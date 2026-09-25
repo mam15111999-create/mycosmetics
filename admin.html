@@ -923,7 +923,6 @@ function billAddItem(){
 function billScanQR(){
   openQRScanner(code=>{
     const found=DB.products.find(p=>p.id===code||(p.sku&&p.sku===code));
-    _renderBillModal();
     if(found){
       const existing=billCart.find(i=>i.productId===found.id);
       if(existing&&existing.qty<found.stock){existing.qty++;renderBillCart();toast(`✓ +1 ${found.name}`);}
