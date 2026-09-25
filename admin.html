@@ -1481,7 +1481,8 @@ function openQRScanner(onFound){
   _qrFoundCb=onFound;
 
   // Mobile (iPhone/Android): dùng camera native — nhanh nhất, không cần getUserMedia
-  if(isMob()){
+  if(isMob()||matchMedia("(pointer:coarse)").matches){
+    loadZXingLib();
     mountModal(`<div class="modal" style="max-width:380px">
       <div class="modal-head"><h2>📷 Quét mã vạch</h2><button class="icon-btn" onclick="stopQR()">✕</button></div>
       <div class="modal-body" style="padding:28px 16px;text-align:center">
@@ -1574,7 +1575,7 @@ function openQRScanner(onFound){
             if(ZXing&&ZXing.BrowserMultiFormatReader){
               if(stat)stat.textContent="Hướng camera vào mã vạch hoặc mã QR…";
               try{
-                const reader=new ZXing.BrowserMultiFormatReader();
+                const reader=new ZXing.BrowserMultiFormatReader(zxHints());
                 qrZXReader=reader;
                 reader.decodeFromVideoElementContinuously(vid,(result,err)=>{
                   if(!document.getElementById("qrVid"))return;
@@ -1604,6 +1605,27 @@ function stopQR(doClose=true){
   if(doClose)closeModal();
 }
 
+function zxHints(){
+  const Z=window.ZXing,F=Z.BarcodeFormat,h=new Map();
+  h.set(Z.DecodeHintType.TRY_HARDER,true);
+  h.set(Z.DecodeHintType.POSSIBLE_FORMATS,[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.CODE_128,F.CODE_39,F.ITF,F.QR_CODE,F.DATA_MATRIX]);
+  return h;
+}
+// Ảnh điện thoại 12MP: thu nhỏ trước khi giải mã giúp nhanh hơn và đọc được ảnh mờ tốt hơn
+function decodeImageRobust(img){
+  const Z=window.ZXing,hints=zxHints(),reader=new Z.MultiFormatReader();reader.setHints(hints);
+  const W=img.naturalWidth||img.width,H=img.naturalHeight||img.height;
+  const cv=document.createElement("canvas"),ctx=cv.getContext("2d",{willReadFrequently:true});
+  const plan=[[1280,"none",0],[800,"none",0],[1280,"grayscale(1) contrast(1.8)",0],[1920,"none",0],[500,"none",0],[1280,"none",1],[800,"grayscale(1) contrast(1.8)",1]];
+  for(const [max,filter,global] of plan){
+    const s=Math.min(1,max/Math.max(W,H));cv.width=Math.round(W*s);cv.height=Math.round(H*s);
+    ctx.filter=filter;ctx.drawImage(img,0,0,cv.width,cv.height);ctx.filter="none";
+    const Bin=global?Z.GlobalHistogramBinarizer:Z.HybridBinarizer;
+    try{return reader.decode(new Z.BinaryBitmap(new Bin(new Z.HTMLCanvasElementLuminanceSource(cv))),hints).getText();}catch(e){}
+  }
+  return null;
+}
+
 function scanFromImageFile(){
   const input=document.getElementById("qrImgInput");
   if(!input?.files?.length)return;
@@ -1624,17 +1646,16 @@ function scanFromImageFile(){
     if(stat)stat.innerHTML=`<span style="color:var(--bad)">Không đọc được mã từ ảnh này.<br><small>Thử chụp thẳng, rõ nét, đủ sáng, gần hơn.</small></span>`;
   };
 
+  input.value="";
   const imgEl=new Image();
   imgEl.onload=()=>{
     const tryZX=()=>{
       loadZXingLib().then(ZXing=>{
-        if(!ZXing?.BrowserMultiFormatReader){fail();return;}
-        try{
-          const reader=new ZXing.BrowserMultiFormatReader();
-          reader.decodeFromImage(imgEl)
-            .then(result=>{URL.revokeObjectURL(url);foundImg(result.getText());})
-            .catch(()=>fail());
-        }catch(e){fail();}
+        if(!ZXing?.MultiFormatReader){fail();return;}
+        setTimeout(()=>{
+          const val=decodeImageRobust(imgEl);
+          if(val){URL.revokeObjectURL(url);foundImg(val);}else fail();
+        },30);
       });
     };
     if("BarcodeDetector" in window){
