@@ -297,13 +297,13 @@ img{max-width:100%;display:block}
     <h2 class="contact-title">Liên hệ với chúng tôi</h2>
     <p class="contact-sub">Tư vấn sản phẩm, đặt hàng số lượng lớn hoặc bất kỳ hỗ trợ nào — chúng tôi luôn sẵn sàng!</p>
     <div class="contact-cards">
-      <a class="ccard" href="tel:0901234567"><div class="ccard-ico">📞</div><div class="ccard-lbl">Gọi điện</div><div class="ccard-val">0901 234 567</div></a>
-      <a class="ccard" href="https://zalo.me/0901234567" target="_blank" rel="noopener"><div class="ccard-ico">💬</div><div class="ccard-lbl">Zalo</div><div class="ccard-val">Chat ngay</div></a>
-      <a class="ccard" href="https://facebook.com/hoanghiencosmetics" target="_blank" rel="noopener"><div class="ccard-ico">👍</div><div class="ccard-lbl">Facebook</div><div class="ccard-val">Fanpage</div></a>
+      <a class="ccard" href="tel:0789686111"><div class="ccard-ico">📞</div><div class="ccard-lbl">Gọi điện</div><div class="ccard-val">0789 686 111</div></a>
+      <a class="ccard" href="https://zalo.me/0789686111" target="_blank" rel="noopener"><div class="ccard-ico">💬</div><div class="ccard-lbl">Zalo</div><div class="ccard-val">Chat ngay</div></a>
+      <a class="ccard" href="https://www.facebook.com/hoang.thi.thu.hien.465261" target="_blank" rel="noopener"><div class="ccard-ico">👍</div><div class="ccard-lbl">Facebook</div><div class="ccard-val">Fanpage</div></a>
       <a class="ccard" href="mailto:hoanghiencosmetics@gmail.com"><div class="ccard-ico">✉️</div><div class="ccard-lbl">Email</div><div class="ccard-val">Gửi email</div></a>
     </div>
     <div class="contact-info-row">
-      <div class="ci-block"><div class="ci-icon">📍</div><div><div class="ci-label">Địa chỉ cửa hàng</div><div class="ci-value">123 Đường ABC, Phường XYZ, TP. HCM</div></div></div>
+      <div class="ci-block"><div class="ci-icon">📍</div><div><div class="ci-label">Địa chỉ cửa hàng</div><div class="ci-value">Thôn Phú Lương, Vạn Lộc, Thanh Hóa</div></div></div>
       <div class="ci-block"><div class="ci-icon">🕐</div><div><div class="ci-label">Giờ mở cửa</div><div class="ci-value">Thứ 2 – Chủ nhật: 8:00 – 21:00</div></div></div>
       <div class="ci-block"><div class="ci-icon">🚚</div><div><div class="ci-label">Giao hàng</div><div class="ci-value">Toàn quốc — Nhanh 2–4h nội thành</div></div></div>
     </div>
@@ -528,7 +528,7 @@ function submitOrder(){
     p.stock-=aq;
   });
   saveDB(db);const t=total;cart={};updateCartUI({products:[]});
-  document.getElementById("sheet").innerHTML=`<div class="sheet-body success-body"><div class="success-ico">🎉</div><h2>Đặt hàng thành công!</h2><p style="color:var(--ink-soft);font-size:14px;margin:0 0 4px">Cảm ơn bạn đã tin tưởng Hoàng Hiền!</p><div class="success-box"><div class="success-row"><span class="k">Khách hàng</span><b>${esc(name)}</b></div><div class="success-row"><span class="k">Số điện thoại</span><b>${esc(phone)}</b></div>${addr?`<div class="success-row"><span class="k">Địa chỉ</span><b style="text-align:right;max-width:55%;word-break:break-word">${esc(addr)}</b></div>`:""}<div class="success-row"><span class="k">Tổng tiền</span><b style="color:var(--rose-deep);font-size:17px;font-family:'Playfair Display',serif">${money(t)}</b></div></div><p style="color:var(--ink-soft);font-size:13px;margin:0 0 20px">Chúng tôi sẽ liên hệ xác nhận và giao hàng sớm nhất. 📦</p><button class="btn primary" style="width:100%" onclick="closeSheet();renderCats()">Tiếp tục mua hàng</button><a href="https://facebook.com/hoanghiencosmetics" target="_blank" rel="noopener" class="btn" style="width:100%;margin-top:10px;text-decoration:none;background:#1877f2;border-color:#1877f2;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px">👍 Nhắn tin xác nhận qua Facebook</a></div>`;
+  document.getElementById("sheet").innerHTML=`<div class="sheet-body success-body"><div class="success-ico">🎉</div><h2>Đặt hàng thành công!</h2><p style="color:var(--ink-soft);font-size:14px;margin:0 0 4px">Cảm ơn bạn đã tin tưởng Hoàng Hiền!</p><div class="success-box"><div class="success-row"><span class="k">Khách hàng</span><b>${esc(name)}</b></div><div class="success-row"><span class="k">Số điện thoại</span><b>${esc(phone)}</b></div>${addr?`<div class="success-row"><span class="k">Địa chỉ</span><b style="text-align:right;max-width:55%;word-break:break-word">${esc(addr)}</b></div>`:""}<div class="success-row"><span class="k">Tổng tiền</span><b style="color:var(--rose-deep);font-size:17px;font-family:'Playfair Display',serif">${money(t)}</b></div></div><p style="color:var(--ink-soft);font-size:13px;margin:0 0 20px">Chúng tôi sẽ liên hệ xác nhận và giao hàng sớm nhất. 📦</p><button class="btn primary" style="width:100%" onclick="closeSheet();renderCats()">Tiếp tục mua hàng</button><a href="https://www.facebook.com/hoang.thi.thu.hien.465261" target="_blank" rel="noopener" class="btn" style="width:100%;margin-top:10px;text-decoration:none;background:#1877f2;border-color:#1877f2;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px">👍 Nhắn tin xác nhận qua Facebook</a></div>`;
 }
 window.submitOrder=submitOrder;
 
