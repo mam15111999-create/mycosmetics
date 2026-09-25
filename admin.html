@@ -1479,6 +1479,26 @@ function loadZXingLib(){
 
 function openQRScanner(onFound){
   _qrFoundCb=onFound;
+
+  // Mobile (iPhone/Android): dùng camera native — nhanh nhất, không cần getUserMedia
+  if(isMob()){
+    mountModal(`<div class="modal" style="max-width:380px">
+      <div class="modal-head"><h2>📷 Quét mã vạch</h2><button class="icon-btn" onclick="stopQR()">✕</button></div>
+      <div class="modal-body" style="padding:28px 16px;text-align:center">
+        <div style="font-size:56px;margin-bottom:12px">📦</div>
+        <p style="margin:0 0 24px;color:var(--ink-soft);font-size:15px">Chụp ảnh mã vạch hoặc QR code trên sản phẩm</p>
+        <label class="btn primary" style="width:100%;padding:16px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:14px">
+          📸 Mở camera chụp mã
+          <input type="file" accept="image/*" capture="environment" id="qrImgInput" hidden onchange="scanFromImageFile()">
+        </label>
+        <div id="qrStat" style="margin-top:16px;font-size:14px;min-height:20px;color:var(--ink-soft)"></div>
+      </div>
+      <div class="modal-foot"><button class="btn ghost" style="width:100%" onclick="stopQR()">Huỷ</button></div>
+    </div>`);
+    return;
+  }
+
+  // Desktop: video stream + ZXing + chọn ảnh fallback
   mountModal(`<div class="modal" style="max-width:420px">
     <div class="modal-head"><h2>📷 Quét mã vạch / QR</h2><button class="icon-btn" onclick="stopQR()">✕</button></div>
     <div class="modal-body" style="padding:12px;text-align:center">
@@ -1489,12 +1509,11 @@ function openQRScanner(onFound){
         </div>
       </div>
       <div id="qrStat" style="margin:10px 0 4px;font-size:13px;min-height:36px;color:var(--ink-soft)">Đang khởi động camera…</div>
-      <p class="muted" style="font-size:11px;margin:0">Hướng camera vào mã vạch hoặc mã QR trên sản phẩm</p>
     </div>
     <div class="modal-foot" style="display:flex;flex-direction:column;gap:8px">
-      <label class="btn secondary" style="width:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" title="iPhone/iPad: chụp ảnh trực tiếp. Máy tính: chọn ảnh từ máy.">
-        📸 Chụp / chọn ảnh mã vạch
-        <input type="file" accept="image/*" capture="environment" id="qrImgInput" hidden onchange="scanFromImageFile()">
+      <label class="btn secondary" style="width:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        📁 Chọn ảnh chứa mã vạch
+        <input type="file" accept="image/*" id="qrImgInput" hidden onchange="scanFromImageFile()">
       </label>
       <button class="btn ghost" style="width:100%" onclick="stopQR()">Huỷ</button>
     </div>
@@ -1512,7 +1531,6 @@ function openQRScanner(onFound){
       const vid=document.getElementById("qrVid");if(!vid){stopQR(false);return;}
       vid.srcObject=stream;vid.play().catch(()=>{});
 
-      // Tầng 1: BarcodeDetector (Chrome Android, Samsung Browser, Safari 17+)
       let detector=null;
       if("BarcodeDetector" in window){
         try{detector=new BarcodeDetector({formats:["qr_code","ean_13","ean_8","code_128","code_39","upc_a","upc_e","itf","aztec","data_matrix","pdf417"]});}catch(e){}
@@ -1522,7 +1540,6 @@ function openQRScanner(onFound){
       const found=(val)=>{if(stat)stat.innerHTML=`<span class="qr-found">✓ Đọc được mã!</span>`;stopQR(false);onFound(val);};
 
       const startJsQR=()=>{
-        // Tầng 3: jsQR — chỉ đọc QR code
         if(stat)stat.textContent="Hướng camera vào mã QR… (chỉ hỗ trợ QR)";
         const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
         const tick=()=>{
@@ -1538,7 +1555,6 @@ function openQRScanner(onFound){
 
       const startScan=()=>{
         if(detector){
-          // Tầng 1: BarcodeDetector
           if(stat)stat.textContent="Hướng camera vào mã vạch hoặc mã QR…";
           const scanLoop=()=>{
             const v=document.getElementById("qrVid");if(!v)return;
@@ -1552,29 +1568,19 @@ function openQRScanner(onFound){
           };
           qrAF=setTimeout(scanLoop,500);
         }else{
-          // Tầng 2: ZXing — hỗ trợ mã vạch 1D + QR trên mọi trình duyệt
           if(stat)stat.textContent="Đang tải bộ đọc mã vạch…";
           loadZXingLib().then(ZXing=>{
             if(!document.getElementById("qrVid"))return;
             if(ZXing&&ZXing.BrowserMultiFormatReader){
-              if(stat)stat.innerHTML="Hướng camera vào mã vạch…<br><small style='color:var(--ink-soft)'>Nếu không quét được, bấm 📸 Chụp ảnh bên dưới</small>";
+              if(stat)stat.textContent="Hướng camera vào mã vạch hoặc mã QR…";
               try{
                 const reader=new ZXing.BrowserMultiFormatReader();
                 qrZXReader=reader;
-                let zxFailed=false;
                 reader.decodeFromVideoElementContinuously(vid,(result,err)=>{
                   if(!document.getElementById("qrVid"))return;
-                  if(result){found(result.getText());return;}
-                  // Nếu ZXing liên tục báo lỗi (iOS canvas tainted), gợi ý dùng ảnh
-                  if(err&&!zxFailed&&err.name!=="NotFoundException"){
-                    zxFailed=true;
-                    if(stat)stat.innerHTML=`<span style="color:var(--warn)">Camera stream không đọc được.<br>Bấm 📸 <b>Chụp ảnh</b> bên dưới để quét.</span>`;
-                  }
+                  if(result){found(result.getText());}
                 });
-              }catch(e){
-                startJsQR();
-                if(stat)stat.innerHTML="Hướng camera vào mã QR…<br><small style='color:var(--ink-soft)'>Hoặc bấm 📸 Chụp ảnh bên dưới</small>";
-              }
+              }catch(e){startJsQR();}
             }else{startJsQR();}
           });
         }
