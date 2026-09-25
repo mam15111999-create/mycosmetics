@@ -1463,7 +1463,7 @@ function openPartyModal(kind,id,prefillPhone,onSaved){
 }
 
 /* ======= QR ======= */
-let qrStream=null,qrAF=null,qrZXReader=null;
+let qrStream=null,qrAF=null,qrZXReader=null,_qrFoundCb=null;
 
 function loadZXingLib(){
   if(window.ZXing&&window.ZXing.BrowserMultiFormatReader)return Promise.resolve(window.ZXing);
@@ -1478,10 +1478,11 @@ function loadZXingLib(){
 }
 
 function openQRScanner(onFound){
+  _qrFoundCb=onFound;
   mountModal(`<div class="modal" style="max-width:420px">
     <div class="modal-head"><h2>📷 Quét mã vạch / QR</h2><button class="icon-btn" onclick="stopQR()">✕</button></div>
     <div class="modal-body" style="padding:12px;text-align:center">
-      <div style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3;max-height:60vh">
+      <div style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3;max-height:56vh">
         <video id="qrVid" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block"></video>
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
           <div class="qr-frame"><div class="qr-scan-line"></div></div>
@@ -1490,7 +1491,13 @@ function openQRScanner(onFound){
       <div id="qrStat" style="margin:10px 0 4px;font-size:13px;min-height:36px;color:var(--ink-soft)">Đang khởi động camera…</div>
       <p class="muted" style="font-size:11px;margin:0">Hướng camera vào mã vạch hoặc mã QR trên sản phẩm</p>
     </div>
-    <div class="modal-foot"><button class="btn" style="width:100%" onclick="stopQR()">Huỷ</button></div>
+    <div class="modal-foot" style="display:flex;flex-direction:column;gap:8px">
+      <label class="btn secondary" style="width:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        📁 Chọn ảnh chứa mã vạch
+        <input type="file" accept="image/*" id="qrImgInput" hidden onchange="scanFromImageFile()">
+      </label>
+      <button class="btn ghost" style="width:100%" onclick="stopQR()">Huỷ</button>
+    </div>
   </div>`);
 
   if(!navigator.mediaDevices?.getUserMedia){
@@ -1581,6 +1588,54 @@ function stopQR(doClose=true){
   if(qrZXReader){try{qrZXReader.reset();}catch(e){}qrZXReader=null;}
   if(doClose)closeModal();
 }
+
+function scanFromImageFile(){
+  const input=document.getElementById("qrImgInput");
+  if(!input?.files?.length)return;
+  const file=input.files[0];
+  const url=URL.createObjectURL(file);
+  const stat=document.getElementById("qrStat");
+  if(stat)stat.textContent="Đang đọc mã vạch từ ảnh…";
+  // dừng camera khi đọc từ ảnh
+  clearTimeout(qrAF);cancelAnimationFrame(qrAF);qrAF=null;
+  if(qrStream){qrStream.getTracks().forEach(t=>t.stop());qrStream=null;}
+  if(qrZXReader){try{qrZXReader.reset();}catch(e){}qrZXReader=null;}
+  const tryBD=()=>{
+    if(!("BarcodeDetector" in window)){tryZX();return;}
+    const imgEl=new Image();
+    imgEl.onload=()=>{
+      createImageBitmap(imgEl).then(bmp=>{
+        new BarcodeDetector({formats:["ean_13","ean_8","qr_code","code_128","code_39","upc_a","upc_e","itf","aztec","data_matrix","pdf417"]}).detect(bmp)
+          .then(codes=>{
+            URL.revokeObjectURL(url);
+            if(codes&&codes.length){foundImg(codes[0].rawValue);}else{tryZX();}
+          }).catch(()=>tryZX());
+      }).catch(()=>tryZX());
+    };
+    imgEl.onerror=()=>tryZX();
+    imgEl.src=url;
+  };
+  const tryZX=()=>{
+    loadZXingLib().then(ZXing=>{
+      if(!ZXing?.BrowserMultiFormatReader){
+        URL.revokeObjectURL(url);
+        if(stat)stat.innerHTML=`<span style="color:var(--bad)">Không đọc được. Thử ảnh rõ hơn.</span>`;
+        return;
+      }
+      new ZXing.BrowserMultiFormatReader().decodeFromImageUrl(url)
+        .then(result=>{URL.revokeObjectURL(url);foundImg(result.getText());})
+        .catch(()=>{URL.revokeObjectURL(url);if(stat)stat.innerHTML=`<span style="color:var(--bad)">Không đọc được mã từ ảnh này. Thử ảnh rõ hơn / chụp thẳng mã vạch.</span>`;});
+    });
+  };
+  const foundImg=(val)=>{
+    if(stat)stat.innerHTML=`<span class="qr-found">✓ Đọc được: ${esc(val)}</span>`;
+    const cb=_qrFoundCb;
+    stopQR(false);
+    if(cb)cb(val);
+  };
+  tryBD();
+}
+window.scanFromImageFile=scanFromImageFile;
 
 function openQRCode(productId){
   const p=productById(productId);if(!p)return;
