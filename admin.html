@@ -1466,11 +1466,12 @@ function openPartyModal(kind,id,prefillPhone,onSaved){
 let qrStream=null,qrAF=null,qrZXReader=null;
 
 function loadZXingLib(){
-  if(window.ZXing)return Promise.resolve(window.ZXing);
+  if(window.ZXing&&window.ZXing.BrowserMultiFormatReader)return Promise.resolve(window.ZXing);
   return new Promise(resolve=>{
     const s=document.createElement("script");
-    s.src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js";
-    s.onload=()=>resolve(window.ZXing||null);
+    // v0.18.6: BrowserMultiFormatReader vẫn còn trong package chính
+    s.src="https://cdn.jsdelivr.net/npm/@zxing/library@0.18.6/umd/index.min.js";
+    s.onload=()=>resolve((window.ZXing&&window.ZXing.BrowserMultiFormatReader)?window.ZXing:null);
     s.onerror=()=>resolve(null);
     document.head.appendChild(s);
   });
@@ -1553,10 +1554,16 @@ function openQRScanner(onFound){
               try{
                 const reader=new ZXing.BrowserMultiFormatReader();
                 qrZXReader=reader;
-                reader.decodeFromVideoElement(vid,(result,err)=>{
-                  if(!document.getElementById("qrVid"))return;
-                  if(result)found(result.getText());
-                });
+                const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
+                const tick=()=>{
+                  const el=document.getElementById("qrVid");if(!el)return;
+                  if(el.readyState>=el.HAVE_ENOUGH_DATA&&el.videoWidth>0){
+                    canvas.width=el.videoWidth;canvas.height=el.videoHeight;ctx.drawImage(el,0,0);
+                    try{const r=reader.decodeFromCanvas(canvas);if(r){found(r.getText());return;}}catch(e){}
+                  }
+                  qrAF=setTimeout(tick,200);
+                };
+                qrAF=setTimeout(tick,600);
               }catch(e){startJsQR();}
             }else{startJsQR();}
           });
