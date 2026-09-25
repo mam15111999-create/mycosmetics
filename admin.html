@@ -434,7 +434,6 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 "use strict";
@@ -1299,7 +1298,7 @@ function mountModal(html){
     }
   }
 }
-function closeModal(){document.getElementById("modalMount").innerHTML="";}
+function closeModal(){if(_qrOpen){stopQR();return;}document.getElementById("modalMount").innerHTML="";}
 window.closeModal=closeModal;
 
 function confirmModal(title,body,onYes){
@@ -1463,7 +1462,9 @@ function openPartyModal(kind,id,prefillPhone,onSaved){
 }
 
 /* ======= QR ======= */
-let qrStream=null,qrAF=null,qrZXReader=null,_qrFoundCb=null;
+let qrStream=null,qrAF=null,qrZXReader=null,_qrFoundCb=null,_qrOpen=false,_qrPrevModal=null,qrSession=0;
+let _bdPromise=null,_bdKind="";
+const BD_FORMATS=["ean_13","ean_8","upc_a","upc_e","code_128","code_39","itf","qr_code","data_matrix"];
 
 function loadZXingLib(){
   if(window.ZXing&&window.ZXing.BrowserMultiFormatReader)return Promise.resolve(window.ZXing);
@@ -1477,33 +1478,40 @@ function loadZXingLib(){
   });
 }
 
+// Android/macOS có BarcodeDetector sẵn; iPhone/Windows dùng ZXing-C++ (WebAssembly) qua cùng API
+function getBarcodeDetector(){
+  if(_bdPromise)return _bdPromise;
+  _bdPromise=(async()=>{
+    if("BarcodeDetector" in window){
+      try{
+        const sup=await BarcodeDetector.getSupportedFormats();
+        if(sup.includes("ean_13")){_bdKind="native";return new BarcodeDetector({formats:BD_FORMATS.filter(f=>sup.includes(f))});}
+      }catch(e){}
+    }
+    try{
+      const m=await import("https://cdn.jsdelivr.net/npm/barcode-detector@2.3.1/dist/es/pure.min.js");
+      const det=new m.BarcodeDetector({formats:BD_FORMATS});
+      const warm=document.createElement("canvas");warm.width=warm.height=8;
+      await det.detect(warm);
+      _bdKind="wasm";return det;
+    }catch(e){_bdPromise=null;return null;}
+  })();
+  return _bdPromise;
+}
+
 function openQRScanner(onFound){
-  _qrFoundCb=onFound;
-
-  // Mobile (iPhone/Android): dùng camera native — nhanh nhất, không cần getUserMedia
-  if(isMob()||matchMedia("(pointer:coarse)").matches){
-    loadZXingLib();
-    mountModal(`<div class="modal" style="max-width:380px">
-      <div class="modal-head"><h2>📷 Quét mã vạch</h2><button class="icon-btn" onclick="stopQR()">✕</button></div>
-      <div class="modal-body" style="padding:28px 16px;text-align:center">
-        <div style="font-size:56px;margin-bottom:12px">📦</div>
-        <p style="margin:0 0 24px;color:var(--ink-soft);font-size:15px">Chụp ảnh mã vạch hoặc QR code trên sản phẩm</p>
-        <label class="btn primary" style="width:100%;padding:16px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:14px">
-          📸 Mở camera chụp mã
-          <input type="file" accept="image/*" capture="environment" id="qrImgInput" hidden onchange="scanFromImageFile()">
-        </label>
-        <div id="qrStat" style="margin-top:16px;font-size:14px;min-height:20px;color:var(--ink-soft)"></div>
-      </div>
-      <div class="modal-foot"><button class="btn ghost" style="width:100%" onclick="stopQR()">Huỷ</button></div>
-    </div>`);
-    return;
-  }
-
-  // Desktop: video stream + ZXing + chọn ảnh fallback
+  // Tách form đang mở (Nhập hàng, Thêm sản phẩm…) ra để trả lại nguyên vẹn khi đóng màn hình quét
+  if(_qrOpen)stopQR(false);
+  else{const m=document.getElementById("modalMount");_qrPrevModal=m.firstElementChild;if(_qrPrevModal)_qrPrevModal.remove();}
+  _qrOpen=true;_qrFoundCb=onFound;
+  const sid=++qrSession;
+  const alive=()=>sid===qrSession&&!!document.getElementById("qrVid");
+  const touch=isMob()||matchMedia("(pointer:coarse)").matches;
+  getBarcodeDetector();
   mountModal(`<div class="modal" style="max-width:420px">
     <div class="modal-head"><h2>📷 Quét mã vạch / QR</h2><button class="icon-btn" onclick="stopQR()">✕</button></div>
     <div class="modal-body" style="padding:12px;text-align:center">
-      <div style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3;max-height:56vh">
+      <div id="qrBox" style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3;max-height:50vh">
         <video id="qrVid" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block"></video>
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
           <div class="qr-frame"><div class="qr-scan-line"></div></div>
@@ -1512,97 +1520,87 @@ function openQRScanner(onFound){
       <div id="qrStat" style="margin:10px 0 4px;font-size:13px;min-height:36px;color:var(--ink-soft)">Đang khởi động camera…</div>
     </div>
     <div class="modal-foot" style="display:flex;flex-direction:column;gap:8px">
-      <label class="btn secondary" style="width:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
-        📁 Chọn ảnh chứa mã vạch
-        <input type="file" accept="image/*" id="qrImgInput" hidden onchange="scanFromImageFile()">
+      <label class="btn ${touch?"primary":"secondary"}" ${touch?'onclick="qrPhotoMode()"':""} style="width:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        ${touch?"📸 Chụp ảnh mã vạch":"📁 Chọn ảnh chứa mã vạch"}
+        <input type="file" accept="image/*" ${touch?'capture="environment"':""} id="qrImgInput" hidden onchange="scanFromImageFile()">
       </label>
       <button class="btn ghost" style="width:100%" onclick="stopQR()">Huỷ</button>
     </div>
   </div>`);
 
+  const stat=document.getElementById("qrStat"),vid=document.getElementById("qrVid");
+  const found=val=>{if(alive())qrDone(val);};
+  const photoTip=`<br><small>Hoặc bấm ${touch?"📸 Chụp ảnh":"📁 Chọn ảnh"} bên dưới.</small>`;
+
   if(!navigator.mediaDevices?.getUserMedia){
-    const s=document.getElementById("qrStat");
-    if(s)s.innerHTML=`<span style="color:var(--bad)">Cần mở qua HTTPS để dùng camera.</span>`;
+    stat.innerHTML=`<span style="color:var(--bad)">Không mở được camera trực tiếp.</span>${photoTip}`;
     return;
   }
 
+  const startZXingVideo=()=>{
+    loadZXingLib().then(Z=>{
+      if(!alive())return;
+      if(!Z?.BrowserMultiFormatReader){stat.innerHTML=`<span style="color:var(--bad)">Không tải được bộ đọc mã vạch, kiểm tra mạng.</span>`;return;}
+      stat.textContent="Đưa mã vạch vào khung, giữ mã nằm ngang…";
+      try{
+        qrZXReader=new Z.BrowserMultiFormatReader(zxHints());
+        qrZXReader.decodeFromVideoElementContinuously(vid,r=>{if(r)found(r.getText());});
+      }catch(e){}
+    });
+  };
+
+  const startScan=()=>{
+    if(!alive())return;
+    stat.textContent="Đang tải bộ đọc mã vạch…";
+    getBarcodeDetector().then(bd=>{
+      if(!alive())return;
+      if(!bd){startZXingVideo();return;}
+      stat.textContent="Đưa mã vạch vào khung, giữ mã nằm ngang…";
+      const loop=()=>{
+        if(!alive())return;
+        if(vid.readyState>=2&&vid.videoWidth){
+          bd.detect(vid).then(c=>{if(!alive())return;if(c.length)found(c[0].rawValue);else qrAF=setTimeout(loop,100);})
+            .catch(()=>{if(alive())qrAF=setTimeout(loop,300);});
+        }else qrAF=setTimeout(loop,200);
+      };
+      loop();
+    });
+  };
+
   navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}})
     .then(stream=>{
+      if(!alive()){stream.getTracks().forEach(t=>t.stop());return;}
       qrStream=stream;
-      const vid=document.getElementById("qrVid");if(!vid){stopQR(false);return;}
       vid.srcObject=stream;vid.play().catch(()=>{});
-
-      let detector=null;
-      if("BarcodeDetector" in window){
-        try{detector=new BarcodeDetector({formats:["qr_code","ean_13","ean_8","code_128","code_39","upc_a","upc_e","itf","aztec","data_matrix","pdf417"]});}catch(e){}
-      }
-
-      const stat=document.getElementById("qrStat");
-      const found=(val)=>{if(stat)stat.innerHTML=`<span class="qr-found">✓ Đọc được mã!</span>`;stopQR(false);onFound(val);};
-
-      const startJsQR=()=>{
-        if(stat)stat.textContent="Hướng camera vào mã QR… (chỉ hỗ trợ QR)";
-        const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
-        const tick=()=>{
-          const el=document.getElementById("qrVid");if(!el)return;
-          if(el.readyState>=el.HAVE_ENOUGH_DATA&&el.videoWidth>0){
-            canvas.width=el.videoWidth;canvas.height=el.videoHeight;ctx.drawImage(el,0,0);
-            try{const img=ctx.getImageData(0,0,canvas.width,canvas.height);const code=typeof jsQR==="function"&&jsQR(img.data,img.width,img.height,{inversionAttempts:"dontInvert"});if(code?.data){found(code.data);return;}}catch(e){}
-          }
-          qrAF=requestAnimationFrame(tick);
-        };
-        qrAF=requestAnimationFrame(tick);
-      };
-
-      const startScan=()=>{
-        if(detector){
-          if(stat)stat.textContent="Hướng camera vào mã vạch hoặc mã QR…";
-          const scanLoop=()=>{
-            const v=document.getElementById("qrVid");if(!v)return;
-            if(v.readyState>=v.HAVE_ENOUGH_DATA&&v.videoWidth>0){
-              detector.detect(v).then(codes=>{
-                if(!document.getElementById("qrVid"))return;
-                if(codes&&codes.length)found(codes[0].rawValue);
-                else qrAF=setTimeout(scanLoop,250);
-              }).catch(()=>{if(document.getElementById("qrVid"))qrAF=setTimeout(scanLoop,300);});
-            }else{qrAF=setTimeout(scanLoop,250);}
-          };
-          qrAF=setTimeout(scanLoop,500);
-        }else{
-          if(stat)stat.textContent="Đang tải bộ đọc mã vạch…";
-          loadZXingLib().then(ZXing=>{
-            if(!document.getElementById("qrVid"))return;
-            if(ZXing&&ZXing.BrowserMultiFormatReader){
-              if(stat)stat.textContent="Hướng camera vào mã vạch hoặc mã QR…";
-              try{
-                const reader=new ZXing.BrowserMultiFormatReader(zxHints());
-                qrZXReader=reader;
-                reader.decodeFromVideoElementContinuously(vid,(result,err)=>{
-                  if(!document.getElementById("qrVid"))return;
-                  if(result){found(result.getText());}
-                });
-              }catch(e){startJsQR();}
-            }else{startJsQR();}
-          });
-        }
-      };
-
-      if(vid.readyState>=vid.HAVE_ENOUGH_DATA)startScan();
-      else vid.addEventListener("loadeddata",startScan,{once:true});
+      if(vid.readyState>=2)startScan();else vid.addEventListener("loadeddata",startScan,{once:true});
     })
     .catch(err=>{
-      const s=document.getElementById("qrStat");if(!s)return;
-      if(err.name==="NotAllowedError")s.innerHTML=`<span style="color:var(--bad)">Chưa cấp quyền camera.<br><small>Nhấn 🔒 trên thanh địa chỉ → Cho phép camera.</small></span>`;
-      else if(err.name==="NotFoundError")s.innerHTML=`<span style="color:var(--bad)">Không tìm thấy camera.</span>`;
-      else if(err.name==="NotReadableError")s.innerHTML=`<span style="color:var(--bad)">Camera đang dùng bởi ứng dụng khác.</span>`;
-      else s.innerHTML=`<span style="color:var(--bad)">Lỗi: ${esc(err.message)}</span>`;
+      if(!alive())return;
+      const msg=err.name==="NotAllowedError"?"Chưa cấp quyền camera (bấm 🔒 / aA trên thanh địa chỉ để cho phép).":
+        err.name==="NotFoundError"?"Không tìm thấy camera.":
+        err.name==="NotReadableError"?"Camera đang được ứng dụng khác dùng.":"Lỗi camera: "+esc(err.message);
+      stat.innerHTML=`<span style="color:var(--bad)">${msg}</span>${photoTip}`;
     });
 }
+
 function stopQR(doClose=true){
+  qrSession++;
   clearTimeout(qrAF);cancelAnimationFrame(qrAF);qrAF=null;
   if(qrStream){qrStream.getTracks().forEach(t=>t.stop());qrStream=null;}
   if(qrZXReader){try{qrZXReader.reset();}catch(e){}qrZXReader=null;}
-  if(doClose)closeModal();
+  if(!doClose)return;
+  _qrOpen=false;
+  const m=document.getElementById("modalMount");m.innerHTML="";
+  if(_qrPrevModal){m.appendChild(_qrPrevModal);_qrPrevModal=null;}
+}
+
+function qrDone(val){const cb=_qrFoundCb;stopQR();if(cb)cb(val);}
+
+// iPhone không cho camera trực tiếp và camera chụp ảnh chạy cùng lúc: tắt luồng trực tiếp trước
+function qrPhotoMode(){
+  stopQR(false);
+  const box=document.getElementById("qrBox");if(box)box.style.display="none";
+  const st=document.getElementById("qrStat");if(st)st.textContent="Chụp gần để mã vạch rõ nét, chiếm khoảng nửa khung hình.";
 }
 
 function zxHints(){
@@ -1611,17 +1609,34 @@ function zxHints(){
   h.set(Z.DecodeHintType.POSSIBLE_FORMATS,[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.CODE_128,F.CODE_39,F.ITF,F.QR_CODE,F.DATA_MATRIX]);
   return h;
 }
-// Ảnh điện thoại 12MP: thu nhỏ trước khi giải mã giúp nhanh hơn và đọc được ảnh mờ tốt hơn
-function decodeImageRobust(img){
-  const Z=window.ZXing,hints=zxHints(),reader=new Z.MultiFormatReader();reader.setHints(hints);
-  const W=img.naturalWidth||img.width,H=img.naturalHeight||img.height;
-  const cv=document.createElement("canvas"),ctx=cv.getContext("2d",{willReadFrequently:true});
-  const plan=[[1280,"none",0],[800,"none",0],[1280,"grayscale(1) contrast(1.8)",0],[1920,"none",0],[500,"none",0],[1280,"none",1],[800,"grayscale(1) contrast(1.8)",1]];
-  for(const [max,filter,global] of plan){
-    const s=Math.min(1,max/Math.max(W,H));cv.width=Math.round(W*s);cv.height=Math.round(H*s);
-    ctx.filter=filter;ctx.drawImage(img,0,0,cv.width,cv.height);ctx.filter="none";
-    const Bin=global?Z.GlobalHistogramBinarizer:Z.HybridBinarizer;
-    try{return reader.decode(new Z.BinaryBitmap(new Bin(new Z.HTMLCanvasElementLuminanceSource(cv))),hints).getText();}catch(e){}
+
+function drawScaledRotated(img,max,deg,cv){
+  const W=img.naturalWidth||img.width,H=img.naturalHeight||img.height,s=Math.min(1,max/Math.max(W,H)),w=W*s,h=H*s;
+  const r=deg*Math.PI/180,c=Math.abs(Math.cos(r)),n=Math.abs(Math.sin(r));
+  cv.width=Math.ceil(w*c+h*n);cv.height=Math.ceil(w*n+h*c);
+  const ctx=cv.getContext("2d",{willReadFrequently:true});
+  ctx.fillStyle="#fff";ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.translate(cv.width/2,cv.height/2);ctx.rotate(r);ctx.drawImage(img,-w/2,-h/2,w,h);
+  return cv;
+}
+
+// Ảnh chụp tay thường nghiêng: thử xoay 0/22/45/67° (bộ đọc tự lo phần 90°) ở vài độ phân giải
+async function decodeImageRobust(img){
+  const cv=document.createElement("canvas"),angles=[0,22.5,45,67.5];
+  const bd=await getBarcodeDetector();
+  if(bd){
+    for(const max of [1280,1920,800])for(const deg of angles){
+      drawScaledRotated(img,max,deg,cv);
+      try{const r=await bd.detect(cv);if(r.length)return r[0].rawValue;}catch(e){}
+    }
+    return null;
+  }
+  const Z=await loadZXingLib();if(!Z?.MultiFormatReader)return null;
+  const hints=zxHints(),reader=new Z.MultiFormatReader();reader.setHints(hints);
+  for(const max of [1280,800,1920])for(const deg of angles){
+    drawScaledRotated(img,max,deg,cv);
+    try{return reader.decode(new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(cv))),hints).getText();}catch(e){}
+    await new Promise(r=>setTimeout(r));
   }
   return null;
 }
@@ -1629,50 +1644,23 @@ function decodeImageRobust(img){
 function scanFromImageFile(){
   const input=document.getElementById("qrImgInput");
   if(!input?.files?.length)return;
-  const file=input.files[0];
-  const url=URL.createObjectURL(file);
-  const stat=document.getElementById("qrStat");
-  if(stat)stat.textContent="Đang đọc mã vạch từ ảnh…";
-  clearTimeout(qrAF);cancelAnimationFrame(qrAF);qrAF=null;
-  if(qrStream){qrStream.getTracks().forEach(t=>t.stop());qrStream=null;}
-  if(qrZXReader){try{qrZXReader.reset();}catch(e){}qrZXReader=null;}
-
-  const foundImg=(val)=>{
-    if(stat)stat.innerHTML=`<span class="qr-found">✓ Đọc được: ${esc(val)}</span>`;
-    const cb=_qrFoundCb;stopQR(false);if(cb)cb(val);
-  };
-  const fail=()=>{
-    URL.revokeObjectURL(url);
-    if(stat)stat.innerHTML=`<span style="color:var(--bad)">Không đọc được mã từ ảnh này.<br><small>Thử chụp thẳng, rõ nét, đủ sáng, gần hơn.</small></span>`;
-  };
-
+  const url=URL.createObjectURL(input.files[0]);
   input.value="";
-  const imgEl=new Image();
-  imgEl.onload=()=>{
-    const tryZX=()=>{
-      loadZXingLib().then(ZXing=>{
-        if(!ZXing?.MultiFormatReader){fail();return;}
-        setTimeout(()=>{
-          const val=decodeImageRobust(imgEl);
-          if(val){URL.revokeObjectURL(url);foundImg(val);}else fail();
-        },30);
-      });
-    };
-    if("BarcodeDetector" in window){
-      createImageBitmap(imgEl).then(bmp=>{
-        new BarcodeDetector({formats:["ean_13","ean_8","qr_code","code_128","code_39","upc_a","upc_e","itf","aztec","data_matrix","pdf417"]})
-          .detect(bmp)
-          .then(codes=>{
-            if(codes&&codes.length){URL.revokeObjectURL(url);foundImg(codes[0].rawValue);}
-            else tryZX();
-          }).catch(()=>tryZX());
-      }).catch(()=>tryZX());
-    }else{tryZX();}
+  qrPhotoMode();
+  const sid=qrSession,stat=document.getElementById("qrStat");
+  if(stat)stat.textContent="Đang đọc mã vạch từ ảnh…";
+  const img=new Image();
+  img.onload=async()=>{
+    let val=null;try{val=await decodeImageRobust(img);}catch(e){}
+    URL.revokeObjectURL(url);
+    if(sid!==qrSession||!_qrOpen)return;
+    if(val){qrDone(val);return;}
+    if(stat)stat.innerHTML=`<span style="color:var(--bad)">Không đọc được mã từ ảnh này.</span><br><small>Chụp gần hơn để mã vạch rõ và chiếm khoảng nửa khung hình.</small><br><small style="opacity:.5">${img.naturalWidth}×${img.naturalHeight} · ${_bdKind||"js"}</small>`;
   };
-  imgEl.onerror=()=>{URL.revokeObjectURL(url);if(stat)stat.innerHTML=`<span style="color:var(--bad)">Không tải được ảnh.</span>`;};
-  imgEl.src=url;
+  img.onerror=()=>{URL.revokeObjectURL(url);if(stat)stat.innerHTML=`<span style="color:var(--bad)">Không mở được ảnh này.</span>`;};
+  img.src=url;
 }
-window.scanFromImageFile=scanFromImageFile;
+window.scanFromImageFile=scanFromImageFile;window.qrPhotoMode=qrPhotoMode;
 
 function openQRCode(productId){
   const p=productById(productId);if(!p)return;
@@ -2015,7 +2003,6 @@ function delCategory(id){
 window.go=go;window.openProductModal=openProductModal;window.openTxnModal=openTxnModal;
 window.openPartyModal=openPartyModal;window.delProduct=delProduct;window.delTxn=delTxn;window.delParty=delParty;
 window.openQRCode=openQRCode;window.openQRScanner=openQRScanner;window.stopQR=stopQR;
-window.openFabMenu=openFabMenu;
 window.openCategoryModal=openCategoryModal;window.saveCategory=saveCategory;window.delCategory=delCategory;window.pickCatIcon=pickCatIcon;
 window.scanAndFetchProduct=scanAndFetchProduct;
 
