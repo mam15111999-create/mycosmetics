@@ -1492,9 +1492,9 @@ function openQRScanner(onFound){
       <p class="muted" style="font-size:11px;margin:0">Hướng camera vào mã vạch hoặc mã QR trên sản phẩm</p>
     </div>
     <div class="modal-foot" style="display:flex;flex-direction:column;gap:8px">
-      <label class="btn secondary" style="width:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
-        📁 Chọn ảnh chứa mã vạch
-        <input type="file" accept="image/*" id="qrImgInput" hidden onchange="scanFromImageFile()">
+      <label class="btn secondary" style="width:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" title="iPhone/iPad: chụp ảnh trực tiếp. Máy tính: chọn ảnh từ máy.">
+        📸 Chụp / chọn ảnh mã vạch
+        <input type="file" accept="image/*" capture="environment" id="qrImgInput" hidden onchange="scanFromImageFile()">
       </label>
       <button class="btn ghost" style="width:100%" onclick="stopQR()">Huỷ</button>
     </div>
@@ -1557,15 +1557,24 @@ function openQRScanner(onFound){
           loadZXingLib().then(ZXing=>{
             if(!document.getElementById("qrVid"))return;
             if(ZXing&&ZXing.BrowserMultiFormatReader){
-              if(stat)stat.textContent="Hướng camera vào mã vạch hoặc mã QR…";
+              if(stat)stat.innerHTML="Hướng camera vào mã vạch…<br><small style='color:var(--ink-soft)'>Nếu không quét được, bấm 📸 Chụp ảnh bên dưới</small>";
               try{
                 const reader=new ZXing.BrowserMultiFormatReader();
                 qrZXReader=reader;
+                let zxFailed=false;
                 reader.decodeFromVideoElementContinuously(vid,(result,err)=>{
                   if(!document.getElementById("qrVid"))return;
-                  if(result){found(result.getText());}
+                  if(result){found(result.getText());return;}
+                  // Nếu ZXing liên tục báo lỗi (iOS canvas tainted), gợi ý dùng ảnh
+                  if(err&&!zxFailed&&err.name!=="NotFoundException"){
+                    zxFailed=true;
+                    if(stat)stat.innerHTML=`<span style="color:var(--warn)">Camera stream không đọc được.<br>Bấm 📸 <b>Chụp ảnh</b> bên dưới để quét.</span>`;
+                  }
                 });
-              }catch(e){startJsQR();}
+              }catch(e){
+                startJsQR();
+                if(stat)stat.innerHTML="Hướng camera vào mã QR…<br><small style='color:var(--ink-soft)'>Hoặc bấm 📸 Chụp ảnh bên dưới</small>";
+              }
             }else{startJsQR();}
           });
         }
