@@ -1554,16 +1554,10 @@ function openQRScanner(onFound){
               try{
                 const reader=new ZXing.BrowserMultiFormatReader();
                 qrZXReader=reader;
-                const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
-                const tick=()=>{
-                  const el=document.getElementById("qrVid");if(!el)return;
-                  if(el.readyState>=el.HAVE_ENOUGH_DATA&&el.videoWidth>0){
-                    canvas.width=el.videoWidth;canvas.height=el.videoHeight;ctx.drawImage(el,0,0);
-                    try{const r=reader.decodeFromCanvas(canvas);if(r){found(r.getText());return;}}catch(e){}
-                  }
-                  qrAF=setTimeout(tick,200);
-                };
-                qrAF=setTimeout(tick,600);
+                reader.decodeFromVideoElementContinuously(vid,(result,err)=>{
+                  if(!document.getElementById("qrVid"))return;
+                  if(result){found(result.getText());}
+                });
               }catch(e){startJsQR();}
             }else{startJsQR();}
           });
