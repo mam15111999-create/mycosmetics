@@ -1596,44 +1596,45 @@ function scanFromImageFile(){
   const url=URL.createObjectURL(file);
   const stat=document.getElementById("qrStat");
   if(stat)stat.textContent="Đang đọc mã vạch từ ảnh…";
-  // dừng camera khi đọc từ ảnh
   clearTimeout(qrAF);cancelAnimationFrame(qrAF);qrAF=null;
   if(qrStream){qrStream.getTracks().forEach(t=>t.stop());qrStream=null;}
   if(qrZXReader){try{qrZXReader.reset();}catch(e){}qrZXReader=null;}
-  const tryBD=()=>{
-    if(!("BarcodeDetector" in window)){tryZX();return;}
-    const imgEl=new Image();
-    imgEl.onload=()=>{
-      createImageBitmap(imgEl).then(bmp=>{
-        new BarcodeDetector({formats:["ean_13","ean_8","qr_code","code_128","code_39","upc_a","upc_e","itf","aztec","data_matrix","pdf417"]}).detect(bmp)
-          .then(codes=>{
-            URL.revokeObjectURL(url);
-            if(codes&&codes.length){foundImg(codes[0].rawValue);}else{tryZX();}
-          }).catch(()=>tryZX());
-      }).catch(()=>tryZX());
-    };
-    imgEl.onerror=()=>tryZX();
-    imgEl.src=url;
-  };
-  const tryZX=()=>{
-    loadZXingLib().then(ZXing=>{
-      if(!ZXing?.BrowserMultiFormatReader){
-        URL.revokeObjectURL(url);
-        if(stat)stat.innerHTML=`<span style="color:var(--bad)">Không đọc được. Thử ảnh rõ hơn.</span>`;
-        return;
-      }
-      new ZXing.BrowserMultiFormatReader().decodeFromImageUrl(url)
-        .then(result=>{URL.revokeObjectURL(url);foundImg(result.getText());})
-        .catch(()=>{URL.revokeObjectURL(url);if(stat)stat.innerHTML=`<span style="color:var(--bad)">Không đọc được mã từ ảnh này. Thử ảnh rõ hơn / chụp thẳng mã vạch.</span>`;});
-    });
-  };
+
   const foundImg=(val)=>{
     if(stat)stat.innerHTML=`<span class="qr-found">✓ Đọc được: ${esc(val)}</span>`;
-    const cb=_qrFoundCb;
-    stopQR(false);
-    if(cb)cb(val);
+    const cb=_qrFoundCb;stopQR(false);if(cb)cb(val);
   };
-  tryBD();
+  const fail=()=>{
+    URL.revokeObjectURL(url);
+    if(stat)stat.innerHTML=`<span style="color:var(--bad)">Không đọc được mã từ ảnh này.<br><small>Thử chụp thẳng, rõ nét, đủ sáng, gần hơn.</small></span>`;
+  };
+
+  const imgEl=new Image();
+  imgEl.onload=()=>{
+    const tryZX=()=>{
+      loadZXingLib().then(ZXing=>{
+        if(!ZXing?.BrowserMultiFormatReader){fail();return;}
+        try{
+          const reader=new ZXing.BrowserMultiFormatReader();
+          reader.decodeFromImage(imgEl)
+            .then(result=>{URL.revokeObjectURL(url);foundImg(result.getText());})
+            .catch(()=>fail());
+        }catch(e){fail();}
+      });
+    };
+    if("BarcodeDetector" in window){
+      createImageBitmap(imgEl).then(bmp=>{
+        new BarcodeDetector({formats:["ean_13","ean_8","qr_code","code_128","code_39","upc_a","upc_e","itf","aztec","data_matrix","pdf417"]})
+          .detect(bmp)
+          .then(codes=>{
+            if(codes&&codes.length){URL.revokeObjectURL(url);foundImg(codes[0].rawValue);}
+            else tryZX();
+          }).catch(()=>tryZX());
+      }).catch(()=>tryZX());
+    }else{tryZX();}
+  };
+  imgEl.onerror=()=>{URL.revokeObjectURL(url);if(stat)stat.innerHTML=`<span style="color:var(--bad)">Không tải được ảnh.</span>`;};
+  imgEl.src=url;
 }
 window.scanFromImageFile=scanFromImageFile;
 
