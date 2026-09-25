@@ -372,6 +372,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     </div>
     <button class="nav-btn active" data-view="dashboard"><span class="ic">◆</span> Tổng quan<span class="notif-badge" id="navBadge" style="display:none">0</span></button>
     <button class="nav-btn" data-view="products"><span class="ic">▤</span> Mặt hàng &amp; tồn kho</button>
+    <button class="nav-btn" id="addProdNavBtn"><span class="ic">➕</span> Thêm sản phẩm</button>
     <button class="nav-btn" data-view="categories"><span class="ic">🏷</span> Danh mục hàng</button>
     <button class="nav-btn" data-view="salesPos"><span class="ic">💰</span> Bán hàng</button>
     <button class="nav-btn" data-view="purchases"><span class="ic">📦</span> Nhập hàng</button>
@@ -572,6 +573,12 @@ function go(view){
   }
 }
 document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.view)));
+document.getElementById("addProdNavBtn")?.addEventListener("click",()=>{
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("addProdNavBtn").classList.add("active");
+  go("products");
+  setTimeout(()=>openProductModal(),50);
+});
 
 function topBtn(label,cls,fn){const b=document.createElement("button");b.className="btn "+cls;b.innerHTML=label;b.onclick=fn;document.getElementById("topActions").appendChild(b);return b;}
 
@@ -1356,15 +1363,18 @@ function openProductModal(id,prefill={}){
 function openTxnModal(type,presetProd){
   if(!DB.products.length){toast("Hãy thêm mặt hàng trước");go("products");return;}
   const isSale=type==="sale";
-  const prodOpts=DB.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"vi")).map(p=>`<option value="${p.id}" ${presetProd===p.id?"selected":""}>${esc(p.name)} (còn ${p.stock})</option>`).join("");
+  const cats=[...new Set(DB.products.map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"vi"));
+  const catOpts=`<option value="">— Tất cả danh mục —</option>`+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+  const makeProdOpts=(cat)=>DB.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"vi")).filter(p=>!cat||p.category===cat).map(p=>`<option value="${p.id}" ${presetProd===p.id?"selected":""}>${esc(p.name)} (còn ${p.stock})</option>`).join("");
   const parties=isSale?DB.customers:DB.suppliers;
   const partyOpts=`<option value="">— Không chọn —</option>`+parties.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("");
   mountModal(`<div class="modal">
     <div class="modal-head"><h2>${isSale?"💰 Bán hàng":"📦 Nhập hàng"}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
+      ${cats.length?`<div class="field"><label>Danh mục</label><select id="tCat">${catOpts}</select></div>`:""}
       <div class="field"><label>Sản phẩm *</label>
         <div style="display:flex;gap:8px;align-items:stretch">
-          <select id="tProd" style="flex:1">${prodOpts}</select>
+          <select id="tProd" style="flex:1">${makeProdOpts("")}</select>
           <button type="button" class="btn sm ghost" id="scanBtn" style="padding:10px 13px;white-space:nowrap">📷 QR</button>
         </div>
       </div>
@@ -1381,6 +1391,8 @@ function openTxnModal(type,presetProd){
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Huỷ</button><button class="btn primary" id="saveTxn" style="flex:1">${isSale?"Ghi nhận bán":"Ghi nhận nhập"}</button></div>
   </div>`);
   const prodSel=document.getElementById("tProd"),priceIn=document.getElementById("tPrice"),qtyIn=document.getElementById("tQty");
+  const catSel=document.getElementById("tCat");
+  if(catSel){catSel.addEventListener("change",()=>{prodSel.innerHTML=makeProdOpts(catSel.value);fillPrice();});}
   const fillPrice=()=>{const p=productById(prodSel.value);if(p)priceIn.value=isSale?p.price:p.cost;updateSum();};
   const updateSum=()=>{
     const p=productById(prodSel.value);const qty=+qtyIn.value||0;const price=+priceIn.value||0;
