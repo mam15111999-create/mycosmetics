@@ -3,1857 +3,538 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#4a2545">
-<title>Mỹ Phẩm Hoàng Hiền – Quản lý</title>
+<meta name="theme-color" content="#c64f7b">
+<meta name="description" content="Mỹ phẩm chính hãng – Hoàng Hiền Cosmetics">
+<title>Hoàng Hiền Cosmetics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap">
 </head>
 <body>
 <style>
-/* =========== TOKENS =========== */
 :root{
-  --plum:#4a2545;--plum-soft:#6b3a5e;--rose:#c64f7b;--rose-deep:#a83a63;
-  --gold:#c99a4e;--bg:#fbf3f6;--surface:#fffbfc;--surface-2:#f7ebf0;
-  --line:#ecd7e0;--ink:#3a2333;--ink-soft:#7d6472;
-  --good:#2f9e6b;--good-bg:#e4f4ec;--warn:#c9791f;--warn-bg:#fbeed9;
-  --bad:#c53b3b;--bad-bg:#f8e2e2;
-  --shadow:0 6px 22px rgba(74,37,69,.11);--shadow-sm:0 2px 8px rgba(74,37,69,.08);
-  --radius:16px;--bnav-h:64px;
-  color-scheme:light;
+  --rose:#c64f7b;--rose-soft:#e8789f;--rose-deep:#a83a63;--plum:#4a2545;
+  --gold:#c99a4e;--gold-light:#f5e6c8;
+  --bg:#fdf5f8;--surface:#fffbfd;--surface-2:#f9edf3;--line:#f0dce6;
+  --ink:#2e1a27;--ink-soft:#8a6478;
+  --good:#2a9e68;
+  --shadow:0 8px 28px rgba(74,37,69,.12);--shadow-sm:0 2px 10px rgba(74,37,69,.08);
+  --r:18px;color-scheme:light;
 }
-:root:not([data-theme="light"]){
-  @media(prefers-color-scheme:dark){
-    --plum:#e9c7dc;--plum-soft:#caa0bb;--rose:#e987ac;--rose-deep:#f0a0bf;--gold:#dcb673;
-    --bg:#1c1119;--surface:#271823;--surface-2:#32202c;--line:#432d3b;
-    --ink:#f3e6ee;--ink-soft:#b494a8;
-    --good:#5bc793;--good-bg:#1e3a2c;--warn:#e0a24a;--warn-bg:#3d2e17;--bad:#ec6d6d;--bad-bg:#3d1e1e;
-    --shadow:0 6px 22px rgba(0,0,0,.35);--shadow-sm:0 2px 8px rgba(0,0,0,.28);color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --plum:#e9c7dc;--plum-soft:#caa0bb;--rose:#e987ac;--rose-deep:#f0a0bf;--gold:#dcb673;
-  --bg:#1c1119;--surface:#271823;--surface-2:#32202c;--line:#432d3b;
-  --ink:#f3e6ee;--ink-soft:#b494a8;
-  --good:#5bc793;--good-bg:#1e3a2c;--warn:#e0a24a;--warn-bg:#3d2e17;--bad:#ec6d6d;--bad-bg:#3d1e1e;
-  --shadow:0 6px 22px rgba(0,0,0,.35);--shadow-sm:0 2px 8px rgba(0,0,0,.28);color-scheme:dark;
-}
-/* =========== RESET =========== */
-[hidden]{display:none!important}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--ink);font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
-h1,h2,h3{font-family:"Fraunces","Instrument Sans",Georgia,serif;font-weight:600;margin:0;text-wrap:balance;color:var(--plum)}
-button,input,select,textarea{font-family:inherit;font-size:16px}
-img{max-width:100%}
-.tnum{font-variant-numeric:tabular-nums}
-/* =========== LOGIN =========== */
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:var(--bg)}
-.login-card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:36px 28px;box-shadow:var(--shadow)}
-.login-logo{text-align:center;margin-bottom:18px}
-.login-card h1{text-align:center;font-size:24px;margin-bottom:6px}
-.login-card .sub{text-align:center;color:var(--ink-soft);font-size:14px;margin-bottom:28px}
-.login-err{background:var(--bad-bg);color:var(--bad);border-radius:9px;padding:9px 12px;font-size:13px;font-weight:600;margin-bottom:14px}
-/* =========== LAYOUT =========== */
-.app{display:flex;min-height:100%;padding-bottom:0}
-.sidebar{
-  width:236px;flex-shrink:0;background:var(--plum);color:#fbeef4;
-  display:flex;flex-direction:column;gap:5px;
-  padding:calc(env(safe-area-inset-top,0px)+22px) 14px 22px;
-  position:sticky;top:env(safe-area-inset-top,0px);align-self:flex-start;height:100vh;
-}
-.brand{display:flex;align-items:center;gap:11px;padding:4px 8px 18px}
-.brand-mark{width:42px;height:42px;border-radius:13px;flex-shrink:0;background:linear-gradient(135deg,var(--rose),var(--gold));display:grid;place-items:center;font-family:"Fraunces",serif;font-weight:600;font-size:21px;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.25)}
-.brand-name{font-family:"Fraunces",serif;font-weight:600;font-size:17px;line-height:1.15;color:#fff}
-.brand-sub{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#e6b9d0;margin-top:2px}
-.nav-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:0;color:#f0d5e4;padding:11px 13px;border-radius:11px;cursor:pointer;font-size:14.5px;font-weight:500;transition:background .15s,color .15s;min-height:44px}
-.nav-btn:hover{background:rgba(255,255,255,.09);color:#fff}
-.nav-btn.active{background:var(--surface);color:var(--plum);font-weight:600;box-shadow:var(--shadow-sm)}
-.nav-btn .ic{width:20px;text-align:center;font-size:16px}
-.nav-spacer{flex:1}
-.nav-foot{font-size:11px;color:#d09cba;padding:0 10px;line-height:1.5}
-.main{flex:1;min-width:0;display:flex;flex-direction:column}
-.topbar{
-  position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
-  background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);
-  border-bottom:1px solid var(--line);padding:14px clamp(14px,3vw,28px);
-  display:flex;align-items:center;gap:12px;
-}
-.topbar h1{font-size:21px}
-.topbar .sub{color:var(--ink-soft);font-size:12.5px;margin-top:1px}
-.topbar-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-.content{padding:clamp(14px,3vw,28px);max-width:1180px;width:100%}
-/* =========== BUTTONS =========== */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 16px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;transition:.15s;white-space:nowrap;min-height:44px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:"DM Sans",system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:calc(env(safe-area-inset-bottom,0px)+80px)}
+input,select,textarea,button{font-family:inherit;font-size:16px}
+h2,h3{font-family:"Playfair Display",Georgia,serif;font-weight:700;margin:0;color:var(--plum)}
+button{font-family:inherit;cursor:pointer}
+img{max-width:100%;display:block}
+
+/* HEADER */
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:11px 16px;display:flex;align-items:center;gap:11px}
+.logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#6a1040,#9a2060);display:grid;place-items:center;font-family:"Playfair Display",serif;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;letter-spacing:-.5px}
+.hdr-main{flex:1;min-width:0}
+.hdr-name{font-family:"Playfair Display",serif;font-weight:700;font-size:15px;color:var(--plum);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hdr-tag{font-size:11px;color:var(--ink-soft)}
+.cart-btn{position:relative;width:42px;height:42px;border-radius:11px;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.cart-badge{position:absolute;top:-4px;right:-4px;background:var(--rose);color:#fff;width:18px;height:18px;border-radius:50%;font-size:10px;font-weight:700;display:none;place-items:center}
+
+/* BANNER */
+.banner-wrap{overflow:hidden}
+
+/* WELCOME */
+.welcome{padding:20px 18px 4px;text-align:center}
+.welcome h2{font-size:19px;margin-bottom:5px}
+.welcome p{font-size:13.5px;color:var(--ink-soft);margin:0}
+
+/* SEARCH */
+.search-wrap{padding:14px 16px 6px}
+.sb{position:relative}
+.sb input{width:100%;padding:12px 14px 12px 42px;border:1.5px solid var(--line);border-radius:13px;background:var(--surface);color:var(--ink);font-size:15px;font-family:inherit;transition:.15s}
+.sb input:focus{outline:2px solid var(--rose);outline-offset:1px;border-color:var(--rose)}
+.sb .mag{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--ink-soft);font-size:17px;pointer-events:none}
+
+/* CATEGORY GRID */
+.cat-section{padding:6px 14px 28px}
+.sec-title{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;padding-left:2px}
+.cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+@media(min-width:480px){.cat-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:700px){.cat-grid{grid-template-columns:repeat(4,1fr)}}
+.cat-card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:20px 12px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s;box-shadow:var(--shadow-sm);text-align:center;-webkit-user-select:none;user-select:none}
+.cat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--rose)}
+.cat-card:active{transform:scale(.96)}
+.cat-ico{font-size:32px;line-height:1}
+.cat-name{font-family:"Playfair Display",serif;font-weight:700;font-size:13.5px;color:var(--plum);line-height:1.3}
+.cat-cnt{font-size:11.5px;color:var(--ink-soft)}
+.all-card{background:linear-gradient(135deg,#6a1040,#9a2060);border-color:transparent !important}
+.all-card .cat-name{color:#fff}
+.all-card .cat-cnt{color:rgba(255,255,255,.7)}
+.all-card:hover{box-shadow:var(--shadow)}
+
+/* PRODUCT VIEW */
+.prod-view{display:none}
+.prod-view.show{display:block}
+.cat-view.hide{display:none}
+
+/* BACK BAR */
+.back-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:calc(env(safe-area-inset-top,0px)+57px);z-index:19}
+.back-btn{display:flex;align-items:center;gap:5px;background:none;border:0;color:var(--rose-deep);font-size:14px;font-weight:700;padding:6px 10px;border-radius:9px;transition:.15s;white-space:nowrap}
+.back-btn:hover{background:var(--surface-2)}
+.back-title{font-family:"Playfair Display",serif;font-weight:700;font-size:15px;color:var(--plum);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.back-cnt{font-size:12px;color:var(--ink-soft);white-space:nowrap}
+
+/* PRODUCT GRID */
+.grid-wrap{padding:10px 13px 0}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+@media(min-width:500px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:720px){.grid{grid-template-columns:repeat(4,1fr);gap:14px}}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;transition:transform .18s,box-shadow .18s}
+.pcard:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.pimg{aspect-ratio:1;background:var(--surface-2);position:relative;overflow:hidden}
+.pimg img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.pcard:hover .pimg img{transform:scale(1.04)}
+.pimg-ph{width:100%;height:100%;display:grid;place-items:center;font-size:36px}
+.pbadge{position:absolute;top:8px;left:8px;background:var(--rose);color:#fff;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:100px}
+.pbody{padding:10px 10px 7px;flex:1;display:flex;flex-direction:column;gap:3px}
+.pname{font-weight:700;font-size:13px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pcat{font-size:11px;color:var(--ink-soft)}
+.pprice{font-family:"Playfair Display",serif;font-size:16px;font-weight:700;color:var(--rose-deep);margin-top:auto;padding-top:4px;font-variant-numeric:tabular-nums}
+.pfoot{padding:0 10px 10px;display:flex;gap:6px;align-items:center}
+.qty-ctrl{display:flex;align-items:center;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex-shrink:0}
+.qty-ctrl button{width:28px;height:28px;border:0;background:var(--surface-2);font-size:15px;font-weight:700;color:var(--ink);display:grid;place-items:center;transition:.12s}
+.qty-ctrl button:active{background:var(--rose);color:#fff}
+.qty-val{min-width:26px;text-align:center;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.add-btn{flex:1;height:28px;border:0;background:var(--rose);color:#fff;border-radius:8px;font-size:12px;font-weight:700;transition:.15s}
+.add-btn:hover{background:var(--rose-deep)}
+.add-btn.ok{background:var(--good)}
+.empty{text-align:center;padding:44px 20px;grid-column:1/-1;color:var(--ink-soft)}
+/* PRODUCT DETAIL */
+.pd-img{aspect-ratio:1;background:var(--surface-2);overflow:hidden;max-height:300px;display:grid;place-items:center}
+.pd-img img{width:100%;height:100%;object-fit:cover}
+.pd-img-ph{width:100%;height:100%;display:grid;place-items:center;font-size:80px}
+.pd-cat-tag{display:inline-block;background:var(--surface-2);border:1px solid var(--line);border-radius:100px;padding:3px 11px;font-size:12px;color:var(--ink-soft);margin-bottom:9px}
+.pd-name{font-size:20px;font-weight:700;line-height:1.3;margin-bottom:6px}
+.pd-price{font-family:"Playfair Display",serif;font-size:26px;font-weight:700;color:var(--rose-deep);margin-bottom:10px;font-variant-numeric:tabular-nums}
+.pd-stock-ok{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:100px;background:#e8f8ee;color:#2d7a4b;margin-bottom:12px}
+.pd-stock-warn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:100px;background:#fff8e1;color:#a06820;margin-bottom:12px}
+.pd-stock-bad{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:100px;background:#fde8e8;color:#a03030;margin-bottom:12px}
+.pd-note{font-size:13px;color:var(--ink-soft);line-height:1.6;background:var(--surface-2);border-radius:10px;padding:11px 13px;margin-top:8px}
+.pd-foot{padding:13px 18px calc(env(safe-area-inset-bottom,0px)+13px);border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;background:var(--surface)}
+.empty .ico{font-size:40px;margin-bottom:10px}
+
+/* CART BAR */
+.cart-bar{position:fixed;bottom:0;left:0;right:0;z-index:40;background:linear-gradient(90deg,#6a1040,#9a2060);color:#fff;padding:13px 18px calc(env(safe-area-inset-bottom,0px)+13px);display:flex;align-items:center;gap:14px;transform:translateY(110%);transition:transform .28s cubic-bezier(.34,1.56,.64,1);box-shadow:0 -4px 24px rgba(74,37,69,.35)}
+.cart-bar.show{transform:translateY(0)}
+.cb-info{flex:1}
+.cb-count{font-size:12px;opacity:.75;margin-bottom:1px}
+.cb-total{font-family:"Playfair Display",serif;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.cb-btn{background:var(--rose);border:0;color:#fff;padding:11px 18px;border-radius:11px;font-size:14px;font-weight:700;white-space:nowrap}
+
+/* OVERLAY + SHEET */
+.overlay{position:fixed;inset:0;background:rgba(40,20,35,.55);backdrop-filter:blur(4px);z-index:50;display:none;place-items:flex-end center}
+.overlay.show{display:flex}
+.sheet{background:var(--surface);border-radius:22px 22px 0 0;width:100%;max-width:560px;max-height:88vh;overflow:auto;margin:0 auto;animation:sup .28s cubic-bezier(.34,1.46,.64,1)}
+@keyframes sup{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sheet-drag{width:40px;height:4px;border-radius:2px;background:var(--line);margin:10px auto 0}
+.sheet-head{display:flex;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
+.sheet-head h2{font-size:17px;flex:1}
+.close-btn{width:33px;height:33px;border-radius:9px;background:var(--surface-2);border:0;font-size:14px;display:grid;place-items:center;color:var(--ink-soft)}
+.sheet-body{padding:14px 18px}
+.sheet-foot{padding:11px 18px calc(env(safe-area-inset-bottom,0px)+11px);border-top:1px solid var(--line);background:var(--surface);position:sticky;bottom:0;display:flex;gap:9px}
+.sheet-foot .btn{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:12px 17px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:700;transition:.15s;min-height:46px;font-family:inherit}
 .btn:hover{border-color:var(--rose);color:var(--rose-deep)}
 .btn.primary{background:var(--rose);border-color:var(--rose);color:#fff}
-.btn.primary:hover{background:var(--rose-deep);border-color:var(--rose-deep)}
-.btn.ghost{background:transparent}
-.btn.sm{padding:7px 12px;font-size:13px;border-radius:8px;min-height:36px}
-.btn.xs{padding:5px 9px;font-size:12px;border-radius:7px;min-height:30px}
-.btn.danger:hover{border-color:var(--bad);color:var(--bad)}
-.icon-btn{border:1px solid var(--line);background:var(--surface);width:40px;height:40px;border-radius:10px;cursor:pointer;display:grid;place-items:center;font-size:15px;color:var(--ink-soft);transition:.15s;flex-shrink:0}
-.icon-btn:hover{border-color:var(--rose);color:var(--rose-deep)}
-.menu-toggle{display:none}
-/* =========== STAT CARDS =========== */
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:13px;margin-bottom:22px}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:17px 18px;box-shadow:var(--shadow-sm)}
-.stat .label{font-size:12px;color:var(--ink-soft);font-weight:700;letter-spacing:.02em;display:flex;align-items:center;gap:6px}
-.stat .val{font-family:"Fraunces",serif;font-size:26px;font-weight:600;color:var(--plum);margin-top:8px;line-height:1.1}
-.stat .foot{font-size:12px;color:var(--ink-soft);margin-top:5px}
-.stat .val.rose{color:var(--rose-deep)}.stat .val.good{color:var(--good)}
-/* =========== PANELS =========== */
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);margin-bottom:20px;overflow:hidden}
-.panel-head{display:flex;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line)}
-.panel-head h2{font-size:16px}.panel-head .btn{margin-left:auto}
-.panel-body{padding:8px 18px 16px}
-.two-col{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;align-items:start}
-/* =========== TOOLBAR =========== */
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:15px}
-.search{position:relative;flex:1;min-width:180px}
-.search input{width:100%;padding:11px 12px 11px 38px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
-.search .mag{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-soft)}
-select.filter{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
-/* =========== TABLE =========== */
-.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow-sm)}
-table{width:100%;border-collapse:collapse;min-width:600px}
-th,td{padding:12px 13px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
-th{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:700;background:var(--surface-2);position:sticky;top:0}
-tbody tr:last-child td{border-bottom:0}
-tbody tr:hover{background:var(--surface-2)}
-td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
-.prod-cell{display:flex;align-items:center;gap:10px}
-.thumb{width:40px;height:40px;border-radius:9px;object-fit:cover;flex-shrink:0;background:var(--surface-2);border:1px solid var(--line)}
-.thumb.ph{display:grid;place-items:center;font-size:16px;color:var(--rose)}
-.prod-name{font-weight:600;color:var(--ink)}.prod-sku{font-size:12px;color:var(--ink-soft)}
-.row-actions{display:flex;gap:5px;justify-content:flex-end}
-/* =========== MOBILE CARDS =========== */
-.card-list{display:flex;flex-direction:column;gap:11px}
-.m-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden}
-.m-card-head{display:flex;align-items:center;gap:11px;padding:14px 14px 10px}
-.m-card-head .grow{flex:1;min-width:0}
-.m-card-body{padding:0 14px 4px;display:flex;flex-direction:column;gap:0}
-.m-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-size:14px}
-.m-row span{color:var(--ink-soft);font-size:13px}
-.m-row b,.m-row strong{text-align:right;font-variant-numeric:tabular-nums}
-.m-card-foot{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface-2);flex-wrap:wrap}
-.m-card-foot .btn{flex:1;min-width:0}
-/* Txn card */
-.txn-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow-sm)}
-.txn-card-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.txn-card-top .grow{flex:1;min-width:0}
-.txn-card-meta{font-size:13px;color:var(--ink-soft)}
-.txn-card-nums{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
-.txn-card-nums>div{display:flex;flex-direction:column;gap:2px}
-.txn-card-nums .lbl{font-size:11.5px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
-/* Partner card */
-.party-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:15px;box-shadow:var(--shadow-sm)}
-.party-card-name{font-weight:700;font-size:16px;margin-bottom:5px}
-.party-card-info{display:flex;flex-direction:column;gap:4px;font-size:13.5px;color:var(--ink-soft)}
-.party-card-info span{display:flex;align-items:center;gap:7px}
-.party-card-foot{display:flex;gap:8px;margin-top:12px}
-/* =========== PILLS =========== */
-.pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:600;white-space:nowrap}
-.pill.good{background:var(--good-bg);color:var(--good)}
-.pill.warn{background:var(--warn-bg);color:var(--warn)}
-.pill.bad{background:var(--bad-bg);color:var(--bad)}
-.pill.rose{background:var(--surface-2);color:var(--rose-deep)}
-.pill.sale{background:var(--good-bg);color:var(--good)}
-.pill.purchase{background:#e7eefb;color:#3763b8}
-:root[data-theme="dark"] .pill.purchase,:root:not([data-theme="light"]) .pill.purchase{background:#1e2c47;color:#84a9e8}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill.purchase{background:#1e2c47;color:#84a9e8}}
-.cat-tag{font-size:12px;color:var(--ink-soft)}
-/* =========== EMPTY STATE =========== */
-.empty{text-align:center;padding:42px 20px;color:var(--ink-soft)}
-.empty .big{font-size:36px;margin-bottom:10px}
-.empty h3{color:var(--plum);margin-bottom:6px}
-/* =========== CHARTS =========== */
-.chart-bars{display:flex;align-items:flex-end;gap:9px;height:170px;padding:8px 2px 0}
-.cbar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}
-.cbar-track{width:100%;flex:1;display:flex;align-items:flex-end}
-.cbar{width:100%;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,var(--rose),var(--rose-deep));min-height:3px;transition:height .4s}
-.cbar-lbl{font-size:11.5px;color:var(--ink-soft)}
-.cbar-val{font-size:10.5px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
-.top-list{display:flex;flex-direction:column;gap:0}
-.top-row{display:flex;align-items:center;gap:11px;padding:10px 2px;border-bottom:1px solid var(--line)}
-.top-row:last-child{border-bottom:0}
-.top-rank{width:24px;height:24px;border-radius:7px;background:var(--surface-2);color:var(--rose-deep);display:grid;place-items:center;font-weight:700;font-size:13px;flex-shrink:0}
-.top-row .grow{flex:1;min-width:0}
-.top-name{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.top-meta{font-size:12px;color:var(--ink-soft)}
-.bar-mini{height:6px;border-radius:4px;background:var(--surface-2);margin-top:5px;overflow:hidden}
-.bar-mini>span{display:block;height:100%;background:var(--rose);border-radius:4px}
-/* =========== TOAST =========== */
-.toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 76px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--plum);color:#fff;padding:12px 20px;border-radius:11px;box-shadow:var(--shadow);font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:90;max-width:90vw;text-align:center}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-/* =========== FORMS =========== */
-.field{margin-bottom:14px}
-.field label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px}
-.field .hint{font-weight:400;color:var(--ink-soft);font-size:12px}
-.field input,.field select,.field textarea{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:16px}
-.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--rose);outline-offset:1px;border-color:var(--rose)}
-.field textarea{resize:vertical;min-height:64px}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-.calc-note{background:var(--surface-2);border-radius:10px;padding:10px 13px;font-size:13px;color:var(--ink-soft);margin-top:2px}
-.img-pick{display:flex;align-items:center;gap:12px}
-.img-preview{width:56px;height:56px;border-radius:11px;object-fit:cover;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;color:var(--rose);font-size:20px;flex-shrink:0}
-/* =========== MODAL =========== */
-.modal-back{position:fixed;inset:0;background:rgba(58,35,51,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:18px;z-index:60}
-.modal{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);width:100%;max-width:520px;max-height:90vh;overflow:auto}
-.modal-head{display:flex;align-items:center;padding:17px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
-.modal-head h2{font-size:18px}.modal-head .icon-btn{margin-left:auto}
-.modal-body{padding:18px 20px}
-.modal-foot{display:flex;gap:9px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--surface)}
-/* =========== MISC =========== */
-.backup-area{width:100%;min-height:110px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
-.muted{color:var(--ink-soft)}
-.danger-zone{border:1px solid var(--bad);border-radius:12px;padding:13px 15px;margin-top:10px}
-.danger-zone h3{color:var(--bad);font-size:15px;margin-bottom:5px}
-.seg-tabs{display:flex;gap:0;border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:16px}
-.seg-tab{flex:1;padding:10px 8px;border:0;background:var(--surface);color:var(--ink-soft);font-size:13.5px;font-weight:600;cursor:pointer;transition:.15s}
-.seg-tab.active{background:var(--plum);color:#fff}
-/* =========== BILL / POS =========== */
-.disc-toggle{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex-shrink:0}
-.disc-toggle button{border:0;background:var(--surface);color:var(--ink-soft);padding:9px 14px;cursor:pointer;font-size:13px;font-weight:700;transition:.15s}
-.disc-toggle button.active{background:var(--plum);color:#fff}
-.bill-summary{background:var(--surface-2);border-radius:12px;padding:13px 15px;margin-top:8px;display:flex;flex-direction:column;gap:6px;font-size:14px}
-.bill-summary .s-row{display:flex;justify-content:space-between;align-items:center}
-.bill-summary .s-total{font-weight:700;font-size:17px;border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
-.bill-cart-table{width:100%;border-collapse:collapse;min-width:auto}
-.bill-cart-table th{padding:8px 10px;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:700;background:var(--surface-2);text-align:left}
-.bill-cart-table td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:middle}
-.bill-cart-table th.r,.bill-cart-table td.r{text-align:right}
-/* =========== QR =========== */
-.qr-video-wrap{position:relative;width:100%;max-width:290px;margin:0 auto;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:1}
-.qr-video-wrap video{display:block;width:100%;height:100%;object-fit:cover}
-.qr-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-.qr-frame{width:170px;height:170px;border:2px solid var(--rose);border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.5);position:relative;overflow:hidden}
-.qr-scan-line{position:absolute;left:0;right:0;height:2px;background:var(--rose);opacity:.9;animation:scanline 1.6s ease-in-out infinite}
-@keyframes scanline{0%{top:10%}50%{top:90%}100%{top:10%}}
-.qr-status{text-align:center;margin-top:12px;font-size:13.5px;color:var(--ink-soft);min-height:20px}
-.qr-found{color:var(--good);font-weight:600}
-.qr-gen-wrap{display:inline-block;background:#fff;padding:14px;border-radius:12px;border:1px solid var(--line)}
-/* =========== STORE =========== */
-.store-wrap{min-height:100vh;background:var(--bg);display:flex;flex-direction:column}
-.store-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px clamp(14px,4vw,32px);display:flex;align-items:center;gap:12px}
-.store-header .brand-mark{width:36px;height:36px;border-radius:10px;font-size:18px}
-.store-header h1{font-size:19px;flex:1}
-.cart-btn{position:relative;border:1px solid var(--line);background:var(--surface);width:44px;height:44px;border-radius:12px;cursor:pointer;display:grid;place-items:center;font-size:20px;transition:.15s}
-.cart-btn:hover{border-color:var(--rose);color:var(--rose-deep)}
-.cart-badge{position:absolute;top:-5px;right:-5px;background:var(--rose);color:#fff;width:19px;height:19px;border-radius:50%;font-size:11px;font-weight:700;display:grid;place-items:center;display:none}
-.store-hero{background:linear-gradient(135deg,var(--plum) 0%,var(--rose-deep) 100%);color:#fff;padding:28px clamp(14px,4vw,32px);text-align:center}
-.store-hero h2{font-size:26px;color:#fff;margin-bottom:6px}
-.store-hero p{opacity:.85;font-size:15px;margin:0}
-.store-content{padding:clamp(14px,3vw,28px);flex:1;padding-bottom:100px}
-.store-cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
-.cat-btn{padding:7px 15px;border:1px solid var(--line);background:var(--surface);border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
-.cat-btn:hover,.cat-btn.active{background:var(--rose);border-color:var(--rose);color:#fff}
-.store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
-@media(max-width:480px){.store-grid{grid-template-columns:1fr 1fr;gap:10px}}
-.sp-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
-.sp-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
-.sp-img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--surface-2);display:grid;place-items:center;font-size:36px;color:var(--rose)}
-.sp-img img{width:100%;height:100%;object-fit:cover}
-.sp-body{padding:11px 12px;flex:1;display:flex;flex-direction:column;gap:4px}
-.sp-name{font-weight:700;font-size:14px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.sp-cat{font-size:11.5px;color:var(--ink-soft)}
-.sp-price{font-family:"Fraunces",serif;font-size:18px;font-weight:600;color:var(--rose-deep);margin-top:auto;padding-top:6px;font-variant-numeric:tabular-nums}
-.sp-foot{padding:0 12px 12px;display:flex;gap:8px;align-items:center}
-.sp-qty{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:9px;overflow:hidden}
-.sp-qty button{width:34px;height:34px;border:0;background:var(--surface-2);cursor:pointer;font-size:17px;font-weight:700;color:var(--ink);transition:.12s;flex-shrink:0}
-.sp-qty button:active{background:var(--rose);color:#fff}
-.sp-qty-val{min-width:32px;text-align:center;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;padding:0 4px}
-.add-btn{flex:1;background:var(--rose);border:0;color:#fff;border-radius:9px;padding:9px 10px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
-.add-btn:hover{background:var(--rose-deep)}
-.add-btn.added{background:var(--good)}
-.out-badge{width:100%;text-align:center;padding:8px;font-size:13px;color:var(--ink-soft);font-weight:600}
-/* Cart bar */
-.cart-bar{position:fixed;bottom:0;left:0;right:0;z-index:40;background:var(--plum);color:#fff;padding:14px clamp(14px,4vw,32px) calc(env(safe-area-inset-bottom,0px)+14px);display:flex;align-items:center;gap:14px;transform:translateY(100%);transition:transform .25s;box-shadow:0 -4px 20px rgba(74,37,69,.25)}
-.cart-bar.show{transform:translateY(0)}
-.cart-bar-info{flex:1;min-width:0}
-.cart-bar-count{font-size:13px;opacity:.8}
-.cart-bar-total{font-family:"Fraunces",serif;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
-.cart-bar-btn{background:var(--rose);border:0;color:#fff;padding:13px 22px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;transition:.15s}
-.cart-bar-btn:active{background:var(--rose-deep)}
-/* Cart sheet */
-.cart-item{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+.btn.primary:hover{background:var(--rose-deep)}
+.cart-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
 .cart-item:last-child{border-bottom:0}
-.cart-item .grow{flex:1;min-width:0}
-.cart-item-name{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cart-item-price{font-size:13px;color:var(--ink-soft)}
-.cart-total-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0 0;border-top:2px solid var(--line);margin-top:4px;font-weight:700}
-.cart-total-row .amount{font-family:"Fraunces",serif;font-size:22px;color:var(--rose-deep);font-variant-numeric:tabular-nums}
-/* =========== POINTS BADGE =========== */
-.pts-badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#ffe066,#f5a623);color:#5a3a00;padding:3px 9px;border-radius:100px;font-size:12px;font-weight:700}
-.pts-info-box{background:linear-gradient(135deg,#fff8e1,#fff3cd);border:1px solid #f5c842;border-radius:10px;padding:9px 13px;font-size:13px;display:flex;align-items:center;gap:8px;margin-top:6px}
-/* =========== BOTTOM NAV (ẩn hoàn toàn) =========== */
-.bottom-nav{display:none!important}
-.bnav-btn{display:none}
-/* =========== FAB =========== */
-.fab{
-  display:none;position:fixed;bottom:calc(env(safe-area-inset-bottom,0px)+18px);right:18px;
-  width:54px;height:54px;border-radius:50%;background:var(--rose);color:#fff;border:0;
-  font-size:26px;box-shadow:0 4px 16px rgba(198,79,123,.5);cursor:pointer;z-index:38;
-  display:grid;place-items:center;transition:.18s;
-}
-.fab:active{transform:scale(.93)}
-/* =========== MENU TOGGLE (nút ☰ topbar) =========== */
-.menu-toggle{
-  width:40px;height:40px;border-radius:11px;background:var(--plum);color:#fff;
-  border:0;font-size:18px;display:none;place-items:center;cursor:pointer;
-  flex-shrink:0;transition:.15s;
-}
-.menu-toggle:hover{opacity:.85}
-/* =========== RESPONSIVE =========== */
-@media(max-width:860px){.two-col{grid-template-columns:1fr}.grid-2{grid-template-columns:1fr}}
-@media(max-width:720px){
-  .sidebar{display:none}
-  .fab{display:grid}
-  .menu-toggle{display:grid}
-  .topbar h1{font-size:18px}
-  .topbar-actions{display:none}
-  .toast{bottom:calc(env(safe-area-inset-bottom,0px)+80px)}
-  .content{padding:12px 12px calc(env(safe-area-inset-bottom,0px)+80px)}
-  /* Bottom sheet modal */
-  .modal-back{align-items:flex-end;padding:0}
-  .modal{border-radius:22px 22px 0 0;max-height:92vh;max-width:100%;width:100%}
-  .modal-body{padding:14px 14px}
-  .stat-grid{grid-template-columns:1fr 1fr}
-  .stat .val{font-size:20px}
-  .stat{padding:12px}
-  /* Tables scroll horizontal */
-  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .table-wrap table{min-width:520px}
-  /* Bill cart table */
-  .bill-cart-table{font-size:13px}
-  /* Panel */
-  .panel-body{padding:12px}
-  /* Card list spacing */
-  .card-list{gap:10px}
-  .m-card{padding:12px}
-}
-@media(max-width:400px){
-  .stat-grid{grid-template-columns:1fr}
-  .stat .val{font-size:22px}
-}
+.ci-img{width:48px;height:48px;border-radius:10px;background:var(--surface-2);flex-shrink:0;display:grid;place-items:center;font-size:20px}
+.ci-img img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.ci-info{flex:1;min-width:0}
+.ci-name{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci-price{font-size:13px;color:var(--ink-soft);margin-top:1px}
+.cart-total{display:flex;justify-content:space-between;padding:13px 0 0;border-top:2px solid var(--line);margin-top:4px;font-weight:700}
+.cart-total .amount{font-family:"Playfair Display",serif;font-size:21px;color:var(--rose-deep);font-variant-numeric:tabular-nums}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}
+.field input,.field textarea{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;background:var(--bg);color:var(--ink);font-size:16px;font-family:inherit}
+.field input:focus,.field textarea:focus{outline:2px solid var(--rose);outline-offset:1px;border-color:var(--rose)}
+.field textarea{resize:vertical;min-height:65px}
+.order-sum{background:var(--gold-light);border:1px solid color-mix(in srgb,var(--gold) 28%,var(--line));border-radius:12px;padding:12px 14px;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center}
+.order-sum .lbl{color:var(--ink-soft);font-size:13px}
+.order-sum .val{font-family:"Playfair Display",serif;font-size:18px;font-weight:700;color:var(--rose-deep);font-variant-numeric:tabular-nums}
+.success-body{text-align:center;padding:30px 16px}
+.success-ico{font-size:54px;margin-bottom:12px}
+.success-body h2{font-size:22px;color:var(--good);margin-bottom:6px}
+.success-box{background:var(--surface-2);border-radius:13px;padding:15px;margin:16px 0;display:flex;flex-direction:column;gap:6px}
+.success-row{display:flex;justify-content:space-between;font-size:14px}
+.success-row .k{color:var(--ink-soft)}
+
+/* CONTACT */
+.contact-section{margin-top:36px;background:linear-gradient(160deg,#fff0f5,#fce0ec);border-top:2px solid #f0c8da}
+.contact-inner{padding:30px 18px 20px;max-width:660px;margin:0 auto;text-align:center}
+.contact-logo{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#6a1040,#9a2060);display:grid;place-items:center;font-family:"Playfair Display",serif;font-weight:700;font-size:19px;color:#fff;margin:0 auto 11px;box-shadow:0 4px 16px rgba(106,16,64,.28)}
+.contact-title{font-size:20px;color:#5a0a30;margin-bottom:7px}
+.contact-sub{font-size:13.5px;color:#8a6478;max-width:340px;margin:0 auto 20px;line-height:1.6}
+.contact-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
+@media(min-width:500px){.contact-cards{grid-template-columns:repeat(4,1fr)}}
+.ccard{display:flex;flex-direction:column;align-items:center;gap:5px;padding:14px 10px;background:#fff;border:1.5px solid #f0c8da;border-radius:14px;text-decoration:none;transition:.15s;box-shadow:0 2px 8px rgba(106,16,64,.07)}
+.ccard:hover{border-color:#c0406a;transform:translateY(-2px)}
+.ccard-ico{font-size:24px}
+.ccard-lbl{font-size:11px;font-weight:700;color:#8a6478}
+.ccard-val{font-size:13px;font-weight:700;color:#5a0a30}
+.contact-info-row{display:flex;flex-direction:column;gap:13px;text-align:left;border-top:1px solid #f0c8da;padding-top:18px}
+@media(min-width:600px){.contact-info-row{flex-direction:row}}
+.ci-block{display:flex;align-items:flex-start;gap:10px}
+.ci-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.ci-label{font-size:12px;color:#8a6478;font-weight:600;margin-bottom:2px}
+.ci-value{font-size:13.5px;color:#3a1020;font-weight:600;line-height:1.4}
+.footer-bar{background:linear-gradient(90deg,#5a0a30,#8a1a50);color:#fff;padding:15px 18px;text-align:center;font-size:13px;display:flex;flex-direction:column;gap:4px;align-items:center}
+.footer-note{opacity:.7;font-size:12px}
 </style>
 
-<!-- LOGIN -->
-<div id="loginWrap" class="login-wrap" hidden>
-  <div class="login-card">
-    <div class="login-logo">
-      <div class="brand-mark" style="width:64px;height:64px;font-size:30px;margin:0 auto">H</div>
+<header class="hdr">
+  <div class="logo">HH</div>
+  <div class="hdr-main">
+    <div class="hdr-name">Mỹ Phẩm Hoàng Hiền</div>
+    <div class="hdr-tag">✦ Mỹ phẩm chính hãng</div>
+  </div>
+  <button class="cart-btn" id="cartBtn" onclick="openCartSheet()">🛒<span class="cart-badge" id="badge"></span></button>
+</header>
+
+<!-- BANNER -->
+<div class="banner-wrap">
+  <svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
+    <defs>
+      <linearGradient id="hbg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#fff0f5"/><stop offset="100%" style="stop-color:#fce0ec"/>
+      </linearGradient>
+      <linearGradient id="hgold" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" style="stop-color:#a06820"/><stop offset="45%" style="stop-color:#d4a040"/><stop offset="100%" style="stop-color:#a06820"/>
+      </linearGradient>
+      <linearGradient id="hmt" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#5a0a30"/><stop offset="100%" style="stop-color:#8a1a50"/>
+      </linearGradient>
+      <linearGradient id="hem" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#6a1040"/><stop offset="100%" style="stop-color:#9a2060"/>
+      </linearGradient>
+      <filter id="hds"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#8a1040" flood-opacity="0.2"/></filter>
+      <filter id="hts"><feDropShadow dx="1" dy="1" stdDeviation="2.5" flood-color="#5a0a30" flood-opacity="0.25"/></filter>
+    </defs>
+    <rect width="800" height="280" fill="url(#hbg)"/>
+    <circle cx="700" cy="50" r="140" fill="#f8c0d8" opacity="0.2"/>
+    <circle cx="100" cy="240" r="110" fill="#f8c0d8" opacity="0.15"/>
+    <g stroke="#a06820" stroke-width="1.1" fill="none" opacity="0.45">
+      <path d="M 24 16 L 24 44 M 24 16 L 52 16"/><path d="M 776 16 L 776 44 M 776 16 L 748 16"/>
+      <path d="M 24 264 L 24 236 M 24 264 L 52 264"/><path d="M 776 264 L 776 236 M 776 264 L 748 264"/>
+    </g>
+    <g transform="translate(696,48)" opacity="0.24">
+      <ellipse cx="0" cy="-20" rx="6" ry="14" fill="#c0406a" transform="rotate(0)"/>
+      <ellipse cx="0" cy="-20" rx="6" ry="14" fill="#c0406a" transform="rotate(45)"/>
+      <ellipse cx="0" cy="-20" rx="6" ry="14" fill="#c0406a" transform="rotate(90)"/>
+      <ellipse cx="0" cy="-20" rx="6" ry="14" fill="#c0406a" transform="rotate(135)"/>
+      <ellipse cx="0" cy="-20" rx="6" ry="14" fill="#c0406a" transform="rotate(180)"/>
+      <ellipse cx="0" cy="-20" rx="6" ry="14" fill="#c0406a" transform="rotate(225)"/>
+      <ellipse cx="0" cy="-20" rx="6" ry="14" fill="#c0406a" transform="rotate(270)"/>
+      <ellipse cx="0" cy="-20" rx="6" ry="14" fill="#c0406a" transform="rotate(315)"/>
+      <circle cx="0" cy="0" r="7" fill="#e890b0"/>
+    </g>
+    <g transform="translate(400,80)" filter="url(#hds)">
+      <circle cx="0" cy="0" r="38" fill="url(#hem)"/>
+      <circle cx="0" cy="0" r="38" fill="none" stroke="url(#hgold)" stroke-width="1.6" opacity="0.9"/>
+      <text x="-9" y="12" text-anchor="middle" font-family="Georgia,serif" font-size="26" font-weight="700" fill="#fff">H</text>
+      <text x="9" y="12" text-anchor="middle" font-family="Georgia,serif" font-size="26" font-weight="700" fill="#fff">H</text>
+      <circle cx="0" cy="-38" r="2.4" fill="#d4a040"/>
+      <circle cx="38" cy="0" r="2.4" fill="#d4a040"/>
+      <circle cx="0" cy="38" r="2.4" fill="#d4a040"/>
+      <circle cx="-38" cy="0" r="2.4" fill="#d4a040"/>
+    </g>
+    <line x1="140" y1="132" x2="660" y2="132" stroke="url(#hgold)" stroke-width="0.9" opacity="0.6"/>
+    <polygon points="400,128 404,133 400,138 396,133" fill="#a06820" opacity="0.7"/>
+    <text x="400" y="168" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="36" font-weight="700" fill="url(#hmt)" filter="url(#hts)" letter-spacing="2">HOANG HIEN</text>
+    <text x="400" y="190" text-anchor="middle" font-family="Georgia,serif" font-size="12.5" fill="#a06820" letter-spacing="9" font-weight="700">COSMETIC</text>
+    <line x1="140" y1="202" x2="660" y2="202" stroke="url(#hgold)" stroke-width="0.9" opacity="0.6"/>
+    <polygon points="400,198 404,203 400,208 396,203" fill="#a06820" opacity="0.7"/>
+    <text x="400" y="228" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#7a1040" font-weight="700">Nước Hoa  ·  Mỹ Phẩm Chính Hãng</text>
+    <text x="400" y="250" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#a06820" letter-spacing="3" font-weight="600">PERFUME  ✦  SKINCARE  ✦  MAKEUP</text>
+    <text x="400" y="270" text-anchor="middle" font-family="Georgia,serif" font-size="10" fill="#8a1a50" letter-spacing="1.5">hoanghiencosmetics.com</text>
+  </svg>
+</div>
+
+<!-- CATEGORY VIEW -->
+<div id="catView">
+  <div class="welcome">
+    <h2>Chào mừng đến Hoàng Hiền ✨</h2>
+    <p>Chọn danh mục sản phẩm để bắt đầu khám phá</p>
+  </div>
+  <div class="search-wrap">
+    <div class="sb">
+      <span class="mag">⌕</span>
+      <input id="searchIn" placeholder="Tìm sản phẩm bất kỳ..." oninput="doSearch(this.value)">
     </div>
-    <h1 style="font-size:22px;margin:14px 0 4px">Mỹ Phẩm Hoàng Hiền</h1>
-    <p class="sub">Đăng nhập để quản lý cửa hàng</p>
-    <div class="field"><label>Tên đăng nhập</label><input id="lUser" autocomplete="username" placeholder="admin"></div>
-    <div class="field"><label>Mật khẩu</label><input id="lPass" type="password" autocomplete="current-password" placeholder="••••••"></div>
-    <div id="lErr" class="login-err" hidden></div>
-    <button class="btn primary" id="lBtn" style="width:100%;margin-top:6px">Đăng nhập →</button>
+  </div>
+  <div class="cat-section">
+    <div class="sec-title">Danh mục sản phẩm</div>
+    <div class="cat-grid" id="catGrid"></div>
   </div>
 </div>
 
-<!-- MAIN APP -->
-<div id="appWrap" class="app" hidden>
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">H</div>
-      <div><div class="brand-name">Hoàng Hiền</div><div class="brand-sub">Mỹ phẩm</div></div>
-    </div>
-    <button class="nav-btn active" data-view="dashboard"><span class="ic">◆</span> Tổng quan</button>
-    <button class="nav-btn" data-view="products"><span class="ic">▤</span> Mặt hàng &amp; tồn kho</button>
-    <button class="nav-btn" data-view="categories"><span class="ic">🏷</span> Danh mục hàng</button>
-    <button class="nav-btn" data-view="salesPos"><span class="ic">💰</span> Bán hàng</button>
-    <button class="nav-btn" data-view="purchases"><span class="ic">📦</span> Nhập hàng</button>
-    <button class="nav-btn" data-view="suppliers"><span class="ic">☍</span> Nhà cung cấp</button>
-    <button class="nav-btn" data-view="customers"><span class="ic">☺</span> Khách hàng</button>
-    <div class="nav-spacer"></div>
-    <button class="nav-btn" data-view="settings"><span class="ic">⚙</span> Cài đặt</button>
-    <button class="nav-btn" id="logoutBtn" style="margin-top:4px"><span class="ic">⏏</span> Đăng xuất</button>
-    <div class="nav-foot">Dữ liệu lưu trên máy bạn.<br>Nhớ sao lưu định kỳ.</div>
-  </aside>
-
-  <div class="main">
-    <div class="topbar">
-      <button class="menu-toggle" id="menuToggle" title="Menu">☰</button>
-      <div style="flex:1;min-width:0"><h1 id="viewTitle">Tổng quan</h1><div class="sub" id="viewSub"></div></div>
-      <div class="topbar-actions" id="topActions"></div>
-    </div>
-    <div class="content" id="content"></div>
+<!-- PRODUCT VIEW -->
+<div class="prod-view" id="prodView">
+  <div class="back-bar">
+    <button class="back-btn" onclick="backToCats()">← Quay lại</button>
+    <span class="back-title" id="backTitle"></span>
+    <span class="back-cnt" id="backCnt"></span>
   </div>
-
-  <!-- Bottom nav (mobile) -->
-  <nav class="bottom-nav">
-    <button class="bnav-btn active" data-view="dashboard"><span class="bic">◆</span>Tổng quan</button>
-    <button class="bnav-btn" data-view="products"><span class="bic">▤</span>Hàng</button>
-    <button class="bnav-btn" data-view="transactions"><span class="bic">⇄</span>Giao dịch</button>
-    <button class="bnav-btn" data-view="partners"><span class="bic">☍</span>Đối tác</button>
-    <button class="bnav-btn" data-view="settings"><span class="bic">⚙</span>Cài đặt</button>
-  </nav>
-
-  <!-- FAB -->
-  <button class="fab" id="fab" title="Bán hàng / Nhập hàng">＋</button>
-</div>
-
-<div class="scrim" id="scrim" style="position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:35;display:none"></div>
-<div id="modalMount"></div>
-<div class="toast" id="toast"></div>
-
-<!-- CUSTOMER STORE -->
-<div id="storeWrap" class="store-wrap" hidden>
-  <header class="store-header">
-    <div class="brand-mark">H</div>
-    <h1>Mỹ Phẩm Hoàng Hiền</h1>
-    <button class="cart-btn" id="cartBtn" onclick="openCart()">🛒<span class="cart-badge" id="cartBadge">0</span></button>
-  </header>
-  <div class="store-hero">
-    <h2>Chào mừng đến cửa hàng!</h2>
-    <p>Mỹ phẩm chính hãng, chất lượng cao</p>
-  </div>
-  <div class="store-content">
-    <div class="store-cats" id="storeCats"></div>
-    <div class="store-grid" id="storeGrid"></div>
-  </div>
-  <div class="cart-bar" id="cartBar">
-    <div class="cart-bar-info">
-      <div class="cart-bar-count" id="cartBarCount"></div>
-      <div class="cart-bar-total" id="cartBarTotal"></div>
-    </div>
-    <button class="cart-bar-btn" onclick="openCart()">Xem giỏ hàng →</button>
+  <div class="grid-wrap">
+    <div class="grid" id="grid"></div>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- CONTACT -->
+<div class="contact-section">
+  <div class="contact-inner">
+    <div class="contact-logo">HH</div>
+    <h2 class="contact-title">Liên hệ với chúng tôi</h2>
+    <p class="contact-sub">Tư vấn sản phẩm, đặt hàng số lượng lớn hoặc bất kỳ hỗ trợ nào — chúng tôi luôn sẵn sàng!</p>
+    <div class="contact-cards">
+      <a class="ccard" href="tel:0901234567"><div class="ccard-ico">📞</div><div class="ccard-lbl">Gọi điện</div><div class="ccard-val">0901 234 567</div></a>
+      <a class="ccard" href="https://zalo.me/0901234567" target="_blank" rel="noopener"><div class="ccard-ico">💬</div><div class="ccard-lbl">Zalo</div><div class="ccard-val">Chat ngay</div></a>
+      <a class="ccard" href="https://facebook.com/hoanghiencosmetics" target="_blank" rel="noopener"><div class="ccard-ico">👍</div><div class="ccard-lbl">Facebook</div><div class="ccard-val">Fanpage</div></a>
+      <a class="ccard" href="mailto:hoanghiencosmetics@gmail.com"><div class="ccard-ico">✉️</div><div class="ccard-lbl">Email</div><div class="ccard-val">Gửi email</div></a>
+    </div>
+    <div class="contact-info-row">
+      <div class="ci-block"><div class="ci-icon">📍</div><div><div class="ci-label">Địa chỉ cửa hàng</div><div class="ci-value">123 Đường ABC, Phường XYZ, TP. HCM</div></div></div>
+      <div class="ci-block"><div class="ci-icon">🕐</div><div><div class="ci-label">Giờ mở cửa</div><div class="ci-value">Thứ 2 – Chủ nhật: 8:00 – 21:00</div></div></div>
+      <div class="ci-block"><div class="ci-icon">🚚</div><div><div class="ci-label">Giao hàng</div><div class="ci-value">Toàn quốc — Nhanh 2–4h nội thành</div></div></div>
+    </div>
+  </div>
+  <div class="footer-bar">
+    <div>© 2024 Hoang Hien Cosmetic · hoanghiencosmetics.com</div>
+    <div class="footer-note">Mỹ phẩm chính hãng — Uy tín — Chất lượng</div>
+  </div>
+</div>
+
+<!-- Cart bar -->
+<div class="cart-bar" id="cartBar">
+  <div class="cb-info"><div class="cb-count" id="cbCount"></div><div class="cb-total" id="cbTotal"></div></div>
+  <button class="cb-btn" onclick="openCartSheet()">Xem giỏ →</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="ovClick(event)">
+  <div class="sheet" id="sheet"></div>
+</div>
+
 <script>
 "use strict";
-/* ======= AUTH ======= */
-const AUTH_KEY="myphamHH_auth";
 const DB_KEY="myphamHH_v1";
-const THEME_KEY="myphamHH_theme";
-const DEFAULT_AUTH={username:"admin",password:"admin"};
-
-function getAuth(){try{return JSON.parse(localStorage.getItem(AUTH_KEY+"_cred"))||DEFAULT_AUTH;}catch(e){return DEFAULT_AUTH;}}
-function isLoggedIn(){try{return sessionStorage.getItem(AUTH_KEY)==="1";}catch(e){return false;}}
-function doLogin(user,pass){
-  const cred=getAuth();
-  return user.trim()===cred.username&&pass===cred.password;
-}
-function logout(){try{sessionStorage.removeItem(AUTH_KEY);}catch(e){}showLogin();}
-
-function showLogin(){
-  document.getElementById("loginWrap").hidden=false;
-  document.getElementById("appWrap").hidden=true;
-}
-function showApp(){
-  document.getElementById("loginWrap").hidden=true;
-  document.getElementById("appWrap").hidden=false;
-}
-
-/* login form */
-document.getElementById("lBtn").onclick=function(){
-  const u=document.getElementById("lUser").value;
-  const p=document.getElementById("lPass").value;
-  if(!u||!p){showErr("Vui lòng nhập đủ thông tin.");return;}
-  if(doLogin(u,p)){
-    try{sessionStorage.setItem(AUTH_KEY,"1");}catch(e){}
-    showApp();seed();go("dashboard");
-  } else {
-    showErr("Sai tên đăng nhập hoặc mật khẩu.");
-    document.getElementById("lPass").value="";
-    document.getElementById("lPass").focus();
-  }
-};
-["lUser","lPass"].forEach(id=>document.getElementById(id).addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("lBtn").click();}));
-function showErr(msg){const e=document.getElementById("lErr");e.hidden=false;e.textContent=msg;}
-
-/* ======= DATA ======= */
-const DEFAULT={products:[],suppliers:[],customers:[],transactions:[],bills:[],categories:[],seeded:false};
-let DB=loadDB();
-function loadDB(){try{const r=localStorage.getItem(DB_KEY);if(r)return Object.assign({},DEFAULT,JSON.parse(r));}catch(e){}return JSON.parse(JSON.stringify(DEFAULT));}
-function save(){try{localStorage.setItem(DB_KEY,JSON.stringify(DB));}catch(e){toast("Không lưu được dữ liệu");}}
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+const money=n=>(Math.round(n||0)).toLocaleString("vi-VN")+"₫";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 
-/* ======= SEED ======= */
-function seed(){
-  if(DB.seeded||DB.products.length)return;
-  const s1=uid(),s2=uid();
-  DB.suppliers=[
-    {id:s1,name:"Mỹ phẩm Sài Gòn Dist.",phone:"0908 123 456",address:"Quận 5, TP.HCM",note:"Giao hàng 2 ngày"},
-    {id:s2,name:"Korea Beauty Import",phone:"0912 888 777",address:"Hà Nội",note:"Hàng nhập Hàn Quốc"},
-  ];
-  const c1=uid();
-  DB.customers=[
-    {id:c1,name:"Chị Lan (khách quen)",phone:"0977 555 222",address:"Bình Thạnh",note:"Thích son lì"},
-    {id:uid(),name:"Khách lẻ",phone:"",address:"",note:"Khách vãng lai"},
-  ];
-  const p1=uid(),p2=uid(),p3=uid(),p4=uid(),p5=uid();
-  DB.products=[
-    {id:p1,name:"Son kem lì Black Rouge A02",sku:"SON-A02",category:"Son môi",cost:75000,price:145000,stock:24,lowStock:6,supplierId:s2,image:"",note:""},
-    {id:p2,name:"Kem chống nắng Anessa 60ml",sku:"KCN-ANE",category:"Chống nắng",cost:320000,price:480000,stock:8,lowStock:5,supplierId:s2,image:"",note:""},
-    {id:p3,name:"Nước tẩy trang L'Oreal 400ml",sku:"TT-LOR",category:"Tẩy trang",cost:110000,price:189000,stock:4,lowStock:6,supplierId:s1,image:"",note:"Sắp hết"},
-    {id:p4,name:"Mặt nạ giấy Mediheal (hộp 10)",sku:"MN-MED",category:"Mặt nạ",cost:130000,price:220000,stock:15,lowStock:5,supplierId:s2,image:"",note:""},
-    {id:p5,name:"Phấn phủ kiềm dầu Innisfree",sku:"PH-INN",category:"Trang điểm",cost:145000,price:245000,stock:11,lowStock:4,supplierId:s1,image:"",note:""},
-  ];
-  const today=new Date();
-  const d=n=>{const x=new Date(today);x.setDate(x.getDate()-n);return x.toISOString().slice(0,10);};
-  DB.transactions=[
-    {id:uid(),type:"purchase",date:d(40),productId:p1,qty:30,unitPrice:75000,unitCost:75000,partyId:s2,note:"Nhập lô đầu"},
-    {id:uid(),type:"sale",date:d(20),productId:p1,qty:6,unitPrice:145000,unitCost:75000,partyId:c1,note:""},
-    {id:uid(),type:"sale",date:d(12),productId:p2,qty:2,unitPrice:480000,unitCost:320000,partyId:c1,note:""},
-    {id:uid(),type:"sale",date:d(8),productId:p4,qty:3,unitPrice:220000,unitCost:130000,partyId:c1,note:""},
-    {id:uid(),type:"sale",date:d(3),productId:p1,qty:4,unitPrice:145000,unitCost:75000,partyId:c1,note:""},
-    {id:uid(),type:"sale",date:d(1),productId:p5,qty:2,unitPrice:245000,unitCost:145000,partyId:c1,note:""},
-  ];
-  DB.seeded=true;save();
+const ICONS={"son":"💄","môi":"💋","mắt":"👁️","trang điểm":"💅","phấn":"🪞","chống nắng":"☀️","dưỡng da":"🧴","kem dưỡng":"✨","serum":"💧","mặt nạ":"🌸","tẩy trang":"🌿","nước hoa":"🌹","sữa tắm":"🛁","dầu gội":"💆","tóc":"💇"};
+function getIcon(cat){if(!cat)return"✦";const c=cat.toLowerCase();for(const[k,v]of Object.entries(ICONS))if(c.includes(k))return v;return"✦";}
+
+function loadDB(){try{const r=localStorage.getItem(DB_KEY);if(r){const d=JSON.parse(r);if(d&&Array.isArray(d.products)&&d.products.length)return d;}}catch(e){}return null;}
+function saveDB(db){try{localStorage.setItem(DB_KEY,JSON.stringify(db));}catch(e){}}
+
+let cart={},activeCat=null,searchQ="";
+const cartCount=()=>Object.values(cart).reduce((s,q)=>s+q,0);
+const cartTotal=db=>Object.entries(cart).reduce((s,[id,q])=>{const p=(db.products||[]).find(x=>x.id===id);return s+(p?p.price*q:0);},0);
+
+/* Category view */
+function renderCats(){
+  const db=loadDB()||{products:[]};
+  const allProds=(db.products||[]);
+  const cats=[...new Set(allProds.map(p=>p.category).filter(Boolean))].sort();
+  let html=`<div class="cat-card all-card" onclick="openCat('__all__')"><div style="font-size:32px">🛍️</div><div class="cat-name">Tất cả sản phẩm</div><div class="cat-cnt">${allProds.length} sản phẩm</div></div>`;
+  if(!cats.length){html+=`<div style="grid-column:1/-1;text-align:center;padding:24px 0;color:var(--ink-soft)"><div style="font-size:34px;margin-bottom:8px">✦</div><b>Cửa hàng đang cập nhật</b></div>`;}
+  else html+=cats.map(c=>`<div class="cat-card" onclick="openCat('${esc(c)}')"><div style="font-size:32px">${getIcon(c)}</div><div class="cat-name">${esc(c)}</div><div class="cat-cnt">${allProds.filter(p=>p.category===c).length} sản phẩm</div></div>`).join("");
+  document.getElementById("catGrid").innerHTML=html;
+  updateCartUI(db);
 }
 
-/* ======= UTILS ======= */
-const fmt=n=>(Math.round(n||0)).toLocaleString("vi-VN");
-const money=n=>fmt(n)+"₫";
-const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
-const byId=(arr,id)=>arr.find(x=>x.id===id);
-const isMob=()=>window.innerWidth<=720;
-const supplierName=id=>(byId(DB.suppliers,id)||{}).name||"—";
-const customerName=id=>(byId(DB.customers,id)||{}).name||"—";
-const productById=id=>byId(DB.products,id);
-function stockStatus(p){if(p.stock<=0)return{cls:"bad",txt:"Tạm hết hàng"};if(p.stock<=p.lowStock)return{cls:"warn",txt:"Sắp hết"};return{cls:"good",txt:"Còn hàng"};}
-function margin(p){if(!p.price)return 0;return(p.price-p.cost)/p.price*100;}
-function thumbHtml(p,sz=40){if(p.image)return`<img class="thumb" src="${p.image}" alt="" style="width:${sz}px;height:${sz}px">`;return`<div class="thumb ph" style="width:${sz}px;height:${sz}px">✦</div>`;}
-function fmtDate(d){const[y,m,dd]=d.split("-");return`${dd}/${m}/${y}`;}
-
-let toastTm;
-function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTm);toastTm=setTimeout(()=>t.classList.remove("show"),2700);}
-
-/* ======= ROUTER ======= */
-const VIEWS={
-  dashboard:{title:"Tổng quan",sub:"Bức tranh tổng thể cửa hàng",render:renderDashboard},
-  products:{title:"Mặt hàng & tồn kho",sub:"Sản phẩm, giá nhập/bán, tồn kho",render:renderProducts},
-  salesPos:{title:"Bán hàng",sub:"Lập hóa đơn, tính tiền, giảm giá",render:renderSalesPos},
-  purchases:{title:"Nhập hàng",sub:"Nhập kho từ nhà cung cấp",render:renderPurchases},
-  transactions:{title:"Lịch sử giao dịch",sub:"Toàn bộ nhập & bán hàng",render:renderTransactions},
-  suppliers:{title:"Nhà cung cấp",sub:"Nguồn nhập hàng",render:()=>renderPartyList("supplier",DB.suppliers,"nhà cung cấp","☍")},
-  customers:{title:"Khách hàng",sub:"Thông tin khách mua hàng",render:()=>renderPartyList("customer",DB.customers,"khách hàng","☺")},
-  partners:{title:"Đối tác",sub:"Nhà cung cấp & khách hàng",render:renderPartners},
-  categories:{title:"Danh mục hàng",sub:"Phân loại sản phẩm theo nhóm",render:renderCategories},
-  settings:{title:"Cài đặt",sub:"Tài khoản, sao lưu, giao diện",render:renderSettings},
-};
-let current="dashboard", partnerTab="supplier";
-
-function go(view){
-  current=view;
-  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
-  document.querySelectorAll(".bnav-btn").forEach(b=>{
-    const v=b.dataset.view;
-    b.classList.toggle("active",v===view||(view==="suppliers"&&v==="partners")||(view==="customers"&&v==="partners"));
-  });
-  const v=VIEWS[view]||VIEWS.dashboard;
-  document.getElementById("viewTitle").textContent=v.title;
-  document.getElementById("viewSub").textContent=v.sub||"";
-  document.getElementById("topActions").innerHTML="";
-  document.getElementById("content").innerHTML="";
-  updateFAB(view);
-  v.render();
-  window.scrollTo(0,0);
-  closeScrim();
+function openCat(cat){
+  activeCat=cat==="__all__"?null:cat;
+  document.getElementById("catView").classList.add("hide");
+  document.getElementById("prodView").classList.add("show");
+  document.getElementById("backTitle").textContent=cat==="__all__"?"Tất cả sản phẩm":cat;
+  renderProds();window.scrollTo({top:0,behavior:"smooth"});
 }
-document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.view)));
-
-function topBtn(label,cls,fn){const b=document.createElement("button");b.className="btn "+cls;b.innerHTML=label;b.onclick=fn;document.getElementById("topActions").appendChild(b);return b;}
-
-/* FAB behaviour */
-function updateFAB(view){
-  const fab=document.getElementById("fab");
-  if(view==="dashboard"||view==="salesPos"){fab.textContent="＋";fab.title="Lập hóa đơn";fab.onclick=()=>openBillModal();}
-  else if(view==="purchases"||view==="transactions"){fab.textContent="＋";fab.title="Nhập hàng";fab.onclick=()=>openTxnModal("purchase");}
-  else if(view==="products"){fab.textContent="＋";fab.title="Thêm mặt hàng";fab.onclick=()=>openProductModal();topBtn("📷","ghost",()=>scanAndFetchProduct());}
-  else if(view==="categories"){fab.textContent="＋";fab.title="Thêm danh mục";fab.onclick=()=>openCategoryModal();}
-  else if(view==="suppliers"){fab.textContent="＋";fab.title="Thêm nhà cung cấp";fab.onclick=()=>openPartyModal("supplier");}
-  else if(view==="customers"){fab.textContent="＋";fab.title="Thêm khách hàng";fab.onclick=()=>openPartyModal("customer");}
-  else if(view==="partners"){fab.textContent="＋";fab.title="Thêm đối tác";fab.onclick=()=>openPartyModal(partnerTab==="customer"?"customer":"supplier");}
-  else{fab.onclick=null;}
+function backToCats(){
+  activeCat=null;searchQ="";
+  document.getElementById("catView").classList.remove("hide");
+  document.getElementById("prodView").classList.remove("show");
+  const si=document.getElementById("searchIn");if(si)si.value="";
+  window.scrollTo({top:0,behavior:"smooth"});
 }
+window.openCat=openCat;window.backToCats=backToCats;
 
-/* hamburger */
-document.getElementById("menuToggle").onclick=()=>{
-  document.querySelector(".sidebar").classList.toggle("open");
-  document.getElementById("scrim").style.display="block";
-};
-function closeScrim(){const s=document.querySelector(".sidebar");if(s)s.classList.remove("open");document.getElementById("scrim").style.display="none";}
-document.getElementById("scrim").onclick=closeScrim;
-/* sidebar CSS for open state */
-document.head.insertAdjacentHTML("beforeend","<style>.sidebar.open{display:flex!important;position:fixed;left:0;top:0;height:100%;z-index:50;width:236px}</style>");
-
-/* ======= DASHBOARD ======= */
-function computeStats(){
-  const prods=DB.products;
-  const inv=prods.reduce((s,p)=>s+p.cost*p.stock,0);
-  const retail=prods.reduce((s,p)=>s+p.price*p.stock,0);
-  const lowCount=prods.filter(p=>p.stock>0&&p.stock<=p.lowStock).length;
-  const outCount=prods.filter(p=>p.stock<=0).length;
-  const sales=DB.transactions.filter(t=>t.type==="sale");
-  const bills=DB.bills||[];
-  const revenue=sales.reduce((s,t)=>s+t.qty*t.unitPrice,0)+bills.reduce((s,b)=>s+b.total,0);
-  const profit=sales.reduce((s,t)=>s+t.qty*(t.unitPrice-t.unitCost),0)+bills.reduce((s,b)=>s+b.profit,0);
-  const unitsSold=sales.reduce((s,t)=>s+t.qty,0)+bills.reduce((s,b)=>s+b.items.reduce((ss,i)=>ss+i.qty,0),0);
-  return{inv,retail,lowCount,outCount,revenue,profit,unitsSold};
+function doSearch(q){
+  searchQ=q;
+  if(q.trim()){
+    activeCat=null;
+    document.getElementById("catView").classList.add("hide");
+    document.getElementById("prodView").classList.add("show");
+    document.getElementById("backTitle").textContent="Kết quả tìm kiếm";
+    renderProds();
+  } else backToCats();
 }
-function renderDashboard(){
-  if(!isMob()){topBtn("＋ Lập hóa đơn","primary",()=>openBillModal());topBtn("＋ Nhập hàng","ghost",()=>openTxnModal("purchase"));}
-  const s=computeStats();const c=document.getElementById("content");
-  c.innerHTML=`
-    <div class="stat-grid">
-      <div class="stat"><div class="label">💰 Doanh thu</div><div class="val rose">${money(s.revenue)}</div><div class="foot">${fmt(s.unitsSold)} sản phẩm đã bán</div></div>
-      <div class="stat"><div class="label">📈 Lợi nhuận</div><div class="val good">${money(s.profit)}</div><div class="foot">Sau khi trừ giá nhập</div></div>
-      <div class="stat"><div class="label">📦 Giá trị kho</div><div class="val">${money(s.inv)}</div><div class="foot">Bán ra ≈ ${money(s.retail)}</div></div>
-      <div class="stat"><div class="label">⚠️ Cần nhập thêm</div><div class="val">${s.lowCount+s.outCount}</div><div class="foot">${s.outCount} hết · ${s.lowCount} sắp hết</div></div>
+window.doSearch=doSearch;
+
+/* Product view */
+function renderProds(){
+  const db=loadDB()||{products:[]};
+  let list=(db.products||[]);
+  if(activeCat)list=list.filter(p=>p.category===activeCat);
+  if(searchQ){const q=searchQ.toLowerCase();list=list.filter(p=>p.name.toLowerCase().includes(q)||(p.category||"").toLowerCase().includes(q));}
+  document.getElementById("backCnt").textContent=list.length+" sản phẩm";
+  const el=document.getElementById("grid");
+  if(!list.length){el.innerHTML=`<div class="empty"><div class="ico">🔍</div><b>Không tìm thấy sản phẩm</b><p style="font-size:13px;margin-top:4px">Thử tìm từ khoá khác</p></div>`;updateCartUI(db);return;}
+  el.innerHTML=list.map(p=>{
+    const outOfStock=p.stock<=0;
+    const badge=outOfStock?`<div class="pbadge" style="background:#888">Tạm hết hàng</div>`:(p.stock<=p.lowStock?`<div class="pbadge">Sắp hết</div>`:"");
+    return`<div class="pcard"${outOfStock?' style="opacity:.75"':''}>
+    <div class="pimg" style="cursor:pointer" onclick="openProductDetail('${p.id}')">${p.image?`<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">`:`<div class="pimg-ph">${getIcon(p.category)}</div>`}${badge}</div>
+    <div class="pbody" style="cursor:pointer" onclick="openProductDetail('${p.id}')"><div class="pname">${esc(p.name)}</div><div class="pcat">${esc(p.category||"")}</div><div class="pprice">${money(p.price)}</div></div>
+    <div class="pfoot">
+      ${outOfStock
+        ?`<button class="add-btn" disabled style="width:100%;opacity:.5;cursor:not-allowed;background:#aaa;border-color:#aaa">Tạm hết hàng</button>`
+        :`<div class="qty-ctrl"><button onclick="chg('${p.id}',-1)">−</button><span class="qty-val" id="qv_${p.id}">${cart[p.id]||0}</span><button onclick="chg('${p.id}',1)">＋</button></div>
+      <button class="add-btn${cart[p.id]?" ok":""}" id="ab_${p.id}" onclick="add('${p.id}')">${cart[p.id]?"✓ Đã thêm":"Thêm vào giỏ"}</button>`}
     </div>
-    <div class="two-col">
-      <div class="panel"><div class="panel-head"><h2>Doanh thu 6 tháng</h2></div><div class="panel-body" id="revChart"></div></div>
-      <div class="panel"><div class="panel-head"><h2>Bán chạy nhất</h2></div><div class="panel-body" id="topProd"></div></div>
+  </div>`;}).join("");
+  updateCartUI(db);
+}
+
+function openProductDetail(id){
+  const db=loadDB()||{products:[]};
+  const p=(db.products||[]).find(x=>x.id===id);if(!p)return;
+  const outOfStock=p.stock<=0;
+  const stockBadge=outOfStock
+    ?`<span class="pd-stock-bad">⊘ Tạm hết hàng</span>`
+    :p.stock<=(p.lowStock||5)
+      ?`<span class="pd-stock-warn">⚠ Sắp hết · Còn ${p.stock} sản phẩm</span>`
+      :`<span class="pd-stock-ok">✓ Còn hàng · ${p.stock} sản phẩm</span>`;
+  const s=document.getElementById("sheet");s.dataset.view="detail";
+  s.innerHTML=`<div class="sheet-drag"></div>
+    <div class="sheet-head"><h2>Chi tiết sản phẩm</h2><button class="close-btn" onclick="closeSheet()">✕</button></div>
+    <div class="sheet-body" style="padding:0;overflow:auto">
+      <div class="pd-img">${p.image?`<img src="${esc(p.image)}" alt="${esc(p.name)}">`:`<div class="pd-img-ph">${getIcon(p.category)}</div>`}</div>
+      <div style="padding:16px 18px 6px">
+        ${p.category?`<div class="pd-cat-tag">🏷 ${esc(p.category)}</div>`:""}
+        <div class="pd-name">${esc(p.name)}</div>
+        <div class="pd-price">${money(p.price)}</div>
+        ${stockBadge}
+        ${p.sku?`<div style="font-size:12px;color:var(--ink-soft);margin-top:4px">Mã SP: ${esc(p.sku)}</div>`:""}
+        ${p.note?`<div class="pd-note">📝 ${esc(p.note)}</div>`:""}
+      </div>
     </div>
-    <div class="panel"><div class="panel-head"><h2>Cần nhập thêm hàng</h2><button class="btn sm" onclick="go('products')">Xem tất cả</button></div><div class="panel-body" id="lowStockList"></div></div>`;
-  renderRevChart(document.getElementById("revChart"));
-  renderTopProducts(document.getElementById("topProd"));
-  renderLowStock(document.getElementById("lowStockList"));
-}
-function renderRevChart(el){
-  const now=new Date();
-  const months=[];
-  for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:d.toISOString().slice(0,7),lbl:"T"+(d.getMonth()+1)});}
-  const map={};months.forEach(m=>map[m.key]=0);
-  DB.transactions.filter(t=>t.type==="sale").forEach(t=>{const k=t.date.slice(0,7);if(k in map)map[k]+=t.qty*t.unitPrice;});
-  const max=Math.max(1,...months.map(m=>map[m.key]));
-  if(!DB.transactions.filter(t=>t.type==="sale").length){el.innerHTML=`<div class="empty"><div class="big">📊</div>Chưa có dữ liệu bán hàng</div>`;return;}
-  el.innerHTML=`<div class="chart-bars">${months.map(m=>{const v=map[m.key];const h=Math.max(3,v/max*100);return`<div class="cbar-wrap"><div class="cbar-val">${v?fmt(v/1000)+"k":""}</div><div class="cbar-track"><div class="cbar" style="height:${h}%"></div></div><div class="cbar-lbl">${m.lbl}</div></div>`;}).join("")}</div>`;
-}
-function renderTopProducts(el){
-  const agg={};DB.transactions.filter(t=>t.type==="sale").forEach(t=>{if(!agg[t.productId])agg[t.productId]={qty:0,rev:0};agg[t.productId].qty+=t.qty;agg[t.productId].rev+=t.qty*t.unitPrice;});
-  const rows=Object.entries(agg).map(([id,v])=>({p:productById(id),...v})).filter(r=>r.p).sort((a,b)=>b.rev-a.rev).slice(0,5);
-  if(!rows.length){el.innerHTML=`<div class="empty"><div class="big">🏆</div>Chưa có dữ liệu</div>`;return;}
-  const max=rows[0].rev;
-  el.innerHTML=`<div class="top-list">${rows.map((r,i)=>`<div class="top-row"><div class="top-rank">${i+1}</div><div class="grow"><div class="top-name">${esc(r.p.name)}</div><div class="top-meta">${fmt(r.qty)} đã bán · ${money(r.rev)}</div><div class="bar-mini"><span style="width:${r.rev/max*100}%"></span></div></div></div>`).join("")}</div>`;
-}
-function renderLowStock(el){
-  const low=DB.products.filter(p=>p.stock<=p.lowStock).sort((a,b)=>a.stock-b.stock);
-  if(!low.length){el.innerHTML=`<div class="empty"><div class="big">✅</div><h3>Kho ổn định</h3>Không có mặt hàng nào sắp hết.</div>`;return;}
-  if(isMob()){
-    el.innerHTML=`<div class="card-list">${low.map(p=>{const st=stockStatus(p);return`<div class="m-card"><div class="m-card-head">${thumbHtml(p,42)}<div class="grow"><div class="prod-name">${esc(p.name)}</div><div class="prod-sku">${esc(p.sku||"")}</div></div><span class="pill ${st.cls}">${st.txt}</span></div><div class="m-card-body"><div class="m-row"><span>Còn lại</span><b>${fmt(p.stock)}</b></div><div class="m-row"><span>Ngưỡng cảnh báo</span><b>${fmt(p.lowStock)}</b></div></div><div class="m-card-foot"><button class="btn sm primary" onclick="openTxnModal('purchase','${p.id}')">📦 Nhập thêm</button></div></div>`;}).join("")}</div>`;
-    return;
-  }
-  el.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Sản phẩm</th><th class="num">Còn lại</th><th class="num">Ngưỡng</th><th>Trạng thái</th><th></th></tr></thead><tbody>${low.map(p=>{const st=stockStatus(p);return`<tr><td><div class="prod-cell">${thumbHtml(p)}<div><div class="prod-name">${esc(p.name)}</div><div class="prod-sku">${esc(p.sku||"")}</div></div></div></td><td class="num"><b>${fmt(p.stock)}</b></td><td class="num">${fmt(p.lowStock)}</td><td><span class="pill ${st.cls}">${st.txt}</span></td><td class="row-actions"><button class="btn sm primary" onclick="openTxnModal('purchase','${p.id}')">Nhập thêm</button></td></tr>`;}).join("")}</tbody></table></div>`;
-}
-
-/* ======= PRODUCTS ======= */
-let prodSearch="",prodCat="";
-function renderProducts(){
-  if(!isMob()){topBtn("＋ Thêm mặt hàng","primary",()=>openProductModal());topBtn("📷 Quét mã vạch / QR","ghost",()=>scanAndFetchProduct());}
-  const c=document.getElementById("content");
-  const dbCats=(DB.categories||[]).map(c=>c.name);
-  const cats=[...new Set([...dbCats,...DB.products.map(p=>p.category).filter(Boolean)])].sort();
-  c.innerHTML=`<div class="toolbar"><div class="search"><span class="mag">⌕</span><input id="pSearch" placeholder="Tìm sản phẩm..." value="${esc(prodSearch)}"></div><select class="filter" id="pCat"><option value="">Tất cả danh mục</option>${cats.map(x=>`<option ${x===prodCat?"selected":""}>${esc(x)}</option>`).join("")}</select></div><div id="prodTable"></div>`;
-  const draw=()=>{
-    let list=DB.products.slice();
-    if(prodSearch){const q=prodSearch.toLowerCase();list=list.filter(p=>(p.name+" "+(p.sku||"")).toLowerCase().includes(q));}
-    if(prodCat)list=list.filter(p=>p.category===prodCat);
-    list.sort((a,b)=>a.name.localeCompare(b.name,"vi"));
-    const wrap=document.getElementById("prodTable");
-    if(!DB.products.length){wrap.innerHTML=emptyState("✦","Chưa có mặt hàng nào","Thêm sản phẩm mỹ phẩm đầu tiên.","＋ Thêm mặt hàng",()=>openProductModal());return;}
-    if(!list.length){wrap.innerHTML=`<div class="empty"><div class="big">🔍</div>Không tìm thấy mặt hàng phù hợp.</div>`;return;}
-    if(isMob()){
-      wrap.innerHTML=`<div class="card-list">${list.map(p=>{const st=stockStatus(p);const pr=p.price-p.cost;return`<div class="m-card"><div class="m-card-head">${thumbHtml(p,44)}<div class="grow"><div class="prod-name">${esc(p.name)}</div><div class="prod-sku">${esc(p.sku||"—")} · ${esc(p.category||"—")}</div></div><span class="pill ${st.cls}">${st.txt}</span></div><div class="m-card-body"><div class="m-row"><span>Giá nhập</span><b>${money(p.cost)}</b></div><div class="m-row"><span>Giá bán</span><b style="color:var(--ink)">${money(p.price)}</b></div><div class="m-row"><span>Lãi/sản phẩm</span><b style="color:${pr>=0?"var(--good)":"var(--bad)"}">${money(pr)} (${margin(p).toFixed(0)}%)</b></div><div class="m-row"><span>Tồn kho</span><b>${fmt(p.stock)}</b></div></div><div class="m-card-foot"><button class="btn xs" onclick="openQRCode('${p.id}')">QR</button><button class="btn xs" onclick="openProductModal('${p.id}')">✎ Sửa</button><button class="btn xs danger" onclick="delProduct('${p.id}')">🗑</button></div></div>`;}).join("")}</div>`;
-      return;
-    }
-    wrap.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Sản phẩm</th><th>Loại</th><th class="num">Giá nhập</th><th class="num">Giá bán</th><th class="num">Lãi/SP</th><th class="num">Tồn</th><th>Trạng thái</th><th></th></tr></thead><tbody>${list.map(p=>{const st=stockStatus(p);const pr=p.price-p.cost;return`<tr><td><div class="prod-cell">${thumbHtml(p)}<div><div class="prod-name">${esc(p.name)}</div><div class="prod-sku">${esc(p.sku||"—")}</div></div></div></td><td><span class="cat-tag">${esc(p.category||"—")}</span></td><td class="num">${money(p.cost)}</td><td class="num"><b>${money(p.price)}</b></td><td class="num" style="color:${pr>=0?"var(--good)":"var(--bad)"}">${money(pr)}<div class="prod-sku">${margin(p).toFixed(0)}%</div></td><td class="num"><b>${fmt(p.stock)}</b></td><td><span class="pill ${st.cls}">${st.txt}</span></td><td class="row-actions"><button class="icon-btn" style="font-size:11px;font-weight:700" onclick="openQRCode('${p.id}')">QR</button><button class="icon-btn" onclick="openProductModal('${p.id}')">✎</button><button class="icon-btn" onclick="delProduct('${p.id}')">🗑</button></td></tr>`;}).join("")}</tbody></table></div>`;
-  };
-  draw();
-  document.getElementById("pSearch").addEventListener("input",e=>{prodSearch=e.target.value;draw();});
-  document.getElementById("pCat").addEventListener("change",e=>{prodCat=e.target.value;draw();});
-}
-function delProduct(id){
-  const p=productById(id);if(!p)return;
-  const hasTxn=DB.transactions.some(t=>t.productId===id);
-  confirmModal("Xoá mặt hàng?",`Bạn có chắc muốn xoá <b>${esc(p.name)}</b>?${hasTxn?"<br><span class='muted'>Giao dịch cũ vẫn được giữ lại.</span>":""}`,()=>{DB.products=DB.products.filter(x=>x.id!==id);save();toast("Đã xoá mặt hàng");go(current);});
-}
-
-/* ======= TRANSACTIONS ======= */
-let txnFilter="all";
-function renderTransactions(){
-  if(!isMob()){topBtn("＋ Bán hàng","primary",()=>openTxnModal("sale"));topBtn("＋ Nhập hàng","ghost",()=>openTxnModal("purchase"));}
-  const c=document.getElementById("content");
-  c.innerHTML=`<div class="toolbar"><select class="filter" id="txnF"><option value="all">Tất cả giao dịch</option><option value="sale">Chỉ bán hàng</option><option value="purchase">Chỉ nhập hàng</option></select></div><div id="txnTable"></div>`;
-  document.getElementById("txnF").value=txnFilter;
-  const draw=()=>{
-    let list=DB.transactions.slice().sort((a,b)=>(b.date+b.id).localeCompare(a.date+a.id));
-    if(txnFilter!=="all")list=list.filter(t=>t.type===txnFilter);
-    const wrap=document.getElementById("txnTable");
-    if(!DB.transactions.length){wrap.innerHTML=emptyState("⇄","Chưa có giao dịch","Ghi nhận bán hoặc nhập hàng đầu tiên.","＋ Bán hàng",()=>openTxnModal("sale"));return;}
-    if(!list.length){wrap.innerHTML=`<div class="empty"><div class="big">🔍</div>Không có giao dịch phù hợp.</div>`;return;}
-    if(isMob()){
-      wrap.innerHTML=`<div class="card-list">${list.map(t=>{
-        const p=productById(t.productId);const total=t.qty*t.unitPrice;const profit=t.type==="sale"?t.qty*(t.unitPrice-t.unitCost):0;
-        return`<div class="txn-card"><div class="txn-card-top"><span class="pill ${t.type}">${t.type==="sale"?"Bán":"Nhập"}</span><div class="grow"><div class="prod-name" style="font-size:14px">${esc(p?p.name:"(đã xoá)")}</div><div class="txn-card-meta">${fmtDate(t.date)} · ${t.type==="sale"?esc(customerName(t.partyId)):esc(supplierName(t.partyId))}</div></div><button class="icon-btn" style="width:32px;height:32px;font-size:13px" onclick="delTxn('${t.id}')">🗑</button></div><div class="txn-card-nums"><div><span class="lbl">Số lượng</span><b>${fmt(t.qty)}</b></div><div><span class="lbl">Đơn giá</span><b>${money(t.unitPrice)}</b></div><div><span class="lbl">Thành tiền</span><b>${money(total)}</b></div>${t.type==="sale"?`<div><span class="lbl">Lãi</span><b style="color:${profit>=0?"var(--good)":"var(--bad)"}">${money(profit)}</b></div>`:""}</div>${t.note?`<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">${esc(t.note)}</div>`:""}</div>`;
-      }).join("")}</div>`;
-      return;
-    }
-    wrap.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Loại</th><th>Sản phẩm</th><th class="num">SL</th><th class="num">Đơn giá</th><th class="num">Thành tiền</th><th class="num">Lãi</th><th>Đối tác</th><th></th></tr></thead><tbody>${list.map(t=>{const p=productById(t.productId);const total=t.qty*t.unitPrice;const profit=t.type==="sale"?t.qty*(t.unitPrice-t.unitCost):0;return`<tr><td>${fmtDate(t.date)}</td><td><span class="pill ${t.type}">${t.type==="sale"?"Bán":"Nhập"}</span></td><td><div class="prod-name">${esc(p?p.name:"(đã xoá)")}</div>${t.note?`<div class="prod-sku">${esc(t.note)}</div>`:""}</td><td class="num">${fmt(t.qty)}</td><td class="num">${money(t.unitPrice)}</td><td class="num"><b>${money(total)}</b></td><td class="num" style="color:${t.type==="sale"?(profit>=0?"var(--good)":"var(--bad)"):"var(--ink-soft)"}">${t.type==="sale"?money(profit):"—"}</td><td>${t.type==="sale"?esc(customerName(t.partyId)):esc(supplierName(t.partyId))}</td><td class="row-actions"><button class="icon-btn" onclick="delTxn('${t.id}')">🗑</button></td></tr>`;}).join("")}</tbody></table></div>`;
-  };
-  draw();
-  document.getElementById("txnF").addEventListener("change",e=>{txnFilter=e.target.value;draw();});
-}
-function delTxn(id){
-  const t=byId(DB.transactions,id);if(!t)return;
-  confirmModal("Xoá giao dịch?","Xoá giao dịch này sẽ hoàn lại tồn kho. Tiếp tục?",()=>{
-    const p=productById(t.productId);
-    if(p){if(t.type==="sale")p.stock+=t.qty;else{p.stock-=t.qty;if(p.stock<0)p.stock=0;}}
-    DB.transactions=DB.transactions.filter(x=>x.id!==id);save();toast("Đã xoá giao dịch");go(current);
-  });
-}
-
-/* ======= BÁN HÀNG (POS) ======= */
-let billCart=[], billDiscType="percent";
-
-function renderSalesPos(){
-  if(!isMob())topBtn("＋ Lập hóa đơn","primary",()=>openBillModal());
-  const c=document.getElementById("content");
-  const bills=DB.bills||[];
-  const legacySales=DB.transactions.filter(t=>t.type==="sale");
-  const todayStr=new Date().toISOString().slice(0,10);
-  const todayRev=bills.filter(b=>b.date===todayStr).reduce((s,b)=>s+b.total,0)+legacySales.filter(t=>t.date===todayStr).reduce((s,t)=>s+t.qty*t.unitPrice,0);
-  const totalRev=bills.reduce((s,b)=>s+b.total,0)+legacySales.reduce((s,t)=>s+t.qty*t.unitPrice,0);
-  const totalProfit=bills.reduce((s,b)=>s+b.profit,0)+legacySales.reduce((s,t)=>s+t.qty*(t.unitPrice-t.unitCost),0);
-  c.innerHTML=`
-    <div class="stat-grid">
-      <div class="stat"><div class="label">📅 Hôm nay</div><div class="val rose">${money(todayRev)}</div><div class="foot">${fmtDate(todayStr)}</div></div>
-      <div class="stat"><div class="label">💰 Tổng doanh thu</div><div class="val rose">${money(totalRev)}</div></div>
-      <div class="stat"><div class="label">📋 Số hóa đơn</div><div class="val">${fmt(bills.length+legacySales.length)}</div></div>
-    </div>
-    <div class="panel">
-      <div class="panel-head"><h2>Lịch sử hóa đơn</h2>${!isMob()?`<button class="btn primary" onclick="openBillModal()">＋ Lập hóa đơn</button>`:""}</div>
-      <div id="billList"></div>
+    <div class="pd-foot">
+      ${outOfStock
+        ?`<button class="add-btn" disabled style="flex:1;height:46px;border-radius:12px;font-size:14px;opacity:.5;cursor:not-allowed;background:#aaa;border:0">Tạm hết hàng</button>`
+        :`<div class="qty-ctrl" style="height:46px"><button onclick="chgDetail('${p.id}',-1)" style="width:40px;height:46px;font-size:18px">−</button><span class="qty-val" id="pdQv" style="min-width:36px;font-size:16px">${cart[id]||0}</span><button onclick="chgDetail('${p.id}',1)" style="width:40px;height:46px;font-size:18px">＋</button></div>
+        <button class="btn primary${cart[id]?" ok":""}" id="pdAddBtn" onclick="addDetail('${p.id}')" style="flex:1;font-size:14px">${cart[id]?"✓ Đã thêm ("+(cart[id]||0)+")":"🛒 Thêm vào giỏ"}</button>`}
     </div>`;
-  let salePeriod="all";
-  function drawBillHistory(){
-    let all=[
-      ...bills.map(b=>({...b,_isBill:true})),
-      ...legacySales.map(t=>({...t,_isBill:false,total:t.qty*t.unitPrice,profit:t.qty*(t.unitPrice-t.unitCost),items:[{productId:t.productId,qty:t.qty,unitPrice:t.unitPrice,unitCost:t.unitCost}]}))
-    ].sort((a,b)=>(b.date+b.id).localeCompare(a.date+a.id));
-    const today=new Date().toISOString().slice(0,10);
-    const wk=new Date(Date.now()-6*86400000).toISOString().slice(0,10);
-    const mo=new Date().toISOString().slice(0,8)+"01";
-    if(salePeriod==="today")all=all.filter(b=>b.date===today);
-    else if(salePeriod==="week")all=all.filter(b=>b.date>=wk);
-    else if(salePeriod==="month")all=all.filter(b=>b.date>=mo);
-    const wrap=document.getElementById("billList");
-    if(!all.length){wrap.innerHTML=`<div class="panel-body">${emptyState("💰","Không có hóa đơn","Tạo hóa đơn đầu tiên.","＋ Lập hóa đơn",()=>openBillModal())}</div>`;return;}
-    const sumTotal=all.reduce((s,b)=>s+b.total,0);
-    const sumProfit=all.reduce((s,b)=>s+b.profit,0);
-    if(isMob()){
-      wrap.innerHTML=`<div style="padding:9px 12px;background:var(--surface-2);font-size:13px;display:flex;gap:12px;border-bottom:1px solid var(--line)"><b>${all.length} hóa đơn</b><span style="margin-left:auto">Tổng: <b style="color:var(--rose-deep)">${money(sumTotal)}</b></span></div><div class="card-list" style="padding:12px">${all.map(b=>{
-        const cust=byId(DB.customers,b.customerId||b.partyId);
-        const custN=(cust||{}).name||"Khách lẻ";
-        const pts=b._isBill&&cust?(cust.pointsHistory||[]).find(h=>h.billId===b.id):null;
-        const prodSumm=b._isBill?`${b.items.length} sản phẩm`:`${(productById(b.items[0].productId)||{}).name||"(đã xoá)"} ×${b.items[0].qty}`;
-        return`<div class="txn-card"><div class="txn-card-top"><span class="pill sale">Bán</span><div class="grow"><div class="prod-name" style="font-size:14px">${esc(prodSumm)}</div><div class="txn-card-meta">${fmtDate(b.date)} · ${esc(custN)}</div></div><button class="icon-btn" style="width:32px;height:32px;font-size:13px" onclick="${b._isBill?`delBill('${b.id}')`:`delTxn('${b.id}')`}">🗑</button></div><div class="txn-card-nums">${b.discount?`<div><span class="lbl">Giảm</span><b style="color:var(--warn)">-${b.discountType==="percent"?b.discount+"%":money(b.discount)}</b></div>`:""}<div><span class="lbl">Thành tiền</span><b>${money(b.total)}</b></div>${pts?`<div><span class="lbl">Tích điểm</span><b style="color:#b07d00">+${pts.earned}⭐</b></div>`:""}</div>${b.note?`<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">${esc(b.note)}</div>`:""}</div>`;
-      }).join("")}</div>`;
-      return;
-    }
-    wrap.innerHTML=`<div class="table-wrap" style="border:0;border-radius:0;box-shadow:none"><table><thead><tr><th>Ngày</th><th>Sản phẩm</th><th>Khách hàng</th><th class="num">Giảm</th><th class="num">Thành tiền</th><th class="num">Điểm</th><th></th></tr></thead><tbody>${all.map(b=>{
-      const cust=byId(DB.customers,b.customerId||b.partyId);
-      const custN=(cust||{}).name||"Khách lẻ";
-      const pts=b._isBill&&cust?(cust.pointsHistory||[]).find(h=>h.billId===b.id):null;
-      const prodSumm=b._isBill?b.items.map(i=>`${(productById(i.productId)||{}).name||"?"} ×${i.qty}`).join(", "):`${(productById(b.items[0].productId)||{}).name||"(đã xoá)"} ×${b.items[0].qty}`;
-      return`<tr><td>${fmtDate(b.date)}</td><td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(prodSumm)}">${esc(prodSumm)}</td><td>${esc(custN)}</td><td class="num">${b.discount?(b.discountType==="percent"?b.discount+"%":money(b.discount)):"—"}</td><td class="num"><b style="color:var(--rose-deep)">${money(b.total)}</b></td><td class="num">${pts?`<span class="pts-badge">+${pts.earned}⭐</span>`:"—"}</td><td class="row-actions"><button class="icon-btn" onclick="${b._isBill?`delBill('${b.id}')`:`delTxn('${b.id}')`}">🗑</button></td></tr>`;
-    }).join("")}<tr style="background:var(--surface-2);font-weight:700"><td colspan="4" style="padding:12px 13px">Tổng (${all.length} hóa đơn)</td><td class="num" style="color:var(--rose-deep)">${money(sumTotal)}</td><td colspan="2"></td></tr></tbody></table></div>`;
-  }
-  // Filter toolbar
-  document.getElementById("billList").insertAdjacentHTML("beforebegin",`<div class="toolbar" style="padding:12px 16px 0"><select class="filter" id="salePeriodF"><option value="all">Tất cả thời gian</option><option value="today">Hôm nay</option><option value="week">7 ngày qua</option><option value="month">Tháng này</option></select></div>`);
-  document.getElementById("salePeriodF").value=salePeriod;
-  document.getElementById("salePeriodF").onchange=e=>{salePeriod=e.target.value;drawBillHistory();};
-  drawBillHistory();
+  document.getElementById("overlay").classList.add("show");
 }
-
-/* ======= NHẬP HÀNG ======= */
-function renderPurchases(){
-  if(!isMob())topBtn("＋ Nhập hàng","primary",()=>openTxnModal("purchase"));
-  const c=document.getElementById("content");
-  const list=DB.transactions.filter(t=>t.type==="purchase").slice().sort((a,b)=>(b.date+b.id).localeCompare(a.date+a.id));
-  const totalCost=list.reduce((s,t)=>s+t.qty*t.unitPrice,0);
-  c.innerHTML=`
-    <div class="stat-grid">
-      <div class="stat"><div class="label">📦 Tổng lần nhập</div><div class="val">${fmt(list.length)}</div></div>
-      <div class="stat"><div class="label">💵 Tổng tiền nhập</div><div class="val">${money(totalCost)}</div></div>
-    </div>
-    <div class="panel">
-      <div class="panel-head"><h2>Lịch sử nhập hàng</h2>${!isMob()?`<button class="btn primary" onclick="openTxnModal('purchase')">＋ Nhập hàng</button>`:""}</div>
-      <div id="purchaseList"></div>
-    </div>`;
-  const wrap=document.getElementById("purchaseList");
-  if(!list.length){wrap.innerHTML=`<div class="panel-body">${emptyState("📦","Chưa có lần nhập hàng","Ghi nhận nhập kho đầu tiên.","＋ Nhập hàng",()=>openTxnModal("purchase"))}</div>`;return;}
-  if(isMob()){
-    wrap.innerHTML=`<div class="card-list" style="padding:12px">${list.map(t=>{const p=productById(t.productId);const total=t.qty*t.unitPrice;return`<div class="txn-card"><div class="txn-card-top"><span class="pill purchase">Nhập</span><div class="grow"><div class="prod-name" style="font-size:14px">${esc(p?p.name:"(đã xoá)")}</div><div class="txn-card-meta">${fmtDate(t.date)} · ${esc(supplierName(t.partyId))}</div></div><button class="icon-btn" style="width:32px;height:32px;font-size:13px" onclick="delTxn('${t.id}')">🗑</button></div><div class="txn-card-nums"><div><span class="lbl">Số lượng</span><b>${fmt(t.qty)}</b></div><div><span class="lbl">Đơn giá</span><b>${money(t.unitPrice)}</b></div><div><span class="lbl">Thành tiền</span><b>${money(total)}</b></div></div>${t.note?`<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">${esc(t.note)}</div>`:""}</div>`;}).join("")}</div>`;
-    return;
-  }
-  wrap.innerHTML=`<div class="table-wrap" style="border:0;border-radius:0;box-shadow:none"><table><thead><tr><th>Ngày</th><th>Sản phẩm</th><th class="num">SL</th><th class="num">Đơn giá</th><th class="num">Thành tiền</th><th>Nhà cung cấp</th><th></th></tr></thead><tbody>${list.map(t=>{const p=productById(t.productId);const total=t.qty*t.unitPrice;return`<tr><td>${fmtDate(t.date)}</td><td><div class="prod-name">${esc(p?p.name:"(đã xoá)")}</div>${t.note?`<div class="prod-sku">${esc(t.note)}</div>`:""}</td><td class="num">${fmt(t.qty)}</td><td class="num">${money(t.unitPrice)}</td><td class="num"><b>${money(total)}</b></td><td>${esc(supplierName(t.partyId))}</td><td class="row-actions"><button class="icon-btn" onclick="delTxn('${t.id}')">🗑</button></td></tr>`;}).join("")}</tbody></table></div>`;
+function chgDetail(id,d){
+  const db=loadDB()||{products:[]};const p=(db.products||[]).find(x=>x.id===id);const max=p?p.stock:99;
+  const n=Math.max(0,Math.min(max,(cart[id]||0)+d));
+  if(n===0)delete cart[id];else cart[id]=n;
+  const q=cart[id]||0;
+  const qv=document.getElementById("pdQv");if(qv)qv.textContent=q;
+  const ab=document.getElementById("pdAddBtn");if(ab){ab.textContent=q>0?"✓ Đã thêm ("+q+")":"🛒 Thêm vào giỏ";ab.classList.toggle("ok",q>0);}
+  updateCartUI(db);updateCard(id);
 }
-
-/* ======= HÓA ĐƠN (BILL MODAL) ======= */
-function openBillModal(){
-  if(!DB.products.length){toast("Hãy thêm mặt hàng trước");go("products");return;}
-  billCart=[];billDiscType="percent";
-  _renderBillModal();
-}
-function _renderBillModal(){
-  const custOpts=`<option value="">— Khách lẻ —</option>`+DB.customers.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("");
-  const prodOpts=DB.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"vi")).map(p=>`<option value="${p.id}">${esc(p.name)} (còn ${p.stock})</option>`).join("");
-  mountModal(`<div class="modal" style="max-width:580px">
-    <div class="modal-head"><h2>💰 Lập hóa đơn</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
-    <div class="modal-body">
-      <div class="grid-2">
-        <div class="field"><label>Ngày</label><input id="bDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
-        <div class="field"><label>Khách hàng</label><select id="bCust" onchange="onBillCustChange()">${custOpts}</select></div>
-      </div>
-      <div class="field">
-        <label>Số điện thoại tích điểm <span class="hint">(nhập SĐT để tự tìm khách hàng)</span></label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="bPhone" type="tel" inputmode="tel" placeholder="0901 234 567" style="flex:1" oninput="lookupPhone(this.value)">
-          <button class="btn sm ghost" onclick="addCustFromPhone()" style="white-space:nowrap">＋ Thêm KH</button>
-        </div>
-        <div id="bPhoneBox" style="margin-top:6px"></div>
-      </div>
-      <div id="billCartWrap"></div>
-      <div style="margin-top:12px">
-        <div class="field">
-          <label>Giảm giá</label>
-          <div style="display:flex;gap:8px;align-items:center">
-            <div class="disc-toggle"><button id="dPct" class="active" onclick="setDiscType('percent')">%</button><button id="dAmt" onclick="setDiscType('amount')">₫</button></div>
-            <input id="bDisc" type="number" min="0" value="0" inputmode="numeric" placeholder="0" style="flex:1" oninput="updateBillSummary()">
-          </div>
-        </div>
-        <div class="field"><label>Ghi chú</label><input id="bNote" placeholder="Không bắt buộc"></div>
-      </div>
-      <div class="bill-summary" id="billSummary"></div>
-    </div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal()">Huỷ</button><button class="btn primary" id="saveBillBtn" style="flex:1">💾 Lưu hóa đơn</button></div>
-  </div>`);
-  renderBillCart();
-  document.getElementById("saveBillBtn").onclick=saveBill;
-}
-function lookupPhone(phone){
-  const box=document.getElementById("bPhoneBox");
-  const sel=document.getElementById("bCust");
-  if(!box)return;
-  const clean=phone.replace(/\s|-/g,"");
-  if(!clean||clean.length<6){box.innerHTML="";return;}
-  const cust=DB.customers.find(c=>c.phone&&c.phone.replace(/\s|-/g,"").includes(clean));
-  if(cust){
-    if(sel)sel.value=cust.id;
-    box.innerHTML=`<div class="pts-info-box">⭐ <b>${esc(cust.name)}</b> · Điểm hiện có: <span class="pts-badge">⭐ ${fmt(cust.points||0)} điểm</span></div>`;
-  } else {
-    box.innerHTML=`<div style="font-size:12px;color:var(--ink-soft);margin-top:2px">Không tìm thấy — bấm <b>＋ Thêm KH</b> để tạo mới.</div>`;
-  }
-}
-function onBillCustChange(){
-  const sel=document.getElementById("bCust");
-  const box=document.getElementById("bPhoneBox");
-  if(!sel||!box)return;
-  const cust=byId(DB.customers,sel.value);
-  if(cust){
-    const ph=document.getElementById("bPhone");
-    if(ph&&!ph.value&&cust.phone)ph.value=cust.phone;
-    box.innerHTML=`<div class="pts-info-box">⭐ <b>${esc(cust.name)}</b> · Điểm hiện có: <span class="pts-badge">⭐ ${fmt(cust.points||0)} điểm</span></div>`;
-  } else {
-    box.innerHTML="";
-  }
-}
-function addCustFromPhone(){
-  const ph=document.getElementById("bPhone");
-  const phone=ph?ph.value.trim():"";
-  openPartyModal("customer",null,phone,id=>{
-    const sel=document.getElementById("bCust");
-    if(sel){
-      // rebuild options
-      const opts=`<option value="">— Khách lẻ —</option>`+DB.customers.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("");
-      sel.innerHTML=opts;
-      sel.value=id;
-      onBillCustChange();
-    }
-  });
-}
-function setDiscType(type){
-  billDiscType=type;
-  document.getElementById("dPct").classList.toggle("active",type==="percent");
-  document.getElementById("dAmt").classList.toggle("active",type==="amount");
-  updateBillSummary();
-}
-function billAddItem(){
-  const p=productById(document.getElementById("bProd").value);
-  if(!p){toast("Chọn sản phẩm");return;}
-  const qty=Math.max(1,+document.getElementById("bQty").value||1);
-  const unitPrice=+document.getElementById("bUPrice").value||p.price;
-  const existing=billCart.find(i=>i.productId===p.id);
-  if(existing){existing.qty+=qty;existing.unitPrice=unitPrice;}
-  else billCart.push({productId:p.id,qty,unitPrice,unitCost:p.cost});
-  // clamp to stock
-  const totalQty=billCart.filter(i=>i.productId===p.id).reduce((s,i)=>s+i.qty,0);
-  if(totalQty>p.stock){const ci=billCart.find(i=>i.productId===p.id);if(ci)ci.qty=Math.max(1,p.stock-billCart.filter(i=>i.productId===p.id&&i!==ci).reduce((s,i)=>s+i.qty,0));toast(`⚠️ Kho chỉ còn ${p.stock}`);}
-  document.getElementById("bQty").value=1;
-  renderBillCart();
-}
-function billScanQR(){
-  openQRScanner(code=>{
-    const found=DB.products.find(p=>p.id===code||(p.sku&&p.sku===code));
-    _renderBillModal();
-    if(found){
-      const existing=billCart.find(i=>i.productId===found.id);
-      if(existing&&existing.qty<found.stock){existing.qty++;renderBillCart();toast(`✓ +1 ${found.name}`);}
-      else if(!existing){billCart.push({productId:found.id,qty:1,unitPrice:found.price,unitCost:found.cost});renderBillCart();toast(`✓ Đã thêm: ${found.name}`);}
-      else toast(`⚠️ Kho chỉ còn ${found.stock}`);
-    } else toast("Không tìm thấy sản phẩm với mã QR này");
-  });
-}
-function billPickProduct(){
-  const prods=DB.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"vi"));
-  mountModal(`<div class="modal" style="max-width:580px">
-    <div class="modal-head"><h2>📋 Chọn sản phẩm</h2><button class="icon-btn" onclick="_renderBillModal()">✕</button></div>
-    <div class="modal-body" style="padding-bottom:8px">
-      <div class="search" style="margin-bottom:14px"><span class="mag">🔍</span><input id="ppQ" placeholder="Tìm tên, loại sản phẩm..." oninput="filterPickerProds(this.value)" autocomplete="off"></div>
-      <div id="ppGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;max-height:55vh;overflow-y:auto;padding-bottom:4px"></div>
-    </div>
-    <div class="modal-foot"><button class="btn primary" style="flex:1" onclick="_renderBillModal()">✓ Xong (${billCart.length} mặt hàng)</button></div>
-  </div>`);
-  renderPickerGrid(prods);
-}
-function filterPickerProds(q){
-  const ql=q.toLowerCase();
-  const prods=DB.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"vi"))
-    .filter(p=>!ql||(p.name||"").toLowerCase().includes(ql)||(p.category||"").toLowerCase().includes(ql)||(p.sku||"").toLowerCase().includes(ql));
-  renderPickerGrid(prods);
-}
-function renderPickerGrid(prods){
-  const grid=document.getElementById("ppGrid");if(!grid)return;
-  if(!prods.length){grid.innerHTML=`<div class="empty" style="grid-column:1/-1;padding:20px"><p class="muted">Không tìm thấy</p></div>`;return;}
-  grid.innerHTML=prods.map(p=>{
-    const inCart=billCart.find(i=>i.productId===p.id);
-    const out=p.stock<=0;
-    return`<div style="background:var(--surface);border:2px solid ${inCart?"var(--rose)":"var(--line)"};border-radius:12px;padding:10px;cursor:${out?"default":"pointer"};opacity:${out?.6:1};transition:.12s" ${out?"":` onclick="billAddFromPicker('${p.id}')"`}>
-      <div style="font-weight:600;font-size:13px;line-height:1.35;margin-bottom:3px">${esc(p.name)}</div>
-      <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:5px">${esc(p.category||"")}</div>
-      <div style="font-weight:700;color:var(--rose-deep);font-size:15px">${money(p.price)}</div>
-      <div style="font-size:11.5px;color:${p.stock<=p.lowStock?"var(--warn)":"var(--ink-soft)"};margin-top:2px">Còn ${p.stock}</div>
-      ${inCart?`<div style="margin-top:7px;display:flex;align-items:center;gap:6px">
-        <button style="width:26px;height:26px;border:1px solid var(--line);background:var(--surface-2);border-radius:7px;cursor:pointer;font-size:16px;font-weight:700;line-height:1" onclick="event.stopPropagation();billPickQty('${p.id}',-1)">−</button>
-        <span style="font-weight:700;font-size:14px;min-width:20px;text-align:center">${inCart.qty}</span>
-        <button style="width:26px;height:26px;border:1px solid var(--line);background:var(--surface-2);border-radius:7px;cursor:pointer;font-size:16px;font-weight:700;line-height:1" onclick="event.stopPropagation();billPickQty('${p.id}',1)">＋</button>
-        <span style="font-size:12px;color:var(--rose-deep);margin-left:2px">${money(inCart.qty*inCart.unitPrice)}</span>
-      </div>`:`<div style="margin-top:8px;background:var(--rose);color:#fff;border-radius:8px;padding:5px 8px;font-size:12px;font-weight:700;text-align:center">${out?"Hết hàng":"＋ Thêm"}</div>`}
-    </div>`;
-  }).join("");
-}
-function billAddFromPicker(productId){
-  const p=productById(productId);if(!p||p.stock<=0)return;
-  const existing=billCart.find(i=>i.productId===p.id);
-  if(existing){if(existing.qty<p.stock)existing.qty++;else{toast(`⚠️ Kho chỉ còn ${p.stock}`);return;}}
-  else billCart.push({productId:p.id,qty:1,unitPrice:p.price,unitCost:p.cost});
-  filterPickerProds(document.getElementById("ppQ")?.value||"");
-  // update Xong button count
-  const xongBtn=document.querySelector(".modal-foot .btn.primary");
-  if(xongBtn)xongBtn.textContent=`✓ Xong (${billCart.reduce((s,i)=>s+i.qty,0)} sản phẩm)`;
-}
-function billPickQty(productId,delta){
-  const item=billCart.find(i=>i.productId===productId);if(!item)return;
-  const p=productById(productId);
-  item.qty+=delta;
-  if(item.qty<=0){billCart=billCart.filter(i=>i.productId!==productId);}
-  else if(p&&item.qty>p.stock){item.qty=p.stock;toast(`⚠️ Kho chỉ còn ${p.stock}`);}
-  filterPickerProds(document.getElementById("ppQ")?.value||"");
-  const xongBtn=document.querySelector(".modal-foot .btn.primary");
-  if(xongBtn)xongBtn.textContent=`✓ Xong (${billCart.reduce((s,i)=>s+i.qty,0)} sản phẩm)`;
-}
-function billRemoveItem(idx){billCart.splice(idx,1);renderBillCart();}
-function billUpdateQty(idx,val){
-  const item=billCart[idx];if(!item)return;
-  const p=productById(item.productId);
-  item.qty=Math.max(1,+val||1);
-  if(p&&item.qty>p.stock){item.qty=p.stock;toast(`Kho chỉ còn ${p.stock}`);}
-  updateBillSummary();
-  // re-render price cell
-  const cell=document.getElementById("bcell_"+idx);
-  if(cell)cell.textContent=money(item.qty*item.unitPrice);
-}
-function renderBillCart(){
-  const wrap=document.getElementById("billCartWrap");if(!wrap)return;
-  const addRow=`<tr style="background:var(--surface-2)">
-    <td colspan="4" style="padding:10px 12px;text-align:center">
-      <button class="btn ghost" onclick="billPickProduct()" style="margin-right:8px;font-size:13px">📋 Chọn sản phẩm</button>
-      <button class="btn ghost" onclick="billScanQR()" style="font-size:13px">📷 Quét mã vạch / QR</button>
-    </td>
-  </tr>`;
-  wrap.innerHTML=`<div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:2px">
-    <table class="bill-cart-table">
-      <thead><tr><th>Sản phẩm</th><th style="text-align:center">SL</th><th class="r">Thành tiền</th><th style="width:80px"></th></tr></thead>
-      <tbody>
-        ${billCart.map((item,i)=>{
-          const p=productById(item.productId);
-          return`<tr><td><div style="font-weight:600;font-size:13px">${esc(p?p.name:"?")}</div><div style="font-size:12px;color:var(--ink-soft)">${money(item.unitPrice)}/cái</div></td><td style="width:72px;text-align:center"><input type="number" min="1" value="${item.qty}" style="width:60px;text-align:center;padding:5px 4px;border:1px solid var(--line);border-radius:7px;font-size:14px;font-weight:600;background:var(--bg);color:var(--ink)" onchange="billUpdateQty(${i},this.value)"></td><td class="r" id="bcell_${i}" style="font-weight:700;font-variant-numeric:tabular-nums">${money(item.qty*item.unitPrice)}</td><td style="width:36px;padding:4px 6px;text-align:center"><button style="width:28px;height:28px;border:0;background:transparent;color:var(--bad);cursor:pointer;font-size:16px;border-radius:6px;line-height:1" onclick="billRemoveItem(${i})">✕</button></td></tr>`;
-        }).join("")}
-        ${addRow}
-      </tbody>
-    </table>
-  </div>`;
-  updateBillSummary();
-}
-function onBillProdSelectChange(){
-  const sel=document.getElementById("bProd");
-  const pi=document.getElementById("bUPrice");
-  if(!sel||!pi)return;
-  const p=productById(sel.value);if(p)pi.value=p.price;
-}
-function getBillCalc(){
-  const subtotal=billCart.reduce((s,i)=>s+i.qty*i.unitPrice,0);
-  const d=+((document.getElementById("bDisc")||{}).value)||0;
-  const discAmt=billDiscType==="percent"?Math.round(subtotal*d/100):d;
-  const total=Math.max(0,subtotal-discAmt);
-  const cost=billCart.reduce((s,i)=>s+i.qty*i.unitCost,0);
-  return{subtotal,discAmt,total,profit:total-cost};
-}
-function updateBillSummary(){
-  const el=document.getElementById("billSummary");if(!el)return;
-  if(!billCart.length){el.innerHTML="";return;}
-  const {subtotal,discAmt,total,profit}=getBillCalc();
-  el.innerHTML=`<div class="s-row"><span style="color:var(--ink-soft)">Tạm tính:</span><span>${money(subtotal)}</span></div>${discAmt?`<div class="s-row" style="color:var(--warn)"><span>Giảm giá:</span><span>-${money(discAmt)}</span></div>`:""}<div class="s-row s-total"><span>Tổng cộng:</span><span style="color:var(--rose-deep)">${money(total)}</span></div>`;
-}
-function saveBill(){
-  if(!billCart.length){toast("Chưa có sản phẩm trong hóa đơn");return;}
-  const {subtotal,discAmt,total,profit}=getBillCalc();
-  const d=+document.getElementById("bDisc").value||0;
-  for(const item of billCart){const p=productById(item.productId);if(p)p.stock=Math.max(0,p.stock-item.qty);}
-  if(!DB.bills)DB.bills=[];
-  DB.bills.push({id:uid(),date:document.getElementById("bDate").value||new Date().toISOString().slice(0,10),customerId:document.getElementById("bCust").value,items:billCart.map(i=>({...i})),discount:d,discountType:billDiscType,note:document.getElementById("bNote").value.trim(),subtotal,discAmt,total,profit});
-  billCart=[];
-  // Tích điểm cho khách hàng (1 điểm / 10,000₫)
-  const custId=document.getElementById("bCust").value;
-  let toastMsg=`✓ Đã lưu hóa đơn ${money(total)}`;
-  if(custId){
-    const cust=byId(DB.customers,custId);
-    if(cust){
-      const earned=Math.floor(total/10000);
-      cust.points=(cust.points||0)+earned;
-      if(!cust.pointsHistory)cust.pointsHistory=[];
-      cust.pointsHistory.push({date:document.getElementById("bDate").value,billId:DB.bills[DB.bills.length-1].id,earned,balance:cust.points});
-      if(earned>0)toastMsg+=` · Tích +${fmt(earned)} điểm`;
-    }
-  }
-  save();closeModal();toast(toastMsg);go(current);
-}
-function delBill(id){
-  const b=byId(DB.bills||[],id);if(!b)return;
-  confirmModal("Xoá hóa đơn?","Xoá sẽ hoàn lại tồn kho cho các sản phẩm. Tiếp tục?",()=>{
-    for(const item of b.items){const p=productById(item.productId);if(p)p.stock+=item.qty;}
-    DB.bills=(DB.bills||[]).filter(x=>x.id!==id);
-    save();toast("Đã xoá hóa đơn");go(current);
-  });
-}
-
-/* ======= PARTNERS COMBINED (mobile) ======= */
-function renderPartners(){
-  if(!isMob()){go("suppliers");return;}
-  if(!isMob())topBtn("＋ Thêm","primary",()=>openPartyModal(partnerTab));
-  const c=document.getElementById("content");
-  c.innerHTML=`<div class="seg-tabs"><button class="seg-tab ${partnerTab==="supplier"?"active":""}" id="ptab_s">☍ Nhà cung cấp (${DB.suppliers.length})</button><button class="seg-tab ${partnerTab==="customer"?"active":""}" id="ptab_c">☺ Khách hàng (${DB.customers.length})</button></div><div id="partnerBody"></div>`;
-  document.getElementById("ptab_s").onclick=()=>{partnerTab="supplier";renderPartners();};
-  document.getElementById("ptab_c").onclick=()=>{partnerTab="customer";renderPartners();};
-  renderPartyCards(partnerTab);
-}
-function renderPartyCards(kind){
-  const list=kind==="supplier"?DB.suppliers:DB.customers;
-  const label=kind==="supplier"?"nhà cung cấp":"khách hàng";
-  const wrap=document.getElementById("partnerBody");
-  if(!wrap)return;
-  if(!list.length){wrap.innerHTML=emptyState(kind==="supplier"?"☍":"☺",`Chưa có ${label} nào`,`Thêm ${label} để ghi nhận giao dịch.`,`＋ Thêm ${label}`,()=>openPartyModal(kind));return;}
-  const countTxn=id=>DB.transactions.filter(t=>t.partyId===id).length;
-  wrap.innerHTML=`<div class="card-list">${list.slice().sort((a,b)=>a.name.localeCompare(b.name,"vi")).map(x=>`<div class="party-card"><div class="party-card-name">${esc(x.name)}${kind==="customer"&&(x.points||0)>0?` <span class="pts-badge">⭐ ${fmt(x.points)} điểm</span>`:""}</div><div class="party-card-info">${x.phone?`<span>📞 ${esc(x.phone)}</span>`:""}${x.address?`<span>📍 ${esc(x.address)}</span>`:""}${x.note?`<span>📝 ${esc(x.note)}</span>`:""}<span>📋 ${countTxn(x.id)} giao dịch</span></div><div class="party-card-foot"><button class="btn sm" onclick="openPartyModal('${kind}','${x.id}')">✎ Sửa</button><button class="btn sm danger" onclick="delParty('${kind}','${x.id}')">🗑 Xoá</button></div></div>`).join("")}</div>`;
-}
-
-/* ======= PARTY LIST (desktop) ======= */
-function renderPartyList(kind,list,label,icon){
-  if(!isMob())topBtn(`＋ Thêm ${label}`,"primary",()=>openPartyModal(kind));
-  const c=document.getElementById("content");
-  if(isMob()){partnerTab=kind;renderPartners();return;}
-  if(!list.length){c.innerHTML=emptyState(icon,`Chưa có ${label} nào`,`Thêm ${label} để dễ ghi nhận giao dịch.`,`＋ Thêm ${label}`,()=>openPartyModal(kind));return;}
-  const countTxn=id=>DB.transactions.filter(t=>t.partyId===id&&t.type===(kind==="supplier"?"purchase":"sale")).length;
-  const showPts=kind==="customer";
-  c.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Tên</th><th>Điện thoại</th><th>Địa chỉ</th><th class="num">Giao dịch</th>${showPts?`<th class="num">Điểm tích lũy</th>`:""}<th>Ghi chú</th><th></th></tr></thead><tbody>${list.slice().sort((a,b)=>a.name.localeCompare(b.name,"vi")).map(x=>`<tr><td class="prod-name">${esc(x.name)}</td><td>${esc(x.phone||"—")}</td><td>${esc(x.address||"—")}</td><td class="num">${countTxn(x.id)}</td>${showPts?`<td class="num">${(x.points||0)>0?`<span class="pts-badge">⭐ ${fmt(x.points)}</span>`:"—"}</td>`:""}<td class="muted">${esc(x.note||"")}</td><td class="row-actions"><button class="icon-btn" onclick="openPartyModal('${kind}','${x.id}')">✎</button><button class="icon-btn" onclick="delParty('${kind}','${x.id}')">🗑</button></td></tr>`).join("")}</tbody></table></div>`;
-}
-function delParty(kind,id){
-  const arr=kind==="supplier"?DB.suppliers:DB.customers;
-  const x=byId(arr,id);if(!x)return;
-  confirmModal("Xoá?",`Xoá <b>${esc(x.name)}</b>?`,()=>{
-    if(kind==="supplier")DB.suppliers=DB.suppliers.filter(y=>y.id!==id);
-    else DB.customers=DB.customers.filter(y=>y.id!==id);
-    save();toast("Đã xoá");go(current);
-  });
-}
-
-/* ======= SETTINGS ======= */
-function renderSettings(){
-  const c=document.getElementById("content");
-  const cred=getAuth();
-  c.innerHTML=`
-    <div class="panel">
-      <div class="panel-head"><h2>🔒 Tài khoản đăng nhập</h2></div>
-      <div class="panel-body">
-        <div class="field"><label>Tên đăng nhập hiện tại</label>
-          <input id="newUser" value="${esc(cred.username)}">
-        </div>
-        <div class="field"><label>Mật khẩu mới <span class="hint">(để trống nếu không đổi)</span></label>
-          <input id="newPass" type="password" placeholder="Nhập mật khẩu mới...">
-        </div>
-        <div class="field"><label>Xác nhận mật khẩu mới</label>
-          <input id="newPass2" type="password" placeholder="Nhập lại mật khẩu...">
-        </div>
-        <button class="btn primary" id="saveCredBtn">Lưu thay đổi tài khoản</button>
-        <div id="credMsg" style="margin-top:10px;font-size:13px"></div>
-      </div>
-    </div>
-    <div class="panel">
-      <div class="panel-head"><h2>🎨 Giao diện</h2></div>
-      <div class="panel-body">
-        <div class="field"><label>Chế độ hiển thị</label>
-          <select id="themeSel" style="max-width:280px">
-            <option value="auto">Theo hệ thống</option>
-            <option value="light">Sáng</option>
-            <option value="dark">Tối</option>
-          </select>
-        </div>
-      </div>
-    </div>
-    <div class="panel">
-      <div class="panel-head"><h2>🛍️ Giao diện khách hàng</h2></div>
-      <div class="panel-body">
-        <p class="muted">Khách hàng có thể mở link dưới đây để xem sản phẩm và đặt hàng. Không cần đăng nhập.</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-          <button class="btn primary" id="openStoreBtn">🛒 Mở cửa hàng ngay</button>
-          <button class="btn" id="copyStoreLink">⧉ Sao chép link cửa hàng</button>
-        </div>
-      </div>
-    </div>
-    <div class="panel">
-      <div class="panel-head"><h2>☁️ Đồng bộ lên web (GitHub Pages)</h2></div>
-      <div class="panel-body">
-        <p class="muted">Tải xuống file dữ liệu, rồi vào trang quản lý trên GitHub Pages → Cài đặt → Nhập file để sản phẩm hiện trên web.</p>
-        <div style="background:var(--surface-2);border-radius:10px;padding:12px 14px;margin:10px 0;font-size:13px;line-height:1.7">
-          <b>Hướng dẫn:</b><br>
-          1️⃣ Nhấn <b>Tải xuống file dữ liệu</b> bên dưới<br>
-          2️⃣ Mở <a href="https://mam15111999-create.github.io/mycosmetics/" target="_blank" style="color:var(--plum)">trang quản lý trên GitHub Pages</a><br>
-          3️⃣ Vào <b>Cài đặt → Nhập từ file JSON</b> → chọn file vừa tải
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
-          <button class="btn primary" id="exportJson">⬇ Tải xuống file dữ liệu</button>
-          <span class="muted" style="align-self:center">${DB.products.length} mặt hàng · ${DB.transactions.length} giao dịch</span>
-        </div>
-      </div>
-    </div>
-    <div class="panel">
-      <div class="panel-head"><h2>💾 Sao lưu dữ liệu</h2></div>
-      <div class="panel-body">
-        <p class="muted">Sao chép đoạn mã dưới đây và lưu an toàn (email, ghi chú...) để khôi phục khi cần.</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin:11px 0">
-          <button class="btn primary" id="copyBackup">⧉ Sao chép dữ liệu sao lưu</button>
-          <span class="muted" style="align-self:center">${DB.products.length} mặt hàng · ${DB.transactions.length} giao dịch</span>
-        </div>
-        <textarea class="field backup-area" id="backupOut" readonly></textarea>
-      </div>
-    </div>
-    <div class="panel">
-      <div class="panel-head"><h2>♻️ Nhập / Khôi phục dữ liệu</h2></div>
-      <div class="panel-body">
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-          <label class="btn primary" style="cursor:pointer">📂 Nhập từ file JSON<input type="file" id="importFile" accept=".json,application/json" style="display:none"></label>
-        </div>
-        <p class="muted" style="margin:0 0 8px">Hoặc dán mã sao lưu vào ô dưới rồi bấm Khôi phục:</p>
-        <textarea class="field backup-area" id="restoreIn" placeholder="Dán dữ liệu sao lưu vào đây..."></textarea>
-        <button class="btn" id="doRestore">↺ Khôi phục từ dữ liệu đã dán</button>
-      </div>
-    </div>
-    <div class="panel">
-      <div class="panel-head"><h2>⚠️ Xoá dữ liệu</h2></div>
-      <div class="panel-body">
-        <div class="danger-zone">
-          <h3>Xoá toàn bộ dữ liệu</h3>
-          <p class="muted" style="margin:0 0 12px">Xoá tất cả mặt hàng, giao dịch, nhà cung cấp và khách hàng. Không thể hoàn tác.</p>
-          <button class="btn danger" id="wipe">🗑 Xoá tất cả</button>
-        </div>
-      </div>
-    </div>`;
-
-  /* store link */
-  document.getElementById("openStoreBtn").onclick=()=>{window.open(window.location.href.split("#")[0]+"#store","_blank");};
-  document.getElementById("copyStoreLink").onclick=()=>{
-    const url=window.location.href.split("#")[0]+"#store";
-    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(()=>toast("Đã sao chép link cửa hàng")).catch(()=>toast(url));
-    else toast(url);
-  };
-  /* credentials */
-  document.getElementById("saveCredBtn").onclick=function(){
-    const newUser=document.getElementById("newUser").value.trim();
-    const p1=document.getElementById("newPass").value;
-    const p2=document.getElementById("newPass2").value;
-    const msg=document.getElementById("credMsg");
-    if(!newUser){msg.innerHTML=`<span style="color:var(--bad)">Tên đăng nhập không được để trống.</span>`;return;}
-    if(p1&&p1!==p2){msg.innerHTML=`<span style="color:var(--bad)">Mật khẩu xác nhận không khớp.</span>`;return;}
-    const oldCred=getAuth();
-    const newCred={username:newUser,password:p1||oldCred.password};
-    try{localStorage.setItem(AUTH_KEY+"_cred",JSON.stringify(newCred));}catch(e){}
-    msg.innerHTML=`<span style="color:var(--good)">✓ Đã lưu. Đăng nhập lần sau dùng thông tin mới.</span>`;
-    document.getElementById("newPass").value="";document.getElementById("newPass2").value="";
-  };
-
-  const themeSel=document.getElementById("themeSel");
-  themeSel.value=getTheme();
-  themeSel.onchange=()=>setTheme(themeSel.value);
-
-  document.getElementById("exportJson").onclick=function(){
-    const json=JSON.stringify(DB,null,2);
-    const blob=new Blob([json],{type:"application/json"});
-    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
-    a.download="hoanghien-data.json";a.click();URL.revokeObjectURL(a.href);
-    toast("Đã tải xuống file dữ liệu!");
-  };
-  document.getElementById("importFile").addEventListener("change",function(e){
-    const f=e.target.files[0];if(!f)return;
-    const r=new FileReader();r.onload=()=>{
-      let data;try{data=JSON.parse(r.result);}catch(err){toast("File không hợp lệ");return;}
-      if(!data||!Array.isArray(data.products)){toast("File không đúng định dạng");return;}
-      confirmModal("Nhập dữ liệu từ file?","Toàn bộ dữ liệu hiện tại sẽ bị thay thế bằng dữ liệu từ file. Tiếp tục?",()=>{
-        DB=Object.assign({},DEFAULT,data);save();toast("✓ Đã nhập dữ liệu thành công!");go("dashboard");
-      });
-    };r.readAsText(f);
-    this.value="";
-  });
-  document.getElementById("backupOut").value=JSON.stringify(DB);
-  document.getElementById("copyBackup").onclick=function(){
-    const text=JSON.stringify(DB);const ta=document.getElementById("backupOut");ta.value=text;ta.select();
-    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>toast("Đã sao chép dữ liệu sao lưu")).catch(()=>{try{document.execCommand("copy");}catch(e){}toast("Nhấn Ctrl+C để sao chép");});}
-    else{try{document.execCommand("copy");toast("Đã sao chép");}catch(e){toast("Hãy chọn và Ctrl+C");}}
-  };
-  document.getElementById("doRestore").onclick=function(){
-    const raw=document.getElementById("restoreIn").value.trim();
-    if(!raw){toast("Chưa có dữ liệu để khôi phục");return;}
-    let data;try{data=JSON.parse(raw);}catch(e){toast("Dữ liệu không hợp lệ");return;}
-    if(!data||!Array.isArray(data.products)){toast("Dữ liệu không đúng định dạng");return;}
-    confirmModal("Khôi phục dữ liệu?","Toàn bộ dữ liệu hiện tại sẽ bị thay thế. Tiếp tục?",()=>{DB=Object.assign({},DEFAULT,data);save();toast("Đã khôi phục");go("dashboard");});
-  };
-  document.getElementById("wipe").onclick=function(){
-    confirmModal("Xoá toàn bộ dữ liệu?","<b>Không thể hoàn tác.</b> Bạn chắc chắn?",()=>{DB=JSON.parse(JSON.stringify(DEFAULT));save();toast("Đã xoá toàn bộ");go("dashboard");});
-  };
-}
-function getTheme(){try{return localStorage.getItem(THEME_KEY)||"auto";}catch(e){return "auto";}}
-function setTheme(t){try{localStorage.setItem(THEME_KEY,t);}catch(e){}if(t==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",t);}
-
-/* ======= MODALS ======= */
-function mountModal(html){
-  const m=document.getElementById("modalMount");
-  m.innerHTML=`<div class="modal-back" id="mBack">${html}</div>`;
-  const back=document.getElementById("mBack");
-  back.addEventListener("mousedown",e=>{if(e.target.id==="mBack")closeModal();});
-  // bottom sheet swipe-down on mobile
-  if(isMob()){
-    const modal=back.querySelector(".modal");
-    if(modal){
-      let startY=0;
-      modal.addEventListener("touchstart",e=>{startY=e.touches[0].clientY;},{passive:true});
-      modal.addEventListener("touchend",e=>{const dy=e.changedTouches[0].clientY-startY;if(dy>80)closeModal();},{passive:true});
-    }
-  }
-}
-function closeModal(){document.getElementById("modalMount").innerHTML="";}
-window.closeModal=closeModal;
-
-function confirmModal(title,body,onYes){
-  mountModal(`<div class="modal" style="max-width:400px">
-    <div class="modal-head"><h2>${title}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
-    <div class="modal-body">${body}</div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal()">Huỷ</button><button class="btn primary" id="cfmYes">Đồng ý</button></div>
-  </div>`);
-  document.getElementById("cfmYes").onclick=()=>{closeModal();onYes();};
-}
-
-/* ---- Product modal ---- */
-function openProductModal(id,prefill={}){
-  const p=id?productById(id):null;
-  const pf=p?{}:prefill;
-  const supOpts=`<option value="">— Nhà cung cấp —</option>`+DB.suppliers.map(s=>`<option value="${s.id}" ${p&&p.supplierId===s.id?"selected":""}>${esc(s.name)}</option>`).join("");
-  const previewHtml=p&&p.image?`<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`:pf.imageUrl?`<img src="${esc(pf.imageUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:11px" id="pfImg">`:"✦";
-  const matchedCat=(DB.categories||[]).find(c=>c.name===(p?p.category:pf.category||""));
-  mountModal(`<div class="modal">
-    <div class="modal-head"><h2>${p?"Sửa mặt hàng":"Thêm mặt hàng"}${pf.source?` <span style="font-size:12px;color:var(--ink-soft);font-weight:400">(${esc(pf.source)})</span>`:""}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
-    <div class="modal-body">
-      <div class="field"><label>Ảnh sản phẩm <span class="hint">(không bắt buộc)</span></label>
-        <div class="img-pick"><div class="img-preview" id="imgPrev">${previewHtml}</div>
-        <div><input type="file" id="imgFile" accept="image/*"><button type="button" class="btn sm ghost" id="imgClear" style="margin-top:6px">Bỏ ảnh</button></div></div>
-      </div>
-      <div class="field"><label>Tên sản phẩm *</label><input id="fName" value="${p?esc(p.name):esc(pf.name||"")}" placeholder="VD: Son kem lì Black Rouge A02"></div>
-      <div class="grid-2">
-        <div class="field"><label>Mã (SKU)</label><input id="fSku" value="${p?esc(p.sku):esc(pf.sku||"")}" placeholder="SON-A02"></div>
-        <div class="field"><label>Danh mục</label>
-          <select id="fCat"><option value="">— Không có danh mục —</option>${(DB.categories||[]).map(cat=>`<option value="${esc(cat.name)}" ${(p?p.category:pf.category||"")===cat.name?"selected":""}>${esc(cat.icon||"🏷")} ${esc(cat.name)}</option>`).join("")}${p&&p.category&&!(DB.categories||[]).some(c=>c.name===p.category)?`<option value="${esc(p.category)}" selected>${esc(p.category)}</option>`:""}</select>
-        </div>
-      </div>
-      <div class="grid-2">
-        <div class="field"><label>Giá nhập (₫) *</label><input id="fCost" type="number" min="0" value="${p?p.cost:""}" placeholder="75000"></div>
-        <div class="field"><label>Giá bán (₫) *</label><input id="fPrice" type="number" min="0" value="${p?p.price:""}" placeholder="145000"></div>
-      </div>
-      <div class="calc-note" id="marginNote"></div>
-      <div class="grid-2" style="margin-top:14px">
-        <div class="field"><label>Tồn kho hiện tại</label><input id="fStock" type="number" min="0" value="${p?p.stock:0}"></div>
-        <div class="field"><label>Ngưỡng báo sắp hết</label><input id="fLow" type="number" min="0" value="${p?p.lowStock:5}"></div>
-      </div>
-      <div class="field"><label>Nhà cung cấp</label><select id="fSup">${supOpts}</select></div>
-      <div class="field"><label>Mô tả / Ghi chú</label><textarea id="fNote" placeholder="Thành phần, hạn dùng, hướng dẫn sử dụng...">${p?esc(p.note):esc(pf.note||"")}</textarea></div>
-    </div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal()">Huỷ</button><button class="btn primary" id="saveProd">Lưu</button></div>
-  </div>`);
-  let imgData=p?p.image:(pf.imageUrl||"");
-  const prev=document.getElementById("imgPrev");
-  if(!p&&pf.imageUrl){
-    fetch(pf.imageUrl).then(r=>r.blob()).then(blob=>{const rd=new FileReader();rd.onload=()=>{imgData=rd.result;if(prev)prev.innerHTML=`<img src="${imgData}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`;};rd.readAsDataURL(blob);}).catch(()=>{});
-  }
-  document.getElementById("imgFile").addEventListener("change",e=>{
-    const f=e.target.files[0];if(!f)return;
-    if(f.size>3*1024*1024){toast("Ảnh quá lớn (tối đa 3MB)");return;}
-    const r=new FileReader();r.onload=()=>{imgData=r.result;prev.innerHTML=`<img src="${imgData}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`;};r.readAsDataURL(f);
-  });
-  document.getElementById("imgClear").onclick=()=>{imgData="";prev.innerHTML="✦";document.getElementById("imgFile").value="";};
-  const upd=()=>{const cost=+document.getElementById("fCost").value||0,price=+document.getElementById("fPrice").value||0;const pr=price-cost;const m=price?pr/price*100:0;document.getElementById("marginNote").innerHTML=`Lợi nhuận/SP: <b style="color:${pr>=0?"var(--good)":"var(--bad)"}">${money(pr)}</b> · Biên ${m.toFixed(0)}%`;};
-  document.getElementById("fCost").addEventListener("input",upd);document.getElementById("fPrice").addEventListener("input",upd);upd();
-  document.getElementById("saveProd").onclick=()=>{
-    const name=document.getElementById("fName").value.trim();
-    const cost=+document.getElementById("fCost").value||0,price=+document.getElementById("fPrice").value||0;
-    if(!name){toast("Vui lòng nhập tên sản phẩm");return;}
-    if(!price){toast("Vui lòng nhập giá bán");return;}
-    const rec={name,sku:document.getElementById("fSku").value.trim(),category:document.getElementById("fCat").value.trim(),cost,price,stock:+document.getElementById("fStock").value||0,lowStock:+document.getElementById("fLow").value||0,supplierId:document.getElementById("fSup").value,image:imgData,note:document.getElementById("fNote").value.trim()};
-    if(p)Object.assign(p,rec);else DB.products.push(Object.assign({id:uid()},rec));
-    save();closeModal();toast(p?"Đã cập nhật mặt hàng":"Đã thêm mặt hàng");go(current);
-  };
-}
-
-/* ---- Transaction modal ---- */
-function openTxnModal(type,presetProd){
-  if(!DB.products.length){toast("Hãy thêm mặt hàng trước");go("products");return;}
-  const isSale=type==="sale";
-  const prodOpts=DB.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"vi")).map(p=>`<option value="${p.id}" ${presetProd===p.id?"selected":""}>${esc(p.name)} (còn ${p.stock})</option>`).join("");
-  const parties=isSale?DB.customers:DB.suppliers;
-  const partyOpts=`<option value="">— Không chọn —</option>`+parties.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("");
-  mountModal(`<div class="modal">
-    <div class="modal-head"><h2>${isSale?"💰 Bán hàng":"📦 Nhập hàng"}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
-    <div class="modal-body">
-      <div class="field"><label>Sản phẩm *</label>
-        <div style="display:flex;gap:8px;align-items:stretch">
-          <select id="tProd" style="flex:1">${prodOpts}</select>
-          <button type="button" class="btn sm ghost" id="scanBtn" style="padding:10px 13px;white-space:nowrap">📷 QR</button>
-        </div>
-      </div>
-      <div class="grid-2">
-        <div class="field"><label>Số lượng *</label><input id="tQty" type="number" min="1" inputmode="numeric" value="1"></div>
-        <div class="field"><label>${isSale?"Giá bán":"Giá nhập"} (₫) *</label><input id="tPrice" type="number" min="0" inputmode="numeric"></div>
-      </div>
-      <div class="field"><label>Ngày</label><input id="tDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
-      <div class="field"><label>${isSale?"Khách hàng":"Nhà cung cấp"}</label><select id="tParty">${partyOpts}</select></div>
-      <div class="field"><label>Ghi chú</label><input id="tNote" placeholder="Không bắt buộc"></div>
-      <div class="calc-note" id="tSummary"></div>
-      ${!isSale?`<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:12px;cursor:pointer"><input type="checkbox" id="tUpdCost" checked style="width:auto;min-height:auto"> Cập nhật giá nhập theo lần nhập này</label>`:""}
-    </div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal()">Huỷ</button><button class="btn primary" id="saveTxn" style="flex:1">${isSale?"Ghi nhận bán":"Ghi nhận nhập"}</button></div>
-  </div>`);
-  const prodSel=document.getElementById("tProd"),priceIn=document.getElementById("tPrice"),qtyIn=document.getElementById("tQty");
-  const fillPrice=()=>{const p=productById(prodSel.value);if(p)priceIn.value=isSale?p.price:p.cost;updateSum();};
-  const updateSum=()=>{
-    const p=productById(prodSel.value);const qty=+qtyIn.value||0;const price=+priceIn.value||0;
-    let html=`Thành tiền: <b>${money(qty*price)}</b>`;
-    if(isSale&&p){const profit=qty*(price-p.cost);html+=` · Lãi: <b style="color:${profit>=0?"var(--good)":"var(--bad)"}">${money(profit)}</b>`;if(qty>p.stock)html+=`<br><span style="color:var(--warn)">⚠️ Kho chỉ còn ${p.stock}</span>`;}
-    if(!isSale&&p)html+=` · Tồn sau nhập: <b>${fmt(p.stock+qty)}</b>`;
-    document.getElementById("tSummary").innerHTML=html;
-  };
-  prodSel.addEventListener("change",fillPrice);
-  qtyIn.addEventListener("input",updateSum);priceIn.addEventListener("input",updateSum);
-  fillPrice();
-  document.getElementById("scanBtn").onclick=()=>openQRScanner(code=>{
-    const found=DB.products.find(p=>p.id===code||(p.sku&&p.sku===code));
-    if(found){prodSel.value=found.id;fillPrice();toast(`✓ Đã chọn: ${found.name}`);}
-    else toast("Không tìm thấy sản phẩm với mã QR này");
-  });
-  document.getElementById("saveTxn").onclick=()=>{
-    const p=productById(prodSel.value);if(!p){toast("Chọn sản phẩm");return;}
-    const qty=+qtyIn.value||0,price=+priceIn.value||0;
-    if(qty<=0){toast("Số lượng phải lớn hơn 0");return;}
-    if(price<0){toast("Giá không hợp lệ");return;}
-    if(isSale&&qty>p.stock){toast(`Không đủ hàng — kho chỉ còn ${p.stock}`);return;}
-    const txn={id:uid(),type,date:document.getElementById("tDate").value||new Date().toISOString().slice(0,10),productId:p.id,qty,unitPrice:price,unitCost:p.cost,partyId:document.getElementById("tParty").value,note:document.getElementById("tNote").value.trim()};
-    if(isSale)p.stock-=qty;else{p.stock+=qty;if(document.getElementById("tUpdCost")?.checked)p.cost=price;}
-    DB.transactions.push(txn);save();closeModal();
-    toast(isSale?`Đã bán ${qty} × ${p.name}`:`Đã nhập ${qty} × ${p.name}`);go(current);
-  };
-}
-
-/* ---- Party modal ---- */
-function openPartyModal(kind,id,prefillPhone,onSaved){
-  const arr=kind==="supplier"?DB.suppliers:DB.customers;
-  const x=id?byId(arr,id):null;const label=kind==="supplier"?"nhà cung cấp":"khách hàng";
-  mountModal(`<div class="modal" style="max-width:440px">
-    <div class="modal-head"><h2>${x?"Sửa":"Thêm"} ${label}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
-    <div class="modal-body">
-      <div class="field"><label>Tên *</label><input id="qName" value="${x?esc(x.name):""}"></div>
-      <div class="field"><label>Điện thoại</label><input id="qPhone" type="tel" inputmode="tel" value="${x?esc(x.phone):esc(prefillPhone||"")}"></div>
-      <div class="field"><label>Địa chỉ</label><input id="qAddr" value="${x?esc(x.address):""}"></div>
-      <div class="field"><label>Ghi chú</label><textarea id="qNote">${x?esc(x.note):""}</textarea></div>
-    </div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal()">Huỷ</button><button class="btn primary" id="saveParty" style="flex:1">Lưu</button></div>
-  </div>`);
-  document.getElementById("saveParty").onclick=()=>{
-    const name=document.getElementById("qName").value.trim();if(!name){toast("Vui lòng nhập tên");return;}
-    const rec={name,phone:document.getElementById("qPhone").value.trim(),address:document.getElementById("qAddr").value.trim(),note:document.getElementById("qNote").value.trim()};
-    let newId;
-    if(x){Object.assign(x,rec);newId=x.id;}else{newId=uid();arr.push(Object.assign({id:newId,points:0,pointsHistory:[]},rec));}
-    save();closeModal();toast("Đã lưu");
-    if(onSaved)onSaved(newId);else go(current);
-  };
-}
-
-/* ======= QR ======= */
-let qrStream=null,qrAF=null;
-function openQRScanner(onFound){
-  mountModal(`<div class="modal" style="max-width:420px">
-    <div class="modal-head"><h2>📷 Quét mã vạch / QR</h2><button class="icon-btn" onclick="stopQR()">✕</button></div>
-    <div class="modal-body" style="padding:12px;text-align:center">
-      <div style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3;max-height:60vh">
-        <video id="qrVid" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block"></video>
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
-          <div class="qr-frame"><div class="qr-scan-line"></div></div>
-        </div>
-      </div>
-      <div id="qrStat" style="margin:10px 0 4px;font-size:13px;min-height:36px;color:var(--ink-soft)">Đang khởi động camera…</div>
-      <p class="muted" style="font-size:11px;margin:0">Hướng camera vào mã vạch hoặc mã QR trên sản phẩm</p>
-    </div>
-    <div class="modal-foot"><button class="btn" style="width:100%" onclick="stopQR()">Huỷ</button></div>
-  </div>`);
-
-  if(!navigator.mediaDevices?.getUserMedia){
-    const s=document.getElementById("qrStat");
-    if(s)s.innerHTML=`<span style="color:var(--bad)">Cần mở qua HTTPS để dùng camera.<br><small>Dùng đường dẫn https://</small></span>`;
-    return;
-  }
-
-  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}})
-    .then(stream=>{
-      qrStream=stream;
-      const vid=document.getElementById("qrVid");if(!vid){stopQR(false);return;}
-      vid.srcObject=stream;vid.play().catch(()=>{});
-
-      // BarcodeDetector API: Chrome Android & Safari 17+ — đọc được cả mã vạch 1D lẫn QR
-      let detector=null;
-      if("BarcodeDetector" in window){
-        try{detector=new BarcodeDetector({formats:["qr_code","ean_13","ean_8","code_128","code_39","upc_a","upc_e","itf","aztec","data_matrix","pdf417"]});}catch(e){}
-      }
-
-      const stat=document.getElementById("qrStat");
-
-      const startScan=()=>{
-        if(stat)stat.textContent=detector?"Hướng camera vào mã vạch hoặc mã QR…":"Hướng camera vào mã QR… (trình duyệt chỉ hỗ trợ QR)";
-
-        if(detector){
-          // BarcodeDetector: poll 250ms — async, tiết kiệm CPU
-          const scanLoop=()=>{
-            const v=document.getElementById("qrVid");if(!v)return;
-            if(v.readyState>=v.HAVE_ENOUGH_DATA&&v.videoWidth>0){
-              detector.detect(v).then(codes=>{
-                if(!document.getElementById("qrVid"))return;
-                if(codes&&codes.length){
-                  if(stat)stat.innerHTML=`<span class="qr-found">✓ Đọc được mã!</span>`;
-                  stopQR(false);onFound(codes[0].rawValue);
-                }else{qrAF=setTimeout(scanLoop,250);}
-              }).catch(()=>{if(document.getElementById("qrVid"))qrAF=setTimeout(scanLoop,300);});
-            }else{qrAF=setTimeout(scanLoop,250);}
-          };
-          qrAF=setTimeout(scanLoop,500);
-        }else{
-          // Fallback jsQR: rAF — chỉ đọc QR
-          const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
-          const tick=()=>{
-            const el=document.getElementById("qrVid");if(!el)return;
-            if(el.readyState>=el.HAVE_ENOUGH_DATA&&el.videoWidth>0){
-              canvas.width=el.videoWidth;canvas.height=el.videoHeight;ctx.drawImage(el,0,0);
-              try{
-                const img=ctx.getImageData(0,0,canvas.width,canvas.height);
-                const code=typeof jsQR==="function"&&jsQR(img.data,img.width,img.height,{inversionAttempts:"dontInvert"});
-                if(code?.data){if(stat)stat.innerHTML=`<span class="qr-found">✓ Đọc được mã!</span>`;stopQR(false);onFound(code.data);return;}
-              }catch(e){}
-            }
-            qrAF=requestAnimationFrame(tick);
-          };
-          qrAF=requestAnimationFrame(tick);
-        }
-      };
-
-      if(vid.readyState>=vid.HAVE_ENOUGH_DATA)startScan();
-      else vid.addEventListener("loadeddata",startScan,{once:true});
-    })
-    .catch(err=>{
-      const s=document.getElementById("qrStat");if(!s)return;
-      if(err.name==="NotAllowedError")s.innerHTML=`<span style="color:var(--bad)">Chưa cấp quyền camera.<br><small>Nhấn biểu tượng 🔒 trên thanh địa chỉ → Cho phép camera.</small></span>`;
-      else if(err.name==="NotFoundError")s.innerHTML=`<span style="color:var(--bad)">Không tìm thấy camera trên thiết bị.</span>`;
-      else if(err.name==="NotReadableError")s.innerHTML=`<span style="color:var(--bad)">Camera đang dùng bởi ứng dụng khác.</span>`;
-      else s.innerHTML=`<span style="color:var(--bad)">Lỗi camera: ${esc(err.message)}</span>`;
-    });
-}
-function stopQR(doClose=true){
-  clearTimeout(qrAF);cancelAnimationFrame(qrAF);qrAF=null;
-  if(qrStream){qrStream.getTracks().forEach(t=>t.stop());qrStream=null;}
-  if(doClose)closeModal();
-}
-
-function openQRCode(productId){
-  const p=productById(productId);if(!p)return;
-  mountModal(`<div class="modal" style="max-width:340px">
-    <div class="modal-head"><h2>Mã QR sản phẩm</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
-    <div class="modal-body" style="text-align:center">
-      <p class="muted" style="font-size:13px;margin-bottom:14px">In dán lên sản phẩm để quét khi bán / nhập hàng.</p>
-      <div class="qr-gen-wrap" id="qrGenWrap" style="display:inline-block"></div>
-      <div style="font-weight:700;font-size:15px;color:var(--ink);margin-top:12px">${esc(p.name)}</div>
-      ${p.sku?`<div class="muted" style="font-size:12px;margin-top:3px">SKU: ${esc(p.sku)}</div>`:""}
-    </div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal()">Đóng</button></div>
-  </div>`);
-  try{if(typeof QRCode==="function")new QRCode(document.getElementById("qrGenWrap"),{text:p.id,width:200,height:200,colorDark:"#1a0d18",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});}
-  catch(e){if(document.getElementById("qrGenWrap"))document.getElementById("qrGenWrap").textContent="Không tạo được QR: "+e.message;}
-}
-
-/* ======= EMPTY STATE ======= */
-function emptyState(icon,title,desc,btnLabel,fn){
-  const bid="empt_"+uid();setTimeout(()=>{const b=document.getElementById(bid);if(b)b.onclick=fn;},0);
-  return`<div class="empty" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)"><div class="big">${icon}</div><h3>${title}</h3><p class="muted" style="max-width:320px;margin:6px auto 16px">${desc}</p><button class="btn primary" id="${bid}">${btnLabel}</button></div>`;
-}
-
-/* ======= INIT ======= */
-(function init(){
-  const t=getTheme();if(t!=="auto")document.documentElement.setAttribute("data-theme",t);
-  // Customer store mode
-  if(window.location.hash==="#store"||new URLSearchParams(window.location.search).get("store")==="1"){
-    seed();initStore();return;
-  }
-  if(isLoggedIn()){showApp();seed();go("dashboard");}
-  else showLogin();
-})();
-
-document.getElementById("logoutBtn").onclick=()=>{
-  confirmModal("Đăng xuất?","Bạn sẽ cần đăng nhập lại.",()=>{logout();});
-};
-
-/* ======= CUSTOMER STORE ======= */
-let cart={}, storeActiveCat="";
-
-function initStore(){
-  document.getElementById("loginWrap").hidden=true;
-  document.getElementById("appWrap").hidden=true;
-  document.getElementById("storeWrap").hidden=false;
-  renderStoreCats();
-  renderStoreGrid();
-}
-
-function renderStoreCats(){
-  const cats=["Tất cả",...new Set(DB.products.filter(p=>p.stock>0).map(p=>p.category).filter(Boolean)).values()].sort((a,b)=>a==="Tất cả"?-1:b==="Tất cả"?1:a.localeCompare(b,"vi"));
-  document.getElementById("storeCats").innerHTML=cats.map(c=>`<button class="cat-btn${(storeActiveCat===""&&c==="Tất cả")||(storeActiveCat===c)?" active":""}" onclick="storeSetCat('${esc(c)}')">${esc(c)}</button>`).join("");
-}
-
-function storeSetCat(cat){storeActiveCat=cat==="Tất cả"?"":cat;renderStoreCats();renderStoreGrid();}
-
-function renderStoreGrid(){
-  const prods=DB.products.filter(p=>p.stock>0&&(!storeActiveCat||p.category===storeActiveCat));
-  const el=document.getElementById("storeGrid");
-  if(!prods.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="big">✦</div><h3>Không có sản phẩm</h3><p class="muted">Danh mục này đang cập nhật.</p></div>`;return;}
-  el.innerHTML=prods.map(p=>`<div class="sp-card">
-    ${p.image?`<div class="sp-img"><img src="${p.image}" alt="${esc(p.name)}"></div>`:`<div class="sp-img">✦</div>`}
-    <div class="sp-body">
-      <div class="sp-name">${esc(p.name)}</div>
-      <div class="sp-cat">${esc(p.category||"")}</div>
-      <div class="sp-price">${money(p.price)}</div>
-    </div>
-    <div class="sp-foot">
-      ${p.stock>0?`
-        <div class="sp-qty">
-          <button onclick="changeCartQty('${p.id}',-1)">−</button>
-          <span class="sp-qty-val" id="qv_${p.id}">${cart[p.id]||0}</span>
-          <button onclick="changeCartQty('${p.id}',1)">＋</button>
-        </div>
-        <button class="add-btn${cart[p.id]?" added":""}" id="ab_${p.id}" onclick="addToCart('${p.id}')">${cart[p.id]?"✓ Đã thêm":"Thêm vào giỏ"}</button>
-      `:`<div class="out-badge">Hết hàng</div>`}
-    </div>
-  </div>`).join("");
-}
-
-function addToCart(id){
+function addDetail(id){
   if(!cart[id])cart[id]=1;
-  updateCartUI();
+  chgDetail(id,0);
 }
+window.openProductDetail=openProductDetail;window.chgDetail=chgDetail;window.addDetail=addDetail;
 
-function changeCartQty(id,delta){
-  const p=productById(id);if(!p)return;
-  const cur=cart[id]||0;
-  const newQty=Math.max(0,Math.min(p.stock,cur+delta));
-  if(newQty===0)delete cart[id];else cart[id]=newQty;
-  // update this card's display inline
+function add(id){if(!cart[id])cart[id]=1;updateCard(id);updateCartUI(loadDB()||{products:[]});}
+function chg(id,d){
+  const db=loadDB()||{products:[]};const p=(db.products||[]).find(x=>x.id===id);const max=p?p.stock:99;
+  const n=Math.max(0,Math.min(max,(cart[id]||0)+d));
+  if(n===0)delete cart[id];else cart[id]=n;
+  updateCard(id);updateCartUI(db);
+  const s=document.getElementById("sheet");if(s&&s.dataset.view==="cart")renderCartBody(db);
+}
+window.add=add;window.chg=chg;
+function updateCard(id){
   const qv=document.getElementById("qv_"+id);if(qv)qv.textContent=cart[id]||0;
-  const ab=document.getElementById("ab_"+id);if(ab){ab.textContent=cart[id]?"✓ Đã thêm":"Thêm vào giỏ";ab.classList.toggle("added",!!cart[id]);}
-  updateCartUI();
+  const ab=document.getElementById("ab_"+id);if(ab){ab.textContent=cart[id]?"✓ Đã thêm":"Thêm vào giỏ";ab.classList.toggle("ok",!!cart[id]);}
+}
+function updateCartUI(db){
+  const n=cartCount(),t=cartTotal(db);
+  const b=document.getElementById("badge");if(b){b.textContent=n;b.style.display=n>0?"grid":"none";}
+  document.getElementById("cartBar")?.classList.toggle("show",n>0);
+  const c=document.getElementById("cbCount");if(c)c.textContent=n+" sản phẩm trong giỏ";
+  const tt=document.getElementById("cbTotal");if(tt)tt.textContent=money(t);
 }
 
-function cartCount(){return Object.values(cart).reduce((s,q)=>s+q,0);}
-function cartTotal(){return Object.entries(cart).reduce((s,[id,q])=>{const p=productById(id);return s+(p?p.price*q:0);},0);}
+/* Sheet */
+function ovClick(e){if(e.target.id==="overlay")closeSheet();}
+function closeSheet(){document.getElementById("overlay").classList.remove("show");const s=document.getElementById("sheet");s.innerHTML="";s.dataset.view="";}
+window.ovClick=ovClick;window.closeSheet=closeSheet;
 
-function updateCartUI(){
-  const count=cartCount(),total=cartTotal();
-  // badge
-  const badge=document.getElementById("cartBadge");
-  if(badge){badge.textContent=count;badge.style.display=count>0?"grid":"none";}
-  // bar
-  const bar=document.getElementById("cartBar");
-  if(bar){
-    bar.classList.toggle("show",count>0);
-    const cnt=document.getElementById("cartBarCount");if(cnt)cnt.textContent=count+" sản phẩm";
-    const tot=document.getElementById("cartBarTotal");if(tot)tot.textContent=money(total);
-  }
+function openCartSheet(){
+  if(cartCount()===0){toast("Giỏ hàng đang trống");return;}
+  const db=loadDB()||{products:[]};
+  const s=document.getElementById("sheet");s.dataset.view="cart";
+  s.innerHTML=`<div class="sheet-drag"></div><div class="sheet-head"><h2>🛒 Giỏ hàng</h2><button class="close-btn" onclick="closeSheet()">✕</button></div><div class="sheet-body" id="cartBody"></div><div class="sheet-foot"><button class="btn" onclick="closeSheet()">Tiếp tục mua</button><button class="btn primary" onclick="openCheckout()">Đặt hàng →</button></div>`;
+  document.getElementById("overlay").classList.add("show");renderCartBody(db);
 }
+window.openCartSheet=openCartSheet;
 
-function openCart(){
-  if(cartCount()===0){toast("Giỏ hàng trống");return;}
-  const items=Object.entries(cart).map(([id,qty])=>{const p=productById(id);return p?{p,qty}:null;}).filter(Boolean);
-  const total=cartTotal();
-  const rows=items.map(({p,qty})=>`<div class="cart-item">
-    ${thumbHtml(p,40)}
-    <div class="grow"><div class="cart-item-name">${esc(p.name)}</div><div class="cart-item-price">${money(p.price)} × ${qty} = <b>${money(p.price*qty)}</b></div></div>
-    <div class="sp-qty" style="border-color:var(--line)">
-      <button onclick="changeCartQty('${p.id}',-1);refreshCartModal()">−</button>
-      <span class="sp-qty-val">${qty}</span>
-      <button onclick="changeCartQty('${p.id}',1);refreshCartModal()">＋</button>
-    </div>
-  </div>`).join("");
-  mountModal(`<div class="modal">
-    <div class="modal-head"><h2>🛒 Giỏ hàng (${cartCount()})</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
-    <div class="modal-body" id="cartBody">
-      ${rows}
-      <div class="cart-total-row"><span>Tổng cộng</span><span class="amount">${money(total)}</span></div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn" onclick="closeModal()">Tiếp tục mua</button>
-      <button class="btn primary" style="flex:1" onclick="openCheckout()">Đặt hàng →</button>
-    </div>
-  </div>`);
-}
-
-function refreshCartModal(){
-  if(cartCount()===0){closeModal();updateCartUI();renderStoreGrid();return;}
-  updateCartUI();openCart();
+function renderCartBody(db){
+  const items=Object.entries(cart).map(([id,qty])=>{const p=(db.products||[]).find(x=>x.id===id);return p?{p,qty}:null;}).filter(Boolean);
+  const el=document.getElementById("cartBody");if(!el)return;
+  el.innerHTML=items.map(({p,qty})=>`<div class="cart-item">${p.image?`<div class="ci-img"><img src="${esc(p.image)}" alt="${esc(p.name)}"></div>`:`<div class="ci-img">${getIcon(p.category)}</div>`}<div class="ci-info"><div class="ci-name">${esc(p.name)}</div><div class="ci-price">${money(p.price)} × ${qty} = <b>${money(p.price*qty)}</b></div></div><div class="qty-ctrl"><button onclick="chg('${p.id}',-1)">−</button><span class="qty-val">${qty}</span><button onclick="chg('${p.id}',1)">＋</button></div></div>`).join("")+`<div class="cart-total"><span>Tổng cộng</span><span class="amount">${money(cartTotal(db))}</span></div>`;
 }
 
 function openCheckout(){
-  const total=cartTotal();
-  mountModal(`<div class="modal">
-    <div class="modal-head"><h2>📋 Thông tin đặt hàng</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
-    <div class="modal-body">
-      <div class="calc-note" style="margin-bottom:16px">
-        🛒 <b>${cartCount()}</b> sản phẩm · Tổng cộng: <b style="color:var(--rose-deep)">${money(total)}</b>
-      </div>
-      <div class="field"><label>Họ và tên *</label><input id="coName" placeholder="Nguyễn Văn A" autocomplete="name"></div>
-      <div class="field"><label>Số điện thoại *</label><input id="coPhone" type="tel" inputmode="tel" placeholder="0901 234 567" autocomplete="tel"></div>
-      <div class="field"><label>Ghi chú cho đơn hàng</label><textarea id="coNote" placeholder="Màu sắc, kích thước, địa chỉ giao..."></textarea></div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn" onclick="openCart()">← Quay lại</button>
-      <button class="btn primary" style="flex:1" id="confirmOrder">✓ Xác nhận đặt hàng</button>
-    </div>
-  </div>`);
-  document.getElementById("confirmOrder").onclick=submitOrder;
+  const db=loadDB()||{products:[]};const total=cartTotal(db);
+  const s=document.getElementById("sheet");s.dataset.view="checkout";
+  s.innerHTML=`<div class="sheet-drag"></div><div class="sheet-head"><h2>📋 Thông tin đặt hàng</h2><button class="close-btn" onclick="closeSheet()">✕</button></div>
+  <div class="sheet-body">
+    <div class="order-sum"><div class="lbl">Tổng (${cartCount()} sản phẩm)</div><div class="val">${money(total)}</div></div>
+    <div class="field"><label>Họ và tên *</label><input id="coName" placeholder="Nguyễn Văn A" autocomplete="name"></div>
+    <div class="field"><label>Số điện thoại *</label><input id="coPhone" type="tel" inputmode="tel" placeholder="0901 234 567" autocomplete="tel"></div>
+    <div class="field"><label>Địa chỉ giao hàng</label><input id="coAddr" placeholder="Số nhà, tên đường, phường/xã..." autocomplete="street-address"></div>
+    <div class="field"><label>Ghi chú</label><textarea id="coNote" placeholder="Màu sắc, số lượng cụ thể..."></textarea></div>
+  </div>
+  <div class="sheet-foot"><button class="btn" onclick="openCartSheet()">← Giỏ hàng</button><button class="btn primary" onclick="submitOrder()" style="flex:1">✓ Xác nhận đặt hàng</button></div>`;
   document.getElementById("coName").focus();
 }
+window.openCheckout=openCheckout;
 
 function submitOrder(){
-  const name=document.getElementById("coName").value.trim();
-  const phone=document.getElementById("coPhone").value.trim();
-  const note=document.getElementById("coNote").value.trim();
+  const name=document.getElementById("coName")?.value.trim();
+  const phone=document.getElementById("coPhone")?.value.trim();
+  const addr=document.getElementById("coAddr")?.value.trim();
+  const note=document.getElementById("coNote")?.value.trim();
   if(!name){toast("Vui lòng nhập họ tên");return;}
   if(!phone){toast("Vui lòng nhập số điện thoại");return;}
-  // Find or create customer
-  let cust=DB.customers.find(c=>c.phone===phone||c.name===name);
-  if(!cust){cust={id:uid(),name,phone,address:"",note:""};DB.customers.push(cust);}
-  else{if(!cust.phone&&phone)cust.phone=phone;}
-  // Create sale transactions
-  const today=new Date().toISOString().slice(0,10);
+  const db=loadDB()||{products:[],customers:[],transactions:[],suppliers:[],seeded:false};
+  let cust=db.customers.find(c=>c.phone===phone);
+  if(!cust){cust={id:uid(),name,phone,address:addr||"",note:""};db.customers.push(cust);}
+  else{if(!cust.name&&name)cust.name=name;if(addr&&!cust.address)cust.address=addr;}
+  const today=new Date().toISOString().slice(0,10);const total=cartTotal(db);
   Object.entries(cart).forEach(([productId,qty])=>{
-    const p=productById(productId);if(!p||qty<=0)return;
-    const actualQty=Math.min(qty,p.stock);if(actualQty<=0)return;
-    DB.transactions.push({id:uid(),type:"sale",date:today,productId,qty:actualQty,unitPrice:p.price,unitCost:p.cost,partyId:cust.id,note:note||"Đơn qua cửa hàng online"});
-    p.stock-=actualQty;
+    const p=db.products.find(x=>x.id===productId);if(!p||qty<=0)return;
+    const aq=Math.min(qty,p.stock);if(aq<=0)return;
+    db.transactions.push({id:uid(),type:"sale",date:today,productId,qty:aq,unitPrice:p.price,unitCost:p.cost,partyId:cust.id,note:(note?"[Online] "+note:"Đơn hàng online")+(addr?" | Địa chỉ: "+addr:"")});
+    p.stock-=aq;
   });
-  save();
-  const total=cartTotal(); // capture before clearing
-  cart={};updateCartUI();
-  // Success screen
-  document.getElementById("modalMount").innerHTML=`<div class="modal-back"><div class="modal" style="max-width:400px">
-    <div class="modal-body" style="text-align:center;padding:32px 24px">
-      <div style="font-size:52px;margin-bottom:14px">🎉</div>
-      <h2 style="font-size:22px;margin-bottom:10px;color:var(--good)">Đặt hàng thành công!</h2>
-      <p class="muted">Cảm ơn <b>${esc(name)}</b> đã mua hàng.</p>
-      <p class="muted">Chúng tôi sẽ liên hệ lại qua số <b>${esc(phone)}</b>.</p>
-      <div style="background:var(--surface-2);border-radius:12px;padding:14px;margin:18px 0;font-size:15px">
-        Tổng đơn hàng: <b style="font-family:'Fraunces',serif;font-size:20px;color:var(--rose-deep)">${money(total)}</b>
-      </div>
-      <button class="btn primary" style="width:100%" onclick="document.getElementById('modalMount').innerHTML='';renderStoreGrid()">Tiếp tục mua hàng</button>
-    </div>
-  </div></div>`;
-  renderStoreGrid();
+  saveDB(db);const t=total;cart={};updateCartUI({products:[]});
+  document.getElementById("sheet").innerHTML=`<div class="sheet-body success-body"><div class="success-ico">🎉</div><h2>Đặt hàng thành công!</h2><p style="color:var(--ink-soft);font-size:14px;margin:0 0 4px">Cảm ơn bạn đã tin tưởng Hoàng Hiền!</p><div class="success-box"><div class="success-row"><span class="k">Khách hàng</span><b>${esc(name)}</b></div><div class="success-row"><span class="k">Số điện thoại</span><b>${esc(phone)}</b></div>${addr?`<div class="success-row"><span class="k">Địa chỉ</span><b style="text-align:right;max-width:55%;word-break:break-word">${esc(addr)}</b></div>`:""}<div class="success-row"><span class="k">Tổng tiền</span><b style="color:var(--rose-deep);font-size:17px;font-family:'Playfair Display',serif">${money(t)}</b></div></div><p style="color:var(--ink-soft);font-size:13px;margin:0 0 20px">Chúng tôi sẽ liên hệ xác nhận và giao hàng sớm nhất. 📦</p><button class="btn primary" style="width:100%" onclick="closeSheet();renderCats()">Tiếp tục mua hàng</button><a href="https://facebook.com/hoanghiencosmetics" target="_blank" rel="noopener" class="btn" style="width:100%;margin-top:10px;text-decoration:none;background:#1877f2;border-color:#1877f2;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px">👍 Nhắn tin xác nhận qua Facebook</a></div>`;
 }
+window.submitOrder=submitOrder;
 
-window.storeSetCat=storeSetCat;window.addToCart=addToCart;window.changeCartQty=changeCartQty;
-window.openCart=openCart;window.refreshCartModal=refreshCartModal;window.openCheckout=openCheckout;
+let toastTm;
+function toast(msg){let t=document.getElementById("xt");if(!t){t=document.createElement("div");t.id="xt";Object.assign(t.style,{position:"fixed",bottom:"calc(env(safe-area-inset-bottom,0px)+90px)",left:"50%",transform:"translateX(-50%) translateY(20px)",background:"var(--plum)",color:"#fff",padding:"11px 20px",borderRadius:"11px",fontWeight:"700",fontSize:"14px",zIndex:"99",opacity:"0",transition:".25s",maxWidth:"90vw",textAlign:"center",pointerEvents:"none"});document.body.appendChild(t);}t.textContent=msg;t.style.opacity="1";t.style.transform="translateX(-50%) translateY(0)";clearTimeout(toastTm);toastTm=setTimeout(()=>{t.style.opacity="0";t.style.transform="translateX(-50%) translateY(20px)";},2500);}
+window.toast=toast;window.renderCats=renderCats;
 
-/* expose globals */
-/* ======= QR SCAN & FETCH PRODUCT ======= */
-async function scanAndFetchProduct(){
-  openQRScanner(async code=>{
-    // Check if it's an existing internal product
-    const existing=DB.products.find(p=>p.id===code||(p.sku&&p.sku===code));
-    if(existing){toast("Tìm thấy sản phẩm trong kho!");openProductModal(existing.id);return;}
-    // Show loading
-    mountModal(`<div class="modal" style="max-width:360px;text-align:center">
-      <div class="modal-body" style="padding:32px 24px">
-        <div style="font-size:36px;margin-bottom:12px">🔍</div>
-        <div style="font-weight:700;margin-bottom:6px">Đang tìm thông tin sản phẩm...</div>
-        <div style="font-size:13px;color:var(--ink-soft)">Mã: ${esc(code)}</div>
-      </div>
-    </div>`);
-    try{
-      const resp=await fetch(`https://world.openbeautyfacts.org/api/v0/product/${encodeURIComponent(code)}.json`);
-      const data=await resp.json();
-      if(data.status===1&&data.product){
-        const prod=data.product;
-        const name=prod.product_name_vi||prod.product_name||prod.product_name_en||"";
-        const brands=prod.brands||"";
-        const ingredients=prod.ingredients_text_vi||prod.ingredients_text||"";
-        const quantity=prod.quantity||"";
-        const imageUrl=prod.image_front_url||prod.image_url||"";
-        const noteLines=[brands&&`Thương hiệu: ${brands}`,quantity&&`Quy cách: ${quantity}`,ingredients&&`Thành phần: ${ingredients}`].filter(Boolean);
-        closeModal();
-        toast("Đã lấy được thông tin sản phẩm!");
-        openProductModal(null,{name,sku:code,note:noteLines.join("\n"),imageUrl,source:"Open Beauty Facts"});
-      }else{
-        // Try Open Food Facts as fallback
-        try{
-          const r2=await fetch(`https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(code)}.json`);
-          const d2=await r2.json();
-          if(d2.status===1&&d2.product){
-            const prod=d2.product;
-            const name=prod.product_name_vi||prod.product_name||"";
-            const brands=prod.brands||"";
-            const imageUrl=prod.image_front_url||prod.image_url||"";
-            closeModal();
-            toast("Đã lấy thông tin từ cơ sở dữ liệu!");
-            openProductModal(null,{name,sku:code,note:brands?`Thương hiệu: ${brands}`:"",imageUrl,source:"Open Food Facts"});
-          }else{
-            closeModal();
-            toast("Không tìm thấy — nhập thủ công");
-            openProductModal(null,{sku:code});
-          }
-        }catch(e2){closeModal();toast("Không có mạng — nhập thủ công");openProductModal(null,{sku:code});}
-      }
-    }catch(e){closeModal();toast("Không có mạng — nhập thủ công");openProductModal(null,{sku:code});}
-  });
-}
-
-/* ======= DANH MỤC HÀNG ======= */
-function renderCategories(){
-  if(!isMob())topBtn("＋ Thêm danh mục","primary",()=>openCategoryModal());
-  if(!DB.categories)DB.categories=[];
-  const cats=DB.categories;
-  const c=document.getElementById("content");
-  if(!cats.length){
-    c.innerHTML=emptyState("🏷","Chưa có danh mục","Thêm danh mục để phân loại sản phẩm.","＋ Thêm danh mục",()=>openCategoryModal());
-    return;
-  }
-  c.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:4px 0">
-    ${cats.map(cat=>{
-      const count=DB.products.filter(p=>p.category===cat.name).length;
-      return`<div class="m-card" style="padding:16px 14px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-          <span style="font-size:26px">${esc(cat.icon||"🏷")}</span>
-          <div style="display:flex;gap:4px">
-            <button class="icon-btn" onclick="openCategoryModal('${cat.id}')">✎</button>
-            <button class="icon-btn" onclick="delCategory('${cat.id}')">🗑</button>
-          </div>
-        </div>
-        <div style="font-weight:700;font-size:15px;margin-bottom:4px">${esc(cat.name)}</div>
-        <div style="font-size:13px;color:var(--ink-soft)">${count} sản phẩm</div>
-      </div>`;
-    }).join("")}
-  </div>`;
-}
-function openCategoryModal(id){
-  if(!DB.categories)DB.categories=[];
-  const cat=id?DB.categories.find(c=>c.id===id):null;
-  const icons=["🏷","💄","🧴","✨","🌸","💅","🛁","🧼","🌿","🪥","💊","🌺","💋","🫧","🧹","🪞","👄","🧡","💆","🌟"];
-  const curIcon=cat?cat.icon||"🏷":"🏷";
-  mountModal(`<div class="modal" style="max-width:420px">
-    <div class="modal-head"><h2>${cat?"Sửa danh mục":"Thêm danh mục"}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
-    <div class="modal-body">
-      <div class="field"><label>Tên danh mục *</label><input id="cName" value="${cat?esc(cat.name):""}" placeholder="VD: Son môi, Kem dưỡng..."></div>
-      <div class="field"><label>Biểu tượng</label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
-          ${icons.map(ic=>`<button type="button" onclick="pickCatIcon(this,'${ic}')" style="width:42px;height:42px;border-radius:8px;border:2px solid ${ic===curIcon?"var(--plum)":"var(--line)"};background:${ic===curIcon?"var(--plum-soft,#f3e8ff)":"var(--surface-2)"};cursor:pointer;font-size:20px;transition:.15s">${ic}</button>`).join("")}
-        </div>
-        <input type="hidden" id="cIcon" value="${esc(curIcon)}">
-      </div>
-    </div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal()">Huỷ</button><button class="btn primary" onclick="saveCategory('${id||""}')">Lưu danh mục</button></div>
-  </div>`);
-}
-function pickCatIcon(btn,icon){
-  document.getElementById("cIcon").value=icon;
-  document.querySelectorAll("#modalWrap button[onclick^='pickCatIcon']").forEach(b=>{
-    b.style.border="2px solid var(--line)";b.style.background="var(--surface-2)";
-  });
-  btn.style.border="2px solid var(--plum)";btn.style.background="var(--plum-soft,#f3e8ff)";
-}
-function saveCategory(id){
-  if(!DB.categories)DB.categories=[];
-  const name=document.getElementById("cName").value.trim();
-  if(!name){toast("Vui lòng nhập tên danh mục");return;}
-  const icon=document.getElementById("cIcon").value||"🏷";
-  if(id){
-    const cat=DB.categories.find(c=>c.id===id);
-    if(cat){
-      const oldName=cat.name;
-      cat.name=name;cat.icon=icon;
-      if(oldName!==name)DB.products.forEach(p=>{if(p.category===oldName)p.category=name;});
-    }
-  }else{
-    if(DB.categories.some(c=>c.name===name)){toast("Danh mục này đã tồn tại");return;}
-    DB.categories.push({id:uid(),name,icon});
-  }
-  save();closeModal();toast(id?"Đã cập nhật danh mục":"Đã thêm danh mục");go("categories");
-}
-function delCategory(id){
-  if(!DB.categories)return;
-  const cat=DB.categories.find(c=>c.id===id);if(!cat)return;
-  const count=DB.products.filter(p=>p.category===cat.name).length;
-  confirmModal("Xoá danh mục?",`Xoá danh mục <b>${esc(cat.name)}</b>?${count?`<br><span class='muted'>${count} sản phẩm sẽ không còn thuộc danh mục này.</span>`:""}`,()=>{
-    DB.categories=DB.categories.filter(c=>c.id!==id);
-    save();toast("Đã xoá danh mục");go("categories");
-  });
-}
-
-window.go=go;window.openProductModal=openProductModal;window.openTxnModal=openTxnModal;
-window.openPartyModal=openPartyModal;window.delProduct=delProduct;window.delTxn=delTxn;window.delParty=delParty;
-window.openQRCode=openQRCode;window.openQRScanner=openQRScanner;window.stopQR=stopQR;
-window.openFabMenu=openFabMenu;
-window.openCategoryModal=openCategoryModal;window.saveCategory=saveCategory;window.delCategory=delCategory;window.pickCatIcon=pickCatIcon;
-window.scanAndFetchProduct=scanAndFetchProduct;
+renderCats();
 </script>
