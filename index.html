@@ -324,9 +324,13 @@ img{max-width:100%;display:block}
   <div class="sheet" id="sheet"></div>
 </div>
 
+<script src="firebase-config.js?v=1"></script>
+<script src="cloud.js?v=1"></script>
 <script>
 "use strict";
 const DB_KEY="myphamHH_v1";
+const CLOUD=!!(window.FB_CONFIG&&window.cloudBackend);
+let cloudDB=null,cloudErr=false;
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
 const money=n=>(Math.round(n||0)).toLocaleString("vi-VN")+"₫";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -334,7 +338,7 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const ICONS={"son":"💄","môi":"💋","mắt":"👁️","trang điểm":"💅","phấn":"🪞","chống nắng":"☀️","dưỡng da":"🧴","kem dưỡng":"✨","serum":"💧","mặt nạ":"🌸","tẩy trang":"🌿","nước hoa":"🌹","sữa tắm":"🛁","dầu gội":"💆","tóc":"💇"};
 function getIcon(cat){if(!cat)return"✦";const c=cat.toLowerCase();for(const[k,v]of Object.entries(ICONS))if(c.includes(k))return v;return"✦";}
 
-function loadDB(){try{const r=localStorage.getItem(DB_KEY);if(r){const d=JSON.parse(r);if(d&&Array.isArray(d.products)&&d.products.length)return d;}}catch(e){}return null;}
+function loadDB(){if(CLOUD)return cloudDB;try{const r=localStorage.getItem(DB_KEY);if(r){const d=JSON.parse(r);if(d&&Array.isArray(d.products)&&d.products.length)return d;}}catch(e){}return null;}
 function saveDB(db){try{localStorage.setItem(DB_KEY,JSON.stringify(db));}catch(e){}}
 
 let cart={},activeCat=null,searchQ="";
@@ -347,7 +351,7 @@ function renderCats(){
   const allProds=(db.products||[]);
   const cats=[...new Set(allProds.map(p=>p.category).filter(Boolean))].sort();
   let html=`<div class="cat-card all-card" onclick="openCat('__all__')"><div style="font-size:32px">🛍️</div><div class="cat-name">Tất cả sản phẩm</div><div class="cat-cnt">${allProds.length} sản phẩm</div></div>`;
-  if(!cats.length){html+=`<div style="grid-column:1/-1;text-align:center;padding:24px 0;color:var(--ink-soft)"><div style="font-size:34px;margin-bottom:8px">✦</div><b>Cửa hàng đang cập nhật</b></div>`;}
+  if(!cats.length){const msg=CLOUD&&cloudErr?"Không tải được sản phẩm, kiểm tra mạng rồi tải lại trang":CLOUD&&!cloudDB?"Đang tải sản phẩm…":"Cửa hàng đang cập nhật";html+=`<div style="grid-column:1/-1;text-align:center;padding:24px 0;color:var(--ink-soft)"><div style="font-size:34px;margin-bottom:8px">✦</div><b>${msg}</b></div>`;}
   else html+=cats.map(c=>`<div class="cat-card" onclick="openCat('${esc(c)}')"><div style="font-size:32px">${getIcon(c)}</div><div class="cat-name">${esc(c)}</div><div class="cat-cnt">${allProds.filter(p=>p.category===c).length} sản phẩm</div></div>`).join("");
   document.getElementById("catGrid").innerHTML=html;
   updateCartUI(db);
@@ -516,6 +520,21 @@ function submitOrder(){
   const note=document.getElementById("coNote")?.value.trim();
   if(!name){toast("Vui lòng nhập họ tên");return;}
   if(!phone){toast("Vui lòng nhập số điện thoại");return;}
+  if(CLOUD){
+    const digits=phone.replace(/\D/g,"");
+    if(digits.length<9||digits.length>12){toast("Số điện thoại không hợp lệ");return;}
+    const db=loadDB()||{products:[]};
+    const items=Object.entries(cart).map(([id,qty])=>{const p=db.products.find(x=>x.id===id);return p?{productId:id,name:p.name,price:p.price,qty:Math.min(qty,p.stock)}:null;}).filter(i=>i&&i.qty>0);
+    if(!items.length){toast("Sản phẩm trong giỏ đã hết hàng");return;}
+    const total=items.reduce((s,i)=>s+i.price*i.qty,0);
+    const btn=document.querySelector("#sheet .sheet-foot .btn.primary");
+    if(btn){btn.disabled=true;btn.textContent="Đang gửi đơn…";}
+    const slow=setTimeout(()=>{if(btn)btn.textContent="Mạng chậm, đang thử gửi…";},8000);
+    window.cloudBackend.add("orders",{name:name.slice(0,100),phone:phone.slice(0,20),address:(addr||"").slice(0,300),note:(note||"").slice(0,500),items,total,createdAt:Date.now(),status:"new"})
+      .then(()=>{clearTimeout(slow);cart={};updateCartUI(db);renderCats();if(activeCat!==null||searchQ)renderProds();showOrderSuccess(name,phone,addr,total);},
+        ()=>{clearTimeout(slow);if(btn){btn.disabled=false;btn.textContent="✓ Xác nhận đặt hàng";}toast("Gửi đơn thất bại, kiểm tra mạng rồi thử lại");});
+    return;
+  }
   const db=loadDB()||{products:[],customers:[],transactions:[],suppliers:[],seeded:false};
   let cust=db.customers.find(c=>c.phone===phone);
   if(!cust){cust={id:uid(),name,phone,address:addr||"",note:""};db.customers.push(cust);}
@@ -529,6 +548,9 @@ function submitOrder(){
   });
   saveDB(db);const t=total;cart={};updateCartUI({products:[]});
   try{localStorage.setItem('myphamHH_notify',JSON.stringify({type:'new_order',name,phone,total:t,ts:Date.now()}));}catch(e){}
+  showOrderSuccess(name,phone,addr,t);
+}
+function showOrderSuccess(name,phone,addr,t){
   document.getElementById("sheet").innerHTML=`<div class="sheet-body success-body"><div class="success-ico">🎉</div><h2>Đặt hàng thành công!</h2><p style="color:var(--ink-soft);font-size:14px;margin:0 0 4px">Cảm ơn bạn đã tin tưởng Hoàng Hiền!</p><div class="success-box"><div class="success-row"><span class="k">Khách hàng</span><b>${esc(name)}</b></div><div class="success-row"><span class="k">Số điện thoại</span><b>${esc(phone)}</b></div>${addr?`<div class="success-row"><span class="k">Địa chỉ</span><b style="text-align:right;max-width:55%;word-break:break-word">${esc(addr)}</b></div>`:""}<div class="success-row"><span class="k">Tổng tiền</span><b style="color:var(--rose-deep);font-size:17px;font-family:'Playfair Display',serif">${money(t)}</b></div></div><p style="color:var(--ink-soft);font-size:13px;margin:0 0 20px">Chúng tôi sẽ liên hệ xác nhận và giao hàng sớm nhất. 📦</p><button class="btn primary" style="width:100%" onclick="closeSheet();renderCats()">Tiếp tục mua hàng</button><a href="https://www.facebook.com/hoang.thi.thu.hien.465261" target="_blank" rel="noopener" class="btn" style="width:100%;margin-top:10px;text-decoration:none;background:#1877f2;border-color:#1877f2;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px">👍 Nhắn tin xác nhận qua Facebook</a></div>`;
 }
 window.submitOrder=submitOrder;
@@ -538,4 +560,28 @@ function toast(msg){let t=document.getElementById("xt");if(!t){t=document.create
 window.toast=toast;window.renderCats=renderCats;
 
 renderCats();
+
+if(CLOUD){
+  // Danh sách hàng công khai, cập nhật tức thì khi cửa hàng sửa giá / tồn kho
+  let rt=0;
+  const refresh=()=>{if(rt)return;rt=requestAnimationFrame(()=>{
+    rt=0;renderCats();
+    if(document.getElementById("prodView").classList.contains("show"))renderProds();
+    const s=document.getElementById("sheet");if(s.dataset.view==="cart")renderCartBody(cloudDB);
+  });};
+  window.cloudBackend.init().then(()=>{
+    window.cloudBackend.listen("catalog",changes=>{
+      const list=cloudDB?cloudDB.products:[];
+      for(const c of changes){
+        const i=list.findIndex(p=>p.id===c.id);
+        if(c.type==="removed"){if(i>=0)list.splice(i,1);continue;}
+        const p=Object.assign({},c.data,{id:c.id});
+        if(i>=0)list[i]=p;else list.push(p);
+      }
+      cloudDB={products:list};cloudErr=false;
+      for(const id of Object.keys(cart))if(!list.some(p=>p.id===id&&p.stock>0))delete cart[id];
+      refresh();
+    },()=>{cloudErr=true;refresh();});
+  },()=>{cloudErr=true;refresh();});
+}
 </script>

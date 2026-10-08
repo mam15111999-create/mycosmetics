@@ -195,6 +195,12 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .order-alert-title{font-weight:700;font-size:15px}
 .order-alert-sub{font-size:12.5px;opacity:.9;margin-top:2px}
 .order-alert-close{font-size:20px;padding:4px 8px;opacity:.8;flex-shrink:0}
+.sync-dot{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft);white-space:nowrap}
+.sync-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--good);flex-shrink:0}
+.sync-dot.busy::before{background:var(--warn)}.sync-dot.err::before{background:var(--bad)}
+@media(max-width:720px){.sync-dot>span{display:none}}
+.menu-toggle{position:relative}
+.menu-dot{position:absolute;top:3px;right:3px;width:10px;height:10px;border-radius:50%;background:#e53935;border:2px solid var(--bg)}
 .notif-badge{background:#e53935;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:6px;vertical-align:middle;display:inline-block;min-width:16px;text-align:center}
 /* =========== FORMS =========== */
 .field{margin-bottom:14px}
@@ -371,6 +377,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       <div><div class="brand-name">Hoàng Hiền</div><div class="brand-sub">Mỹ phẩm</div></div>
     </div>
     <button class="nav-btn active" data-view="dashboard"><span class="ic">◆</span> Tổng quan<span class="notif-badge" id="navBadge" style="display:none">0</span></button>
+    <button class="nav-btn" data-view="orders" id="ordersNav" hidden><span class="ic">🛒</span> Đơn online<span class="notif-badge" id="ordBadge" style="display:none">0</span></button>
     <button class="nav-btn" data-view="products"><span class="ic">▤</span> Mặt hàng &amp; tồn kho</button>
     <button class="nav-btn" id="addProdNavBtn"><span class="ic">➕</span> Thêm sản phẩm</button>
     <button class="nav-btn" data-view="categories"><span class="ic">🏷</span> Danh mục hàng</button>
@@ -386,8 +393,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 
   <div class="main">
     <div class="topbar">
-      <button class="menu-toggle" id="menuToggle" title="Menu">☰</button>
+      <button class="menu-toggle" id="menuToggle" title="Menu">☰<span class="menu-dot" id="menuDot" hidden></span></button>
       <div style="flex:1;min-width:0"><h1 id="viewTitle">Tổng quan</h1><div class="sub" id="viewSub"></div></div>
+      <span class="sync-dot" id="syncDot" hidden><span></span></span>
       <div class="topbar-actions" id="topActions"></div>
     </div>
     <div class="content" id="content"></div>
@@ -434,10 +442,14 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   </div>
 </div>
 
+<script src="firebase-config.js?v=1"></script>
+<script src="cloud.js?v=1"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 "use strict";
 /* ======= AUTH ======= */
+const CB=window.cloudBackend;
+const CLOUD=!!(window.FB_CONFIG&&CB);
 const AUTH_KEY="myphamHH_auth";
 const DB_KEY="myphamHH_v1";
 const THEME_KEY="myphamHH_theme";
@@ -465,6 +477,13 @@ document.getElementById("lBtn").onclick=function(){
   const u=document.getElementById("lUser").value;
   const p=document.getElementById("lPass").value;
   if(!u||!p){showErr("Vui lòng nhập đủ thông tin.");return;}
+  if(CLOUD){
+    const btn=this;btn.disabled=true;btn.textContent="Đang đăng nhập…";
+    CB.signIn(u.trim(),p).then(()=>{document.getElementById("lErr").hidden=true;},
+      e=>{showErr(authErrMsg(e));document.getElementById("lPass").value="";})
+      .finally(()=>{btn.disabled=false;btn.textContent="Đăng nhập →";});
+    return;
+  }
   if(doLogin(u,p)){
     try{sessionStorage.setItem(AUTH_KEY,"1");}catch(e){}
     showApp();seed();go("dashboard");
@@ -478,10 +497,10 @@ document.getElementById("lBtn").onclick=function(){
 function showErr(msg){const e=document.getElementById("lErr");e.hidden=false;e.textContent=msg;}
 
 /* ======= DATA ======= */
-const DEFAULT={products:[],suppliers:[],customers:[],transactions:[],bills:[],categories:[],seeded:false};
+const DEFAULT={products:[],suppliers:[],customers:[],transactions:[],bills:[],categories:[],orders:[],seeded:false};
 let DB=loadDB();
 function loadDB(){try{const r=localStorage.getItem(DB_KEY);if(r)return Object.assign({},DEFAULT,JSON.parse(r));}catch(e){}return JSON.parse(JSON.stringify(DEFAULT));}
-function save(){try{localStorage.setItem(DB_KEY,JSON.stringify(DB));}catch(e){toast("Không lưu được dữ liệu");}}
+function save(){if(CLOUD){cloudSave();return;}try{localStorage.setItem(DB_KEY,JSON.stringify(DB));}catch(e){toast("Không lưu được dữ liệu");}}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 
 /* ======= SEED ======= */
@@ -544,6 +563,7 @@ function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t
 /* ======= ROUTER ======= */
 const VIEWS={
   dashboard:{title:"Tổng quan",sub:"Bức tranh tổng thể cửa hàng",render:renderDashboard},
+  orders:{title:"Đơn online",sub:"Đơn khách đặt trên trang web",render:renderOrders},
   products:{title:"Mặt hàng & tồn kho",sub:"Sản phẩm, giá nhập/bán, tồn kho",render:renderProducts},
   salesPos:{title:"Bán hàng",sub:"Lập hóa đơn, tính tiền, giảm giá",render:renderSalesPos},
   purchases:{title:"Nhập hàng",sub:"Nhập kho từ nhà cung cấp",render:renderPurchases},
@@ -598,6 +618,7 @@ function updateFAB(view){
   else if(view==="customers"){fab.textContent="＋";fab.title="Thêm khách hàng";fab.onclick=()=>openPartyModal("customer");}
   else if(view==="partners"){fab.textContent="＋";fab.title="Thêm đối tác";fab.onclick=()=>openPartyModal(partnerTab==="customer"?"customer":"supplier");}
   else{fab.onclick=null;}
+  fab.hidden=!fab.onclick;
 }
 
 /* hamburger */
@@ -1133,7 +1154,30 @@ function delParty(kind,id){
 function renderSettings(){
   const c=document.getElementById("content");
   const cred=getAuth();
-  c.innerHTML=`
+  const L=CLOUD?localBackup():null,hasLocal=!!(L&&((L.products||[]).length||(L.transactions||[]).length));
+  c.innerHTML=CLOUD?`
+    <div class="panel">
+      <div class="panel-head"><h2>🔒 Tài khoản</h2></div>
+      <div class="panel-body">
+        <p style="margin:8px 0 12px">Đang đăng nhập: <b>${esc(cloudUser)}</b></p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" id="resetPwBtn">✉ Gửi email đổi mật khẩu</button>
+          <button class="btn ghost" onclick="cloudLogout()">⏏ Đăng xuất</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>☁️ Đồng bộ trực tuyến</h2></div>
+      <div class="panel-body">
+        <p class="muted">Dữ liệu lưu trên máy chủ, tự đồng bộ giữa điện thoại, máy tính và trang khách hàng. Mất mạng vẫn bán được, có mạng lại sẽ tự đồng bộ.</p>
+        <div class="calc-note">${DB.products.length} mặt hàng · ${DB.transactions.length} giao dịch · ${(DB.bills||[]).length} hóa đơn · ${(DB.orders||[]).length} đơn online</div>
+        ${hasLocal?`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Máy này còn dữ liệu cũ (chưa đồng bộ):</b> ${(L.products||[]).length} mặt hàng, ${(L.transactions||[]).length} giao dịch, ${(L.bills||[]).length} hóa đơn.<br><button class="btn primary" id="uploadLocalBtn" style="margin-top:10px">⬆ Đưa dữ liệu máy này lên đám mây</button></div>`:""}
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+          <button class="btn" id="rebuildCatBtn">↻ Làm mới hàng trên trang khách</button>
+          <button class="btn" id="exportJson">⬇ Tải file sao lưu</button>
+        </div>
+      </div>
+    </div>`:`
     <div class="panel">
       <div class="panel-head"><h2>🔒 Tài khoản đăng nhập</h2></div>
       <div class="panel-body">
@@ -1149,7 +1193,8 @@ function renderSettings(){
         <button class="btn primary" id="saveCredBtn">Lưu thay đổi tài khoản</button>
         <div id="credMsg" style="margin-top:10px;font-size:13px"></div>
       </div>
-    </div>
+    </div>`;
+  c.innerHTML+=`
     <div class="panel">
       <div class="panel-head"><h2>🎨 Giao diện</h2></div>
       <div class="panel-body">
@@ -1171,7 +1216,7 @@ function renderSettings(){
           <button class="btn" id="copyStoreLink">⧉ Sao chép link cửa hàng</button>
         </div>
       </div>
-    </div>
+    </div>${CLOUD?"":`
     <div class="panel">
       <div class="panel-head"><h2>☁️ Đồng bộ lên web (GitHub Pages)</h2></div>
       <div class="panel-body">
@@ -1187,7 +1232,7 @@ function renderSettings(){
           <span class="muted" style="align-self:center">${DB.products.length} mặt hàng · ${DB.transactions.length} giao dịch</span>
         </div>
       </div>
-    </div>
+    </div>`}
     <div class="panel">
       <div class="panel-head"><h2>💾 Sao lưu dữ liệu</h2></div>
       <div class="panel-body">
@@ -1222,14 +1267,19 @@ function renderSettings(){
     </div>`;
 
   /* store link */
-  document.getElementById("openStoreBtn").onclick=()=>{window.open(window.location.href.split("#")[0]+"#store","_blank");};
+  const storeUrl=new URL("./",location.href).href;
+  document.getElementById("openStoreBtn").onclick=()=>{window.open(storeUrl,"_blank");};
   document.getElementById("copyStoreLink").onclick=()=>{
-    const url=window.location.href.split("#")[0]+"#store";
-    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(()=>toast("Đã sao chép link cửa hàng")).catch(()=>toast(url));
-    else toast(url);
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(storeUrl).then(()=>toast("Đã sao chép link cửa hàng")).catch(()=>toast(storeUrl));
+    else toast(storeUrl);
   };
+  if(CLOUD){
+    document.getElementById("resetPwBtn").onclick=()=>CB.resetPassword(cloudUser).then(()=>toast("Đã gửi email đổi mật khẩu tới "+cloudUser),e=>toast(authErrMsg(e)));
+    document.getElementById("rebuildCatBtn").onclick=cloudRebuildCatalog;
+    document.getElementById("uploadLocalBtn")?.addEventListener("click",cloudUploadLocal);
+  }
   /* credentials */
-  document.getElementById("saveCredBtn").onclick=function(){
+  if(!CLOUD)document.getElementById("saveCredBtn").onclick=function(){
     const newUser=document.getElementById("newUser").value.trim();
     const p1=document.getElementById("newPass").value;
     const p2=document.getElementById("newPass2").value;
@@ -1259,9 +1309,7 @@ function renderSettings(){
     const r=new FileReader();r.onload=()=>{
       let data;try{data=JSON.parse(r.result);}catch(err){toast("File không hợp lệ");return;}
       if(!data||!Array.isArray(data.products)){toast("File không đúng định dạng");return;}
-      confirmModal("Nhập dữ liệu từ file?","Toàn bộ dữ liệu hiện tại sẽ bị thay thế bằng dữ liệu từ file. Tiếp tục?",()=>{
-        DB=Object.assign({},DEFAULT,data);save();toast("✓ Đã nhập dữ liệu thành công!");go("dashboard");
-      });
+      confirmModal("Nhập dữ liệu từ file?",`Toàn bộ dữ liệu hiện tại${CLOUD?" trên máy chủ (mọi máy)":""} sẽ bị thay thế bằng dữ liệu từ file. Tiếp tục?`,()=>replaceAllData(data,"✓ Đã nhập dữ liệu thành công!"));
     };r.readAsText(f);
     this.value="";
   });
@@ -1276,11 +1324,18 @@ function renderSettings(){
     if(!raw){toast("Chưa có dữ liệu để khôi phục");return;}
     let data;try{data=JSON.parse(raw);}catch(e){toast("Dữ liệu không hợp lệ");return;}
     if(!data||!Array.isArray(data.products)){toast("Dữ liệu không đúng định dạng");return;}
-    confirmModal("Khôi phục dữ liệu?","Toàn bộ dữ liệu hiện tại sẽ bị thay thế. Tiếp tục?",()=>{DB=Object.assign({},DEFAULT,data);save();toast("Đã khôi phục");go("dashboard");});
+    confirmModal("Khôi phục dữ liệu?",`Toàn bộ dữ liệu hiện tại${CLOUD?" trên máy chủ (mọi máy)":""} sẽ bị thay thế. Tiếp tục?`,()=>replaceAllData(data,"Đã khôi phục"));
   };
   document.getElementById("wipe").onclick=function(){
-    confirmModal("Xoá toàn bộ dữ liệu?","<b>Không thể hoàn tác.</b> Bạn chắc chắn?",()=>{DB=JSON.parse(JSON.stringify(DEFAULT));save();toast("Đã xoá toàn bộ");go("dashboard");});
+    confirmModal("Xoá toàn bộ dữ liệu?",`<b>Không thể hoàn tác.</b>${CLOUD?" Dữ liệu trên máy chủ sẽ mất ở mọi máy.":""} Bạn chắc chắn?`,()=>{DB=JSON.parse(JSON.stringify(DEFAULT));save();toast("Đã xoá toàn bộ");go("dashboard");});
   };
+}
+async function replaceAllData(data,msg){
+  if(CLOUD){
+    for(const p of data.products)if(p&&p.image)p.image=await shrinkDataImage(p.image);
+    if(!Array.isArray(data.orders))data.orders=DB.orders;
+  }
+  DB=Object.assign(JSON.parse(JSON.stringify(DEFAULT)),data);save();toast(msg);go("dashboard");
 }
 function getTheme(){try{return localStorage.getItem(THEME_KEY)||"auto";}catch(e){return "auto";}}
 function setTheme(t){try{localStorage.setItem(THEME_KEY,t);}catch(e){}if(t==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",t);}
@@ -1312,7 +1367,7 @@ function mountModal(html){
     }
   }
 }
-function closeModal(){if(_qrOpen){stopQR();return;}document.getElementById("modalMount").innerHTML="";}
+function closeModal(){if(_qrOpen){stopQR();return;}document.getElementById("modalMount").innerHTML="";if(cloudDirty)cloudRerender();}
 window.closeModal=closeModal;
 
 function confirmModal(title,body,onYes){
@@ -1368,12 +1423,12 @@ function openProductModal(id,prefill={}){
   const openStock=p?p.stock:0;
   const prev=document.getElementById("imgPrev");
   if(!p&&pf.imageUrl){
-    fetch(pf.imageUrl).then(r=>r.blob()).then(blob=>{const rd=new FileReader();rd.onload=()=>{imgData=rd.result;if(prev)prev.innerHTML=`<img src="${imgData}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`;};rd.readAsDataURL(blob);}).catch(()=>{});
+    fetch(pf.imageUrl).then(r=>r.blob()).then(blob=>{const rd=new FileReader();rd.onload=async()=>{imgData=await shrinkImage(rd.result);if(prev)prev.innerHTML=`<img src="${imgData}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`;};rd.readAsDataURL(blob);}).catch(()=>{});
   }
   document.getElementById("imgFile").addEventListener("change",e=>{
     const f=e.target.files[0];if(!f)return;
-    if(f.size>3*1024*1024){toast("Ảnh quá lớn (tối đa 3MB)");return;}
-    const r=new FileReader();r.onload=()=>{imgData=r.result;prev.innerHTML=`<img src="${imgData}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`;};r.readAsDataURL(f);
+    if(f.size>25*1024*1024){toast("Ảnh quá lớn (tối đa 25MB)");return;}
+    const r=new FileReader();r.onload=async()=>{imgData=await shrinkImage(r.result);prev.innerHTML=`<img src="${imgData}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`;};r.readAsDataURL(f);
   });
   document.getElementById("imgClear").onclick=()=>{imgData="";prev.innerHTML="✦";document.getElementById("imgFile").value="";};
   const upd=()=>{const cost=+document.getElementById("fCost").value||0,price=+document.getElementById("fPrice").value||0;const pr=price-cost;const m=price?pr/price*100:0;document.getElementById("marginNote").innerHTML=`Lợi nhuận/SP: <b style="color:${pr>=0?"var(--good)":"var(--bad)"}">${money(pr)}</b> · Biên ${m.toFixed(0)}%`;};
@@ -1712,6 +1767,327 @@ function emptyState(icon,title,desc,btnLabel,fn){
   return`<div class="empty" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)"><div class="big">${icon}</div><h3>${title}</h3><p class="muted" style="max-width:320px;margin:6px auto 16px">${desc}</p><button class="btn primary" id="${bid}">${btnLabel}</button></div>`;
 }
 
+/* ======= ĐỒNG BỘ TRỰC TUYẾN ======= */
+const CLOUD_COLS=["products","categories","suppliers","customers","transactions","bills","orders"];
+// Tồn kho và điểm gửi lên dạng cộng/trừ chênh lệch: 2 máy cùng bán một lúc vẫn trừ kho đúng
+const INC_FIELDS={products:["stock"],customers:["points"]};
+// Trang khách chỉ đọc bản sao này, không thấy giá nhập
+const PUBLIC_FIELDS=["id","name","price","category","image","stock","lowStock","sku","note"];
+const CLOUD_USER_KEY="myphamHH_cloudUser";
+let cloudSynced={},cloudUnsubs=[],cloudLoaded=new Set(),cloudReady=false,cloudPending=0,cloudFailed=false,cloudDirty=false,cloudRaf=0,cloudUser="";
+
+function stableJSON(v){
+  if(Array.isArray(v))return"["+v.map(stableJSON).join(",")+"]";
+  if(v&&typeof v==="object")return"{"+Object.keys(v).filter(k=>v[k]!==undefined).sort().map(k=>JSON.stringify(k)+":"+stableJSON(v[k])).join(",")+"}";
+  return JSON.stringify(v===undefined?null:v);
+}
+
+// So DB hiện tại với bản đã đồng bộ, chỉ gửi những gì thay đổi
+function cloudDiffOps(){
+  const ops=[];
+  for(const col of CLOUD_COLS){
+    const prev=cloudSynced[col]||(cloudSynced[col]={}),seen=new Set(),incF=INC_FIELDS[col]||[];
+    for(const r of DB[col]||[]){
+      if(!r||!r.id)continue;
+      seen.add(r.id);
+      const s=stableJSON(r);if(prev[r.id]===s)continue;
+      const now=JSON.parse(JSON.stringify(r));let op;
+      if(!prev[r.id])op={op:"set",col,id:r.id,data:now};
+      else{
+        const old=JSON.parse(prev[r.id]),data={},inc={};
+        for(const k of Object.keys(now)){
+          if(stableJSON(now[k])===stableJSON(old[k]))continue;
+          if(incF.includes(k)&&typeof now[k]==="number"&&typeof old[k]==="number")inc[k]=now[k]-old[k];
+          else data[k]=now[k];
+        }
+        op={op:"set",col,id:r.id,data,merge:true,inc,del:Object.keys(old).filter(k=>!(k in now))};
+      }
+      ops.push(op);prev[r.id]=s;
+      if(col==="products"){const c=catalogOp(op);if(c)ops.push(c);}
+    }
+    for(const id of Object.keys(prev))if(!seen.has(id)){
+      ops.push({op:"del",col,id});
+      if(col==="products")ops.push({op:"del",col:"catalog",id});
+      delete prev[id];
+    }
+  }
+  return ops;
+}
+function catalogOp(op){
+  const pick=o=>{const r={};for(const f of PUBLIC_FIELDS)if(o&&f in o)r[f]=o[f];return r;};
+  const c={op:"set",col:"catalog",id:op.id,data:pick(op.data),merge:!!op.merge,inc:pick(op.inc),del:(op.del||[]).filter(f=>PUBLIC_FIELDS.includes(f))};
+  if(c.merge&&!Object.keys(c.data).length&&!Object.keys(c.inc).length&&!c.del.length)return null;
+  return c;
+}
+
+// Ghi đè tại chỗ để form đang mở vẫn giữ đúng đối tượng
+function cloudApply(col,changes){
+  const arr=DB[col]||(DB[col]=[]),prev=cloudSynced[col]||(cloudSynced[col]={});
+  for(const c of changes){
+    const i=arr.findIndex(x=>x.id===c.id);
+    if(c.type==="removed"){if(i>=0)arr.splice(i,1);delete prev[c.id];continue;}
+    const data=Object.assign({},c.data,{id:c.id});
+    let rec=data;
+    if(i>=0){rec=arr[i];for(const k of Object.keys(rec))if(!(k in data))delete rec[k];Object.assign(rec,data);}
+    else arr.push(rec);
+    prev[c.id]=stableJSON(rec);
+  }
+}
+
+function cloudSave(){
+  if(!cloudReady)return;
+  const ops=cloudDiffOps();if(!ops.length)return;
+  cloudPending++;updateSyncDot();
+  CB.commit(ops).then(()=>{cloudFailed=false;},e=>{cloudFailed=true;toast("Không lưu được lên máy chủ: "+cloudErrText(e));})
+    .finally(()=>{cloudPending--;updateSyncDot();});
+}
+function cloudErrText(e){
+  const c=(e&&e.code)||"";
+  if(/permission/.test(c))return"tài khoản không có quyền";
+  if(/unavailable|network/.test(c))return"mất mạng";
+  return c||(e&&e.message)||"lỗi không rõ";
+}
+function authErrMsg(e){
+  const c=(e&&e.code)||"";
+  if(/invalid-credential|wrong-password|user-not-found|invalid-login/.test(c))return"Sai email hoặc mật khẩu.";
+  if(/invalid-email/.test(c))return"Email không hợp lệ.";
+  if(/too-many-requests/.test(c))return"Thử sai quá nhiều lần, vui lòng đợi vài phút.";
+  if(/network/.test(c))return"Không có mạng, kiểm tra kết nối rồi thử lại.";
+  if(/user-disabled/.test(c))return"Tài khoản đã bị khoá.";
+  return"Lỗi đăng nhập: "+(c||(e&&e.message)||"");
+}
+
+function updateSyncDot(){
+  const el=document.getElementById("syncDot");if(!el)return;
+  el.hidden=!CLOUD;
+  const off=!navigator.onLine;
+  el.className="sync-dot"+(cloudFailed?" err":(cloudPending||off)?" busy":"");
+  el.firstElementChild.textContent=cloudFailed?"Lỗi đồng bộ":off?"Mất mạng – sẽ tự đồng bộ":cloudPending?"Đang đồng bộ…":"Đã đồng bộ";
+  el.title=el.firstElementChild.textContent;
+}
+addEventListener("online",updateSyncDot);addEventListener("offline",updateSyncDot);
+
+function cloudRerender(){
+  if(cloudRaf)return;
+  cloudRaf=requestAnimationFrame(()=>{
+    cloudRaf=0;
+    if(!cloudReady||document.getElementById("appWrap").hidden)return;
+    const a=document.activeElement;
+    // Không vẽ lại khi đang mở form hoặc đang gõ, để khỏi mất chữ đang nhập
+    if(document.getElementById("modalMount").firstElementChild||(a&&a.closest&&a.closest("#content")&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))){cloudDirty=true;return;}
+    cloudDirty=false;const y=window.scrollY;go(current);window.scrollTo(0,y);
+  });
+}
+document.addEventListener("focusout",()=>{if(cloudDirty)setTimeout(cloudRerender,0);});
+
+function cloudStart(){
+  cloudStop();
+  for(const col of CLOUD_COLS)DB[col]=[];
+  cloudSynced={};cloudLoaded=new Set();cloudReady=false;cloudFailed=false;
+  document.getElementById("viewTitle").textContent="Đang tải dữ liệu…";
+  document.getElementById("viewSub").textContent="";
+  document.getElementById("topActions").innerHTML="";
+  document.getElementById("fab").hidden=true;
+  document.getElementById("content").innerHTML=`<div class="empty"><div class="big">☁️</div><h3>Đang tải dữ liệu từ máy chủ…</h3></div>`;
+  updateSyncDot();
+  for(const col of CLOUD_COLS){
+    cloudUnsubs.push(CB.listen(col,changes=>{
+      cloudApply(col,changes);
+      if(col==="orders")onOrderChanges(changes);
+      if(!cloudReady){
+        cloudLoaded.add(col);
+        if(cloudLoaded.size===CLOUD_COLS.length){cloudReady=true;updateOrderBadge();go(current==="orders"?"orders":"dashboard");}
+        return;
+      }
+      cloudRerender();
+    },err=>{
+      cloudFailed=true;updateSyncDot();
+      if(cloudReady){toast("Mất kết nối dữ liệu: "+cloudErrText(err));return;}
+      const perm=/permission/.test((err&&err.code)||"");
+      document.getElementById("viewTitle").textContent="Không tải được dữ liệu";
+      document.getElementById("content").innerHTML=`<div class="empty"><div class="big">⚠️</div><h3>${perm?"Tài khoản này không có quyền quản lý cửa hàng":"Không kết nối được máy chủ"}</h3><p class="muted">${esc(perm?cloudUser:cloudErrText(err))}</p><button class="btn primary" onclick="cloudLogout()">Đăng nhập tài khoản khác</button></div>`;
+    }));
+  }
+}
+function cloudStop(){cloudUnsubs.forEach(u=>{try{u();}catch(e){}});cloudUnsubs=[];cloudReady=false;}
+function cloudLogout(){try{localStorage.removeItem(CLOUD_USER_KEY);}catch(e){}CB.signOut();}
+
+function setupCloudLogin(){
+  const u=document.getElementById("lUser");
+  u.type="email";u.placeholder="email@gmail.com";u.setAttribute("inputmode","email");
+  u.closest(".field").querySelector("label").textContent="Email";
+  const f=document.createElement("button");
+  f.className="btn ghost";f.type="button";f.textContent="Quên mật khẩu?";
+  f.style.cssText="width:100%;margin-top:8px;border:0;background:transparent;font-size:13px;color:var(--ink-soft)";
+  f.onclick=()=>{
+    const e=u.value.trim();if(!e){showErr("Nhập email rồi bấm Quên mật khẩu.");return;}
+    CB.resetPassword(e).then(()=>{document.getElementById("lErr").hidden=true;toast("Đã gửi email đặt lại mật khẩu tới "+e);},err=>showErr(authErrMsg(err)));
+  };
+  document.getElementById("lBtn").after(f);
+}
+
+function cloudInit(){
+  document.getElementById("ordersNav").hidden=false;
+  const foot=document.querySelector(".nav-foot");if(foot)foot.textContent="Dữ liệu đồng bộ trực tuyến.";
+  setupCloudLogin();
+  const btn=document.getElementById("lBtn");
+  let remembered="";try{remembered=localStorage.getItem(CLOUD_USER_KEY)||"";}catch(e){}
+  // Đã đăng nhập lần trước: mở thẳng màn hình app trong lúc chờ xác thực, khỏi nháy màn đăng nhập
+  if(remembered){cloudUser=remembered;showApp();document.getElementById("content").innerHTML=`<div class="empty"><div class="big">☁️</div><h3>Đang kết nối…</h3></div>`;document.getElementById("viewTitle").textContent="Đang kết nối…";}
+  else{btn.disabled=true;btn.textContent="Đang kết nối…";showLogin();}
+  CB.init({auth:true}).then(()=>{
+    CB.onAuth(user=>{
+      btn.disabled=false;btn.textContent="Đăng nhập →";
+      if(user){
+        cloudUser=user.email||"";try{localStorage.setItem(CLOUD_USER_KEY,cloudUser);}catch(e){}
+        showApp();cloudStart();
+      }else{
+        cloudUser="";cloudStop();
+        for(const col of CLOUD_COLS)DB[col]=[];
+        cloudSynced={};updateOrderBadge();showLogin();
+      }
+    });
+  },()=>{
+    btn.disabled=false;btn.textContent="Đăng nhập →";showLogin();
+    showErr("Không kết nối được máy chủ. Kiểm tra mạng rồi tải lại trang.");
+  });
+}
+
+/* ---- Đơn online ---- */
+let orderFilter="new";
+function setOrderFilter(f){orderFilter=f;go("orders");}
+const normPhone=s=>{let d=String(s||"").replace(/\D/g,"");if(d.startsWith("84")&&d.length>=11)d="0"+d.slice(2);return d;};
+function renderOrders(){
+  const all=(DB.orders||[]).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const nNew=all.filter(o=>o.status==="new").length;
+  const list=all.filter(o=>orderFilter==="all"||(orderFilter==="new")===(o.status==="new"));
+  const tab=(k,l)=>`<button class="seg-tab${orderFilter===k?" active":""}" onclick="setOrderFilter('${k}')">${l}</button>`;
+  const pill={new:`<span class="pill warn">Chờ xác nhận</span>`,done:`<span class="pill good">Đã bán</span>`,cancelled:`<span class="pill bad">Đã huỷ</span>`};
+  const card=o=>{
+    const tel=String(o.phone||"").replace(/[^\d+]/g,"");
+    const t=o.createdAt?new Date(o.createdAt).toLocaleString("vi-VN",{hour:"2-digit",minute:"2-digit",day:"2-digit",month:"2-digit"}):"";
+    const id=esc(o.id);
+    return`<div class="m-card">
+      <div class="m-card-head"><div class="grow"><div style="font-weight:700;font-size:16px">${esc(o.name)}</div><div class="muted" style="font-size:13px">${esc(o.phone)} · ${t}</div></div>${pill[o.status]||""}</div>
+      <div class="m-card-body">
+        ${o.address?`<div class="m-row"><span>Địa chỉ</span><b style="max-width:65%">${esc(o.address)}</b></div>`:""}
+        ${o.note?`<div class="m-row"><span>Ghi chú</span><b style="max-width:65%">${esc(o.note)}</b></div>`:""}
+        ${(o.items||[]).map(it=>`<div class="m-row"><span>${esc(it.name)} × ${fmt(it.qty)}</span><b>${money(it.price*it.qty)}</b></div>`).join("")}
+        <div class="m-row"><span style="color:var(--ink);font-weight:700">Tổng cộng</span><b style="color:var(--rose-deep);font-size:16px">${money(o.total)}</b></div>
+      </div>
+      <div class="m-card-foot">
+        ${tel?`<a class="btn ghost" href="tel:${tel}">📞 Gọi</a><a class="btn ghost" href="https://zalo.me/${tel}" target="_blank" rel="noopener">💬 Zalo</a>`:""}
+        ${o.status==="new"?`<button class="btn ghost" onclick="cancelOrder('${id}')">✕ Huỷ</button><button class="btn primary" onclick="confirmOrder('${id}')">✓ Xác nhận bán</button>`:""}
+      </div>
+    </div>`;
+  };
+  document.getElementById("content").innerHTML=`<div class="seg-tabs">${tab("new",`Mới (${nNew})`)}${tab("done","Đã xử lý")}${tab("all","Tất cả")}</div>`+
+    (list.length?`<div class="card-list">${list.map(card).join("")}</div>`:
+    `<div class="empty"><div class="big">🛒</div><h3>${orderFilter==="new"?"Chưa có đơn mới":"Chưa có đơn nào"}</h3><p class="muted">Đơn khách đặt trên trang web sẽ hiện ở đây ngay lập tức.</p></div>`);
+}
+function orderStockProblem(o){
+  for(const it of o.items||[]){
+    const p=productById(it.productId);
+    if(!p)return`Mặt hàng "${it.name}" không còn trong kho`;
+    if(p.stock<it.qty)return`Không đủ hàng: ${p.name} chỉ còn ${p.stock}`;
+  }
+  return"";
+}
+function confirmOrder(id){
+  const o=byId(DB.orders,id);if(!o||o.status!=="new")return;
+  const prob=orderStockProblem(o);if(prob){toast(prob);return;}
+  confirmModal("Xác nhận đơn?",`Trừ kho và ghi nhận bán <b>${money(o.total)}</b> cho <b>${esc(o.name)}</b>?`,()=>{
+    const cur=byId(DB.orders,id);if(!cur||cur.status!=="new"){toast("Đơn này vừa được xử lý ở máy khác");return;}
+    const prob2=orderStockProblem(cur);if(prob2){toast(prob2);return;}
+    let cust=DB.customers.find(c=>c.phone&&normPhone(c.phone)===normPhone(cur.phone));
+    if(!cust){cust={id:uid(),name:cur.name,phone:cur.phone,address:cur.address||"",note:"Khách đặt online",points:0,pointsHistory:[]};DB.customers.push(cust);}
+    else if(!cust.address&&cur.address)cust.address=cur.address;
+    const today=new Date().toISOString().slice(0,10);
+    for(const it of cur.items){
+      const p=productById(it.productId);p.stock-=it.qty;
+      DB.transactions.push({id:uid(),type:"sale",date:today,productId:p.id,qty:it.qty,unitPrice:it.price,unitCost:p.cost,partyId:cust.id,orderId:cur.id,note:"[Online]"+(cur.note?" "+cur.note:"")});
+    }
+    cur.status="done";cur.doneAt=Date.now();cur.customerId=cust.id;
+    save();toast("✓ Đã xác nhận đơn, kho đã trừ");go(current);
+  });
+}
+function cancelOrder(id){
+  const o=byId(DB.orders,id);if(!o||o.status!=="new")return;
+  confirmModal("Huỷ đơn?",`Huỷ đơn của <b>${esc(o.name)}</b> (${money(o.total)})? Kho không thay đổi.`,()=>{
+    const cur=byId(DB.orders,id);if(!cur||cur.status!=="new")return;
+    cur.status="cancelled";cur.doneAt=Date.now();save();toast("Đã huỷ đơn");go(current);
+  });
+}
+function updateOrderBadge(){
+  const n=(DB.orders||[]).filter(o=>o.status==="new").length;
+  const b=document.getElementById("ordBadge");if(b){b.textContent=n>99?"99+":n;b.style.display=n?"inline-block":"none";}
+  const d=document.getElementById("menuDot");if(d)d.hidden=!n;
+}
+function onOrderChanges(changes){
+  updateOrderBadge();
+  if(!cloudReady)return;
+  const fresh=changes.filter(c=>c.type==="added"&&c.data&&c.data.status==="new"&&(c.data.createdAt||0)>Date.now()-864e5).map(c=>c.data);
+  if(!fresh.length)return;
+  showOrderAlert(fresh.length===1?fresh[0]:{name:`${fresh.length} đơn mới`,phone:"",total:fresh.reduce((s,o)=>s+(o.total||0),0)});
+  ding();
+}
+let _ac=null;
+function ding(){
+  try{
+    _ac=_ac||new(window.AudioContext||window.webkitAudioContext)();_ac.resume&&_ac.resume();
+    const t=_ac.currentTime;
+    [880,1320].forEach((f,i)=>{const o=_ac.createOscillator(),g=_ac.createGain(),s=t+i*.18;o.frequency.value=f;o.connect(g);g.connect(_ac.destination);g.gain.setValueAtTime(.0001,s);g.gain.exponentialRampToValueAtTime(.3,s+.02);g.gain.exponentialRampToValueAtTime(.0001,s+.25);o.start(s);o.stop(s+.3);});
+  }catch(e){}
+  try{if(navigator.vibrate&&(!navigator.userActivation||navigator.userActivation.hasBeenActive))navigator.vibrate([200,100,200]);}catch(e){}
+}
+// iPhone chỉ cho phát âm thanh sau lần chạm đầu tiên
+addEventListener("pointerdown",()=>{try{_ac=_ac||new(window.AudioContext||window.webkitAudioContext)();_ac.resume&&_ac.resume();}catch(e){}},{once:true});
+
+/* ---- Ảnh, dữ liệu cũ, trang khách ---- */
+function shrinkImage(src,max=480,q=0.75){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      const s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+      const c=document.createElement("canvas");c.width=Math.max(1,Math.round(img.naturalWidth*s));c.height=Math.max(1,Math.round(img.naturalHeight*s));
+      const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);
+      res(c.toDataURL("image/jpeg",q));
+    };
+    img.onerror=()=>res(src);
+    img.src=src;
+  });
+}
+const shrinkDataImage=src=>src&&String(src).startsWith("data:")&&src.length>150000?shrinkImage(src):Promise.resolve(src);
+function localBackup(){try{const d=JSON.parse(localStorage.getItem(DB_KEY)||"null");return d&&typeof d==="object"?d:null;}catch(e){return null;}}
+
+function cloudUploadLocal(){
+  const L=localBackup();if(!L){toast("Máy này không có dữ liệu cũ");return;}
+  const pid={},cid={},sid={},map=(m,id)=>m[id]||id;
+  // Mặt hàng trùng mã vạch, khách/NCC trùng số điện thoại: gộp vào bản đã có trên máy chủ
+  const prods=[],custs=[],sups=[];
+  for(const p of L.products||[]){if(!p||!p.id||byId(DB.products,p.id))continue;const d=p.sku&&findProductByCode(p.sku);if(d)pid[p.id]=d.id;else prods.push({...p});}
+  for(const c of L.customers||[]){if(!c||!c.id||byId(DB.customers,c.id))continue;const d=c.phone&&DB.customers.find(x=>x.phone&&normPhone(x.phone)===normPhone(c.phone));if(d)cid[c.id]=d.id;else custs.push({...c});}
+  for(const s of L.suppliers||[]){if(!s||!s.id||byId(DB.suppliers,s.id))continue;const d=s.phone&&DB.suppliers.find(x=>x.phone&&normPhone(x.phone)===normPhone(s.phone));if(d)sid[s.id]=d.id;else sups.push({...s});}
+  const cats=(L.categories||[]).filter(c=>c&&c.id&&!byId(DB.categories,c.id)&&!DB.categories.some(x=>x.name===c.name));
+  const txns=(L.transactions||[]).filter(t=>t&&t.id&&!byId(DB.transactions,t.id)).map(t=>({...t,productId:map(pid,t.productId),partyId:t.type==="sale"?map(cid,t.partyId):map(sid,t.partyId)}));
+  const bills=(L.bills||[]).filter(b=>b&&b.id&&!byId(DB.bills,b.id)).map(b=>({...b,customerId:map(cid,b.customerId),items:(b.items||[]).map(i=>({...i,productId:map(pid,i.productId)}))}));
+  const total=prods.length+custs.length+sups.length+cats.length+txns.length+bills.length;
+  if(!total){toast("Dữ liệu trên máy này đã có đủ trên máy chủ");return;}
+  confirmModal("Đưa dữ liệu lên máy chủ?",`Sẽ thêm <b>${prods.length}</b> mặt hàng, <b>${cats.length}</b> danh mục, <b>${custs.length}</b> khách hàng, <b>${sups.length}</b> nhà cung cấp, <b>${txns.length}</b> giao dịch, <b>${bills.length}</b> hóa đơn.<br><span class="muted">Mặt hàng trùng mã vạch, khách trùng số điện thoại được gộp với dữ liệu đã có.</span>`,async()=>{
+    toast("Đang tải lên…");
+    for(const p of prods){p.image=await shrinkDataImage(p.image);p.supplierId=map(sid,p.supplierId);}
+    DB.products.push(...prods);DB.categories.push(...cats);DB.customers.push(...custs);DB.suppliers.push(...sups);DB.transactions.push(...txns);DB.bills.push(...bills);
+    save();go(current);toast(`✓ Đã đưa ${total} mục lên máy chủ`);
+  });
+}
+function cloudRebuildCatalog(){
+  if(!DB.products.length){toast("Chưa có mặt hàng");return;}
+  const ops=DB.products.map(p=>{const d={};for(const f of PUBLIC_FIELDS)if(f in p)d[f]=p[f];return{op:"set",col:"catalog",id:p.id,data:JSON.parse(JSON.stringify(d))};});
+  cloudPending++;updateSyncDot();
+  CB.commit(ops).then(()=>toast(`✓ Đã cập nhật ${ops.length} mặt hàng lên trang khách`),e=>toast("Lỗi: "+cloudErrText(e))).finally(()=>{cloudPending--;updateSyncDot();});
+}
+window.setOrderFilter=setOrderFilter;window.confirmOrder=confirmOrder;window.cancelOrder=cancelOrder;window.cloudLogout=cloudLogout;
+
 /* ======= INIT ======= */
 (function init(){
   const t=getTheme();if(t!=="auto")document.documentElement.setAttribute("data-theme",t);
@@ -1719,12 +2095,13 @@ function emptyState(icon,title,desc,btnLabel,fn){
   if(window.location.hash==="#store"||new URLSearchParams(window.location.search).get("store")==="1"){
     seed();initStore();return;
   }
+  if(CLOUD){cloudInit();return;}
   if(isLoggedIn()){showApp();seed();go("dashboard");}
   else showLogin();
 })();
 
 document.getElementById("logoutBtn").onclick=()=>{
-  confirmModal("Đăng xuất?","Bạn sẽ cần đăng nhập lại.",()=>{logout();});
+  confirmModal("Đăng xuất?","Bạn sẽ cần đăng nhập lại.",()=>{if(CLOUD)cloudLogout();else logout();});
 };
 
 /* ======= CUSTOMER STORE ======= */
@@ -2064,18 +2441,19 @@ function showOrderAlert(order){
   div.innerHTML=`<div class="order-alert-ico">🛒</div>
     <div class="order-alert-body">
       <div class="order-alert-title">Đơn hàng mới! ${order.name||""} – ${order.phone||""}</div>
-      <div class="order-alert-sub">Tổng tiền: ${money2(order.total)} · Nhấn để xem giao dịch</div>
+      <div class="order-alert-sub">Tổng tiền: ${money2(order.total)} · Nhấn để xem ${CLOUD?"đơn":"giao dịch"}</div>
     </div>
     <button class="order-alert-close" onclick="this.parentElement.remove()">✕</button>`;
   div.addEventListener("click",e=>{
     if(e.target.classList.contains("order-alert-close"))return;
-    div.remove();go("transactions");
+    div.remove();go(CLOUD?"orders":"transactions");
   });
   document.body.appendChild(div);
   setTimeout(()=>{if(div.parentNode)div.remove();},12000);
 }
 
 function checkUnreadOnLoad(){
+  if(CLOUD)return;
   try{
     const lastSeen=parseInt(localStorage.getItem(SEEN_KEY)||"0");
     const db=loadDB();if(!db)return;
@@ -2086,7 +2464,7 @@ function checkUnreadOnLoad(){
 }
 
 window.addEventListener("storage",e=>{
-  if(e.key!==NOTIFY_KEY||!e.newValue)return;
+  if(CLOUD||e.key!==NOTIFY_KEY||!e.newValue)return;
   try{
     const order=JSON.parse(e.newValue);
     if(order.type!=="new_order")return;
@@ -2100,7 +2478,7 @@ window.addEventListener("storage",e=>{
 
 // Trang khách hoặc tab admin khác vừa ghi dữ liệu: nạp lại, nếu không lần lưu sau sẽ ghi đè mất đơn mới
 window.addEventListener("storage",e=>{
-  if(e.key!==DB_KEY||!e.newValue)return;
+  if(CLOUD||e.key!==DB_KEY||!e.newValue)return;
   DB=loadDB();
   if(document.getElementById("appWrap").hidden||document.getElementById("modalMount").firstElementChild)return;
   const y=window.scrollY;go(current);window.scrollTo(0,y);

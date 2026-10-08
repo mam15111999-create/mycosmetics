@@ -1,0 +1,35 @@
+rules_version = '2';
+// Dán vào Firebase Console → Firestore Database → Rules → Publish.
+// Thay ADMIN_EMAIL bằng email đăng nhập trang admin (có thể thêm nhiều email, cách nhau dấu phẩy).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email in ['ADMIN_EMAIL'];
+    }
+
+    // Danh sách hàng công khai cho trang khách (không có giá nhập)
+    match /catalog/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Khách chỉ được gửi đơn mới, không đọc/sửa/xoá được đơn nào
+    match /orders/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['name', 'phone', 'address', 'note', 'items', 'total', 'createdAt', 'status'])
+        && request.resource.data.status == 'new'
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
+        && request.resource.data.phone is string && request.resource.data.phone.size() >= 9 && request.resource.data.phone.size() <= 20
+        && request.resource.data.address is string && request.resource.data.address.size() <= 300
+        && request.resource.data.note is string && request.resource.data.note.size() <= 500
+        && request.resource.data.items is list && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 50
+        && request.resource.data.total is number && request.resource.data.total >= 0
+        && request.resource.data.createdAt is int;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Mọi dữ liệu còn lại (mặt hàng, giá nhập, khách hàng, hoá đơn…) chỉ admin
+    match /{col}/{id} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
