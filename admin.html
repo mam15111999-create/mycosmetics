@@ -210,6 +210,20 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--rose);outline-offset:1px;border-color:var(--rose)}
 .field textarea{resize:vertical;min-height:64px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.scan-row{width:100%;justify-content:center;padding:13px;font-size:15px;font-weight:700;margin-bottom:12px;border:1.5px dashed var(--rose);color:var(--rose-deep);background:var(--surface-2)}
+.scan-info{border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:14px;background:var(--surface-2);font-size:13.5px}
+.scan-info.ok{border-color:var(--good);background:var(--good-bg)}
+.scan-info.warn{border-color:var(--warn);background:var(--warn-bg)}
+.scan-code{font-size:12.5px;color:var(--ink-soft);margin-bottom:7px;word-break:break-all}
+.scan-code b{color:var(--ink);font-size:14.5px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.scan-prod{display:flex;align-items:center;gap:10px}
+.scan-prod .grow{flex:1;min-width:0}
+.scan-name{font-weight:700;color:var(--ink)}
+.scan-meta{font-size:12.5px;color:var(--ink-soft);margin-top:2px}
+.scan-miss{font-weight:700;color:var(--warn)}
+.scan-note{margin-top:8px;font-size:12.5px;color:var(--ink)}
+.scan-actions{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.scan-actions .btn{width:100%;justify-content:center}
 .form-sec{font-weight:700;font-size:14px;color:var(--plum);margin:20px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
 .form-sec .hint{font-weight:400;color:var(--ink-soft);font-size:12px}
 .calc-note{background:var(--surface-2);border-radius:10px;padding:10px 13px;font-size:13px;color:var(--ink-soft);margin-top:2px}
@@ -881,6 +895,8 @@ function _renderBillModal(){
         </div>
         <div id="bPhoneBox" style="margin-top:6px"></div>
       </div>
+      <button type="button" class="btn scan-row" onclick="billScanQR()">📷 Quét mã vạch / QR</button>
+      <div class="scan-info" id="billScanInfo" hidden></div>
       <div id="billCartWrap"></div>
       <div style="margin-top:12px">
         <div class="field">
@@ -960,15 +976,23 @@ function billAddItem(){
   document.getElementById("bQty").value=1;
   renderBillCart();
 }
+function scanInfoHtml(code,p,extra=""){
+  const head=`<div class="scan-code">Mã vừa quét: <b>${esc(code)}</b></div>`;
+  if(!p)return head+`<div class="scan-miss">Mã này chưa có trong cửa hàng.</div>`+extra;
+  return head+`<div class="scan-prod">${thumbHtml(p,46)}<div class="grow"><div class="scan-name">${esc(p.name)}</div>
+    <div class="scan-meta">${money(p.price)} · Tồn ${fmt(p.stock)}${p.brand?` · ${esc(p.brand)}`:""}${p.volume?` · ${esc(p.volume)}`:""}</div></div></div>`+extra;
+}
 function billScanQR(){
   openQRScanner(code=>{
-    const found=findProductByCode(code);
-    if(found){
-      const existing=billCart.find(i=>i.productId===found.id);
-      if(existing&&existing.qty<found.stock){existing.qty++;renderBillCart();toast(`✓ +1 ${found.name}`);}
-      else if(!existing){billCart.push({productId:found.id,qty:1,unitPrice:found.price,unitCost:found.cost});renderBillCart();toast(`✓ Đã thêm: ${found.name}`);}
-      else toast(`⚠️ Kho chỉ còn ${found.stock}`);
-    } else toast("Không tìm thấy sản phẩm với mã QR này");
+    const info=document.getElementById("billScanInfo");
+    const show=(cls,html)=>{if(info){info.hidden=false;info.className="scan-info "+cls;info.innerHTML=html;}};
+    const p=findProductByCode(code);
+    if(!p){show("warn",scanInfoHtml(code,null,`<div class="scan-note">Thêm mã này ở <b>Nhập hàng → Quét mã → Tạo mặt hàng mới</b>.</div>`));return;}
+    const inCart=billCart.find(i=>i.productId===p.id),qty=inCart?inCart.qty:0;
+    if(p.stock<=qty){show("warn",scanInfoHtml(code,p,`<div class="scan-note">${p.stock<=0?"Sản phẩm đã hết hàng.":`Kho chỉ còn ${p.stock}, hoá đơn đã đủ số lượng.`}</div>`));return;}
+    if(inCart)inCart.qty++;else billCart.push({productId:p.id,qty:1,unitPrice:p.price,unitCost:p.cost});
+    renderBillCart();
+    show("ok",scanInfoHtml(code,p,`<div class="scan-note">✓ Đã thêm vào hoá đơn · số lượng: <b>${qty+1}</b></div>`));
   });
 }
 function billPickProduct(){
@@ -1044,8 +1068,7 @@ function renderBillCart(){
   const wrap=document.getElementById("billCartWrap");if(!wrap)return;
   const addRow=`<tr style="background:var(--surface-2)">
     <td colspan="4" style="padding:10px 12px;text-align:center">
-      <button class="btn ghost" onclick="billPickProduct()" style="margin-right:8px;font-size:13px">📋 Chọn sản phẩm</button>
-      <button class="btn ghost" onclick="billScanQR()" style="font-size:13px">📷 Quét mã vạch / QR</button>
+      <button class="btn ghost" onclick="billPickProduct()" style="font-size:13px">📋 Chọn sản phẩm</button>
     </td>
   </tr>`;
   wrap.innerHTML=`<div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:2px">
@@ -1380,7 +1403,15 @@ function mountModal(html){
     }
   }
 }
-function closeModal(){if(_qrOpen){stopQR();return;}document.getElementById("modalMount").innerHTML="";if(cloudDirty)cloudRerender();}
+// Mở form con (VD: Thêm mặt hàng từ trong Nhập hàng): cất form cha, đóng form con thì trả form cha lại nguyên vẹn
+let _modalParents=[];
+function pushModal(){const m=document.getElementById("modalMount");const parent=m.firstElementChild;if(parent)parent.remove();_modalParents.push(parent);}
+function closeModal(){
+  if(_qrOpen){stopQR();return;}
+  const m=document.getElementById("modalMount");m.innerHTML="";
+  const parent=_modalParents.pop();if(parent)m.appendChild(parent);
+  if(cloudDirty)cloudRerender();
+}
 window.closeModal=closeModal;
 
 function confirmModal(title,body,onYes){
@@ -1393,8 +1424,9 @@ function confirmModal(title,body,onYes){
 }
 
 /* ---- Product modal ---- */
-function openProductModal(id){
+function openProductModal(id,opts={}){
   const p=id?productById(id):null;
+  if(opts.onDone)pushModal();
   const v=k=>p&&p[k]!=null?esc(p[k]):"";
   const supOpts=`<option value="">— Nhà cung cấp —</option>`+DB.suppliers.map(s=>`<option value="${s.id}" ${p&&p.supplierId===s.id?"selected":""}>${esc(s.name)}</option>`).join("");
   const previewHtml=p&&p.image?`<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`:"✦";
@@ -1410,7 +1442,7 @@ function openProductModal(id){
       <div class="field"><label>Tên sản phẩm *</label><input id="fName" value="${v("name")}" placeholder="VD: Son kem lì Black Rouge A02"></div>
       <div class="grid-2">
         <div class="field"><label>Mã sản phẩm <span class="hint">(SKU / mã vạch)</span></label>
-          <input id="fSku" value="${v("sku")}" placeholder="VD: SON-A02">
+          <input id="fSku" value="${p?v("sku"):esc(opts.sku||"")}" placeholder="VD: SON-A02">
         </div>
         <div class="field"><label>Danh mục</label>
           <select id="fCat"><option value="">— Không có danh mục —</option>${(DB.categories||[]).map(cat=>`<option value="${esc(cat.name)}" ${p&&p.category===cat.name?"selected":""}>${esc(cat.icon||"🏷")} ${esc(cat.name)}</option>`).join("")}${p&&p.category&&!(DB.categories||[]).some(c=>c.name===p.category)?`<option value="${esc(p.category)}" selected>${esc(p.category)}</option>`:""}</select>
@@ -1425,6 +1457,7 @@ function openProductModal(id){
         <div class="field"><label>Tồn kho hiện tại</label><input id="fStock" type="number" min="0" value="${p?p.stock:0}"></div>
         <div class="field"><label>Ngưỡng báo sắp hết</label><input id="fLow" type="number" min="0" value="${p?p.lowStock:5}"></div>
       </div>
+      ${opts.fromPurchase?`<div class="calc-note" style="margin:-4px 0 14px">Để tồn kho = 0. Số lượng sẽ được cộng vào kho khi bấm <b>Ghi nhận nhập</b>.</div>`:""}
       <div class="field"><label>Nhà cung cấp</label><select id="fSup">${supOpts}</select></div>
 
       <div class="form-sec">📝 Mô tả sản phẩm <span class="hint">(khách hàng sẽ thấy)</span></div>
@@ -1475,15 +1508,17 @@ function openProductModal(id){
     const rec={name,sku,category:document.getElementById("fCat").value.trim(),cost,price,stock,lowStock:Math.max(0,Math.round(+document.getElementById("fLow").value||0)),supplierId:document.getElementById("fSup").value,image:imgData,note:val("fNote"),
       brand:val("fBrand"),origin:val("fOrigin"),volume:val("fVolume"),expiry:val("fExpiry"),skinType:val("fSkin"),ingredients:val("fIngr"),usage:val("fUsage")};
     if(p&&!cur){toast("Sản phẩm này vừa bị xoá ở nơi khác");closeModal();go(current);return;}
-    if(cur)Object.assign(cur,rec);else DB.products.push(Object.assign({id:uid()},rec));
+    let saved=cur;
+    if(cur)Object.assign(cur,rec);else{saved=Object.assign({id:uid()},rec);DB.products.push(saved);}
     save();closeModal();toast(p?"Đã cập nhật mặt hàng":"Đã thêm mặt hàng");go(current);
+    if(opts.onDone)opts.onDone(saved);
   };
 }
 
 /* ---- Transaction modal ---- */
 function openTxnModal(type,presetProd){
-  if(!DB.products.length){toast("Hãy thêm mặt hàng trước");go("products");return;}
   const isSale=type==="sale";
+  if(!DB.products.length&&isSale){toast("Hãy thêm mặt hàng trước");go("products");return;}
   const cats=[...new Set(DB.products.map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"vi"));
   const catOpts=`<option value="">— Tất cả danh mục —</option>`+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
   const makeProdOpts=(cat)=>DB.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"vi")).filter(p=>!cat||p.category===cat).map(p=>`<option value="${p.id}" ${presetProd===p.id?"selected":""}>${esc(p.name)} (còn ${p.stock})</option>`).join("");
@@ -1492,12 +1527,11 @@ function openTxnModal(type,presetProd){
   mountModal(`<div class="modal">
     <div class="modal-head"><h2>${isSale?"💰 Bán hàng":"📦 Nhập hàng"}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
+      <button type="button" class="btn scan-row" id="scanBtn">📷 Quét mã vạch / QR</button>
+      <div class="scan-info" id="scanInfo" hidden></div>
       ${cats.length?`<div class="field"><label>Danh mục</label><select id="tCat">${catOpts}</select></div>`:""}
       <div class="field"><label>Sản phẩm *</label>
-        <div style="display:flex;gap:8px;align-items:stretch">
-          <select id="tProd" style="flex:1">${makeProdOpts("")}</select>
-          <button type="button" class="btn sm ghost" id="scanBtn" style="padding:10px 13px;white-space:nowrap">📷 QR</button>
-        </div>
+        <select id="tProd">${makeProdOpts("")||`<option value="">— Chưa có mặt hàng, hãy quét mã để thêm —</option>`}</select>
       </div>
       <div class="grid-2">
         <div class="field"><label>Số lượng *</label><input id="tQty" type="number" min="1" inputmode="numeric" value="1"></div>
@@ -1525,13 +1559,31 @@ function openTxnModal(type,presetProd){
   prodSel.addEventListener("change",fillPrice);
   qtyIn.addEventListener("input",updateSum);priceIn.addEventListener("input",updateSum);
   fillPrice();
+  const info=document.getElementById("scanInfo");let infoPid="";
+  const selectProduct=p=>{
+    if(catSel&&catSel.value&&catSel.value!==p.category)catSel.value="";
+    prodSel.innerHTML=makeProdOpts(catSel?catSel.value:"");prodSel.value=p.id;fillPrice();
+  };
+  const showFound=(code,p,note)=>{infoPid=p.id;info.hidden=false;info.className="scan-info ok";info.innerHTML=scanInfoHtml(code,p,note?`<div class="scan-note">${note}</div>`:"");};
+  prodSel.addEventListener("change",()=>{if(infoPid&&prodSel.value!==infoPid){info.hidden=true;infoPid="";}});
   document.getElementById("scanBtn").onclick=()=>openQRScanner(code=>{
     const found=findProductByCode(code);
-    if(found){
-      if(catSel&&catSel.value&&catSel.value!==found.category){catSel.value="";prodSel.innerHTML=makeProdOpts("");}
-      prodSel.value=found.id;fillPrice();toast(`✓ Đã chọn: ${found.name}`);
-    }
-    else toast(`Chưa có sản phẩm mã ${code} — thêm ở mục Mặt hàng`);
+    if(found){selectProduct(found);showFound(code,found);return;}
+    infoPid="";info.hidden=false;info.className="scan-info warn";
+    if(isSale){info.innerHTML=scanInfoHtml(code,null,`<div class="scan-note">Hãy nhập hàng cho mã này trước khi bán.</div>`);return;}
+    info.innerHTML=scanInfoHtml(code,null,`<div class="scan-actions">
+      <button type="button" class="btn primary sm" id="scanNew">➕ Tạo mặt hàng mới với mã này</button>
+      ${DB.products.length?`<button type="button" class="btn ghost sm" id="scanLink">🔗 Gán mã cho sản phẩm đang chọn bên dưới</button>`:""}
+    </div>`);
+    document.getElementById("scanNew").onclick=()=>openProductModal(null,{sku:code,fromPurchase:true,onDone:p=>{
+      selectProduct(p);showFound(code,p,"Đã tạo mặt hàng mới. Nhập số lượng, giá rồi bấm <b>Ghi nhận nhập</b>.");
+    }});
+    const link=document.getElementById("scanLink");
+    if(link)link.onclick=()=>{
+      const p=productById(prodSel.value);if(!p){toast("Chọn sản phẩm trước");return;}
+      const old=p.sku;p.sku=code;save();selectProduct(p);
+      showFound(code,p,`Đã lưu mã cho sản phẩm này${old?` (thay mã cũ ${esc(old)})`:""}. Lần sau quét mã sẽ ra đúng sản phẩm.`);
+    };
   });
   document.getElementById("saveTxn").onclick=()=>{
     const p=productById(prodSel.value);if(!p){toast("Chọn sản phẩm");return;}
