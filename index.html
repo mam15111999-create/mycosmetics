@@ -117,6 +117,17 @@ img{max-width:100%;display:block}
 .pd-stock-ok{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:100px;background:#e8f8ee;color:#2d7a4b;margin-bottom:12px}
 .pd-stock-warn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:100px;background:#fff8e1;color:#a06820;margin-bottom:12px}
 .pd-stock-bad{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:100px;background:#fde8e8;color:#a03030;margin-bottom:12px}
+.pd-brand{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--rose-deep);margin-bottom:4px}
+.pd-sec{margin-top:16px}
+.pd-sec-t{font-size:13px;font-weight:700;margin-bottom:6px}
+.pd-text{font-size:13.5px;color:var(--ink-soft);line-height:1.65}
+.pd-info{width:100%;border-collapse:collapse;font-size:13.5px}
+.pd-info td{padding:8px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.pd-info td:first-child{color:var(--ink-soft);width:44%;padding-right:10px}
+.pd-info tr:last-child td{border-bottom:0}
+.pd-more{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px 13px;background:var(--surface-2)}
+.pd-more summary{font-size:13px;font-weight:700;cursor:pointer}
+.pd-more .pd-text{margin-top:8px}
 .pd-note{font-size:13px;color:var(--ink-soft);line-height:1.6;background:var(--surface-2);border-radius:10px;padding:11px 13px;margin-top:8px}
 .pd-foot{padding:13px 18px calc(env(safe-area-inset-bottom,0px)+13px);border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;background:var(--surface)}
 .empty .ico{font-size:40px;margin-bottom:10px}
@@ -333,6 +344,7 @@ const CLOUD=!!(window.FB_CONFIG&&window.cloudBackend);
 let cloudDB=null,cloudErr=false;
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
 const money=n=>(Math.round(n||0)).toLocaleString("vi-VN")+"₫";
+const nl2br=s=>esc(s).replace(/\n/g,"<br>");
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 
 const ICONS={"son":"💄","môi":"💋","mắt":"👁️","trang điểm":"💅","phấn":"🪞","chống nắng":"☀️","dưỡng da":"🧴","kem dưỡng":"✨","serum":"💧","mặt nạ":"🌸","tẩy trang":"🌿","nước hoa":"🌹","sữa tắm":"🛁","rửa mặt":"🧼","sữa rửa":"🧼","dầu gội":"💆","tóc":"💇"};
@@ -390,7 +402,7 @@ function renderProds(){
   const db=loadDB()||{products:[]};
   let list=(db.products||[]);
   if(activeCat)list=list.filter(p=>p.category===activeCat);
-  if(searchQ){const q=searchQ.toLowerCase();list=list.filter(p=>p.name.toLowerCase().includes(q)||(p.category||"").toLowerCase().includes(q));}
+  if(searchQ){const q=searchQ.toLowerCase();list=list.filter(p=>p.name.toLowerCase().includes(q)||(p.category||"").toLowerCase().includes(q)||(p.brand||"").toLowerCase().includes(q));}
   document.getElementById("backCnt").textContent=list.length+" sản phẩm";
   const el=document.getElementById("grid");
   if(!list.length){el.innerHTML=`<div class="empty"><div class="ico">🔍</div><b>Không tìm thấy sản phẩm</b><p style="font-size:13px;margin-top:4px">Thử tìm từ khoá khác</p></div>`;updateCartUI(db);return;}
@@ -419,6 +431,7 @@ function openProductDetail(id){
     :p.stock<=(p.lowStock||5)
       ?`<span class="pd-stock-warn">⚠ Sắp hết · Còn ${p.stock} sản phẩm</span>`
       :`<span class="pd-stock-ok">✓ Còn hàng · ${p.stock} sản phẩm</span>`;
+  const infoRows=[["Thương hiệu",p.brand],["Xuất xứ",p.origin],["Dung tích / Khối lượng",p.volume],["Loại da phù hợp",p.skinType],["Hạn sử dụng",p.expiry],["Mã sản phẩm",p.sku]].filter(r=>r[1]);
   const s=document.getElementById("sheet");s.dataset.view="detail";
   s.innerHTML=`<div class="sheet-drag"></div>
     <div class="sheet-head"><h2>Chi tiết sản phẩm</h2><button class="close-btn" onclick="closeSheet()">✕</button></div>
@@ -426,11 +439,15 @@ function openProductDetail(id){
       <div class="pd-img">${p.image?`<img src="${esc(p.image)}" alt="${esc(p.name)}">`:`<div class="pd-img-ph">${getIcon(p.category)}</div>`}</div>
       <div style="padding:16px 18px 6px">
         ${p.category?`<div class="pd-cat-tag">🏷 ${esc(p.category)}</div>`:""}
+        ${p.brand?`<div class="pd-brand">${esc(p.brand)}</div>`:""}
         <div class="pd-name">${esc(p.name)}</div>
         <div class="pd-price">${money(p.price)}</div>
         ${stockBadge}
-        ${p.sku?`<div style="font-size:12px;color:var(--ink-soft);margin-top:4px">Mã SP: ${esc(p.sku)}</div>`:""}
-        ${p.note?`<div class="pd-note">📝 ${esc(p.note)}</div>`:""}
+        ${p.note?`<div class="pd-sec"><div class="pd-sec-t">Mô tả sản phẩm</div><div class="pd-text">${nl2br(p.note)}</div></div>`:""}
+        ${infoRows.length?`<div class="pd-sec"><div class="pd-sec-t">Thông tin sản phẩm</div><table class="pd-info">${infoRows.map(([k,v])=>`<tr><td>${k}</td><td>${esc(v)}</td></tr>`).join("")}</table></div>`:""}
+        ${p.ingredients?`<details class="pd-more"><summary>Thành phần</summary><div class="pd-text">${nl2br(p.ingredients)}</div></details>`:""}
+        ${p.usage?`<details class="pd-more"><summary>Hướng dẫn sử dụng</summary><div class="pd-text">${nl2br(p.usage)}</div></details>`:""}
+        <div style="height:10px"></div>
       </div>
     </div>
     <div class="pd-foot">

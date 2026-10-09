@@ -210,6 +210,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--rose);outline-offset:1px;border-color:var(--rose)}
 .field textarea{resize:vertical;min-height:64px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.form-sec{font-weight:700;font-size:14px;color:var(--plum);margin:20px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+.form-sec .hint{font-weight:400;color:var(--ink-soft);font-size:12px}
 .calc-note{background:var(--surface-2);border-radius:10px;padding:10px 13px;font-size:13px;color:var(--ink-soft);margin-top:2px}
 .img-pick{display:flex;align-items:center;gap:12px}
 .img-preview{width:56px;height:56px;border-radius:11px;object-fit:cover;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;color:var(--rose);font-size:20px;flex-shrink:0}
@@ -623,7 +625,7 @@ function updateFAB(view){
   const fab=document.getElementById("fab");
   if(view==="dashboard"||view==="salesPos"){fab.textContent="＋";fab.title="Lập hóa đơn";fab.onclick=()=>openBillModal();}
   else if(view==="purchases"||view==="transactions"){fab.textContent="＋";fab.title="Nhập hàng";fab.onclick=()=>openTxnModal("purchase");}
-  else if(view==="products"){fab.textContent="＋";fab.title="Thêm mặt hàng";fab.onclick=()=>openProductModal();topBtn("📷","ghost",()=>scanAndFetchProduct());}
+  else if(view==="products"){fab.textContent="＋";fab.title="Thêm mặt hàng";fab.onclick=()=>openProductModal();}
   else if(view==="categories"){fab.textContent="＋";fab.title="Thêm danh mục";fab.onclick=()=>openCategoryModal();}
   else if(view==="suppliers"){fab.textContent="＋";fab.title="Thêm nhà cung cấp";fab.onclick=()=>openPartyModal("supplier");}
   else if(view==="customers"){fab.textContent="＋";fab.title="Thêm khách hàng";fab.onclick=()=>openPartyModal("customer");}
@@ -705,7 +707,7 @@ function renderLowStock(el){
 /* ======= PRODUCTS ======= */
 let prodSearch="",prodCat="";
 function renderProducts(){
-  if(!isMob()){topBtn("＋ Thêm mặt hàng","primary",()=>openProductModal());topBtn("📷 Quét mã vạch / QR","ghost",()=>scanAndFetchProduct());}
+  if(!isMob())topBtn("＋ Thêm mặt hàng","primary",()=>openProductModal());
   const c=document.getElementById("content");
   const dbCats=(DB.categories||[]).map(c=>c.name);
   const cats=[...new Set([...dbCats,...DB.products.map(p=>p.category).filter(Boolean)])].sort();
@@ -1391,29 +1393,27 @@ function confirmModal(title,body,onYes){
 }
 
 /* ---- Product modal ---- */
-function openProductModal(id,prefill={}){
+function openProductModal(id){
   const p=id?productById(id):null;
-  const pf=p?{}:prefill;
+  const v=k=>p&&p[k]!=null?esc(p[k]):"";
   const supOpts=`<option value="">— Nhà cung cấp —</option>`+DB.suppliers.map(s=>`<option value="${s.id}" ${p&&p.supplierId===s.id?"selected":""}>${esc(s.name)}</option>`).join("");
-  const previewHtml=p&&p.image?`<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`:pf.imageUrl?`<img src="${esc(pf.imageUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:11px" id="pfImg">`:"✦";
-  const matchedCat=(DB.categories||[]).find(c=>c.name===(p?p.category:pf.category||""));
+  const previewHtml=p&&p.image?`<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`:"✦";
+  const origins=["Việt Nam","Hàn Quốc","Nhật Bản","Pháp","Mỹ","Thái Lan","Đức","Anh","Úc","Trung Quốc"];
+  const skins=["Mọi loại da","Da dầu","Da khô","Da hỗn hợp","Da nhạy cảm","Da mụn","Da thường"];
   mountModal(`<div class="modal">
-    <div class="modal-head"><h2>${p?"Sửa mặt hàng":"Thêm mặt hàng"}${pf.source?` <span style="font-size:12px;color:var(--ink-soft);font-weight:400">(${esc(pf.source)})</span>`:""}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-head"><h2>${p?"Sửa mặt hàng":"Thêm mặt hàng"}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
       <div class="field"><label>Ảnh sản phẩm <span class="hint">(không bắt buộc)</span></label>
         <div class="img-pick"><div class="img-preview" id="imgPrev">${previewHtml}</div>
         <div><input type="file" id="imgFile" accept="image/*"><button type="button" class="btn sm ghost" id="imgClear" style="margin-top:6px">Bỏ ảnh</button></div></div>
       </div>
-      <div class="field"><label>Tên sản phẩm *</label><input id="fName" value="${p?esc(p.name):esc(pf.name||"")}" placeholder="VD: Son kem lì Black Rouge A02"></div>
+      <div class="field"><label>Tên sản phẩm *</label><input id="fName" value="${v("name")}" placeholder="VD: Son kem lì Black Rouge A02"></div>
       <div class="grid-2">
-        <div class="field"><label>Mã vạch sản phẩm</label>
-          <div style="display:flex;gap:6px">
-            <input id="fSku" value="${p?esc(p.sku):esc(pf.sku||"")}" placeholder="EAN-13 hoặc SKU" style="flex:1">
-            <button type="button" class="btn sm ghost" onclick="scanFillBarcode()" style="padding:10px 11px;white-space:nowrap" title="Quét mã vạch">📷</button>
-          </div>
+        <div class="field"><label>Mã sản phẩm <span class="hint">(SKU / mã vạch)</span></label>
+          <input id="fSku" value="${v("sku")}" placeholder="VD: SON-A02">
         </div>
         <div class="field"><label>Danh mục</label>
-          <select id="fCat"><option value="">— Không có danh mục —</option>${(DB.categories||[]).map(cat=>`<option value="${esc(cat.name)}" ${(p?p.category:pf.category||"")===cat.name?"selected":""}>${esc(cat.icon||"🏷")} ${esc(cat.name)}</option>`).join("")}${p&&p.category&&!(DB.categories||[]).some(c=>c.name===p.category)?`<option value="${esc(p.category)}" selected>${esc(p.category)}</option>`:""}</select>
+          <select id="fCat"><option value="">— Không có danh mục —</option>${(DB.categories||[]).map(cat=>`<option value="${esc(cat.name)}" ${p&&p.category===cat.name?"selected":""}>${esc(cat.icon||"🏷")} ${esc(cat.name)}</option>`).join("")}${p&&p.category&&!(DB.categories||[]).some(c=>c.name===p.category)?`<option value="${esc(p.category)}" selected>${esc(p.category)}</option>`:""}</select>
         </div>
       </div>
       <div class="grid-2">
@@ -1426,16 +1426,30 @@ function openProductModal(id,prefill={}){
         <div class="field"><label>Ngưỡng báo sắp hết</label><input id="fLow" type="number" min="0" value="${p?p.lowStock:5}"></div>
       </div>
       <div class="field"><label>Nhà cung cấp</label><select id="fSup">${supOpts}</select></div>
-      <div class="field"><label>Mô tả / Ghi chú</label><textarea id="fNote" placeholder="Thành phần, hạn dùng, hướng dẫn sử dụng...">${p?esc(p.note):esc(pf.note||"")}</textarea></div>
+
+      <div class="form-sec">📝 Mô tả sản phẩm <span class="hint">(khách hàng sẽ thấy)</span></div>
+      <div class="field"><textarea id="fNote" rows="4" placeholder="Công dụng nổi bật, đặc điểm, phù hợp với ai...">${v("note")}</textarea></div>
+
+      <div class="form-sec">📋 Thông tin sản phẩm</div>
+      <div class="grid-2">
+        <div class="field"><label>Thương hiệu</label><input id="fBrand" value="${v("brand")}" placeholder="VD: Anessa"></div>
+        <div class="field"><label>Xuất xứ</label><input id="fOrigin" value="${v("origin")}" list="dlOrigin" placeholder="VD: Nhật Bản"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Dung tích / Khối lượng</label><input id="fVolume" value="${v("volume")}" placeholder="VD: 60ml, 50g"></div>
+        <div class="field"><label>Hạn sử dụng</label><input id="fExpiry" value="${v("expiry")}" placeholder="VD: 12/2027"></div>
+      </div>
+      <div class="field"><label>Loại da phù hợp</label><input id="fSkin" value="${v("skinType")}" list="dlSkin" placeholder="VD: Da dầu, da hỗn hợp"></div>
+      <div class="field"><label>Thành phần</label><textarea id="fIngr" rows="3" placeholder="Thành phần chính...">${v("ingredients")}</textarea></div>
+      <div class="field"><label>Hướng dẫn sử dụng</label><textarea id="fUsage" rows="3" placeholder="Cách dùng, liều lượng, lưu ý...">${v("usage")}</textarea></div>
+      <datalist id="dlOrigin">${origins.map(o=>`<option value="${o}">`).join("")}</datalist>
+      <datalist id="dlSkin">${skins.map(o=>`<option value="${o}">`).join("")}</datalist>
     </div>
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Huỷ</button><button class="btn primary" id="saveProd">Lưu</button></div>
   </div>`);
-  let imgData=p?p.image:(pf.imageUrl||"");
+  let imgData=p?p.image:"";
   const openStock=p?p.stock:0;
   const prev=document.getElementById("imgPrev");
-  if(!p&&pf.imageUrl){
-    fetch(pf.imageUrl).then(r=>r.blob()).then(blob=>{const rd=new FileReader();rd.onload=async()=>{imgData=await shrinkImage(rd.result);if(prev)prev.innerHTML=`<img src="${imgData}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`;};rd.readAsDataURL(blob);}).catch(()=>{});
-  }
   document.getElementById("imgFile").addEventListener("change",e=>{
     const f=e.target.files[0];if(!f)return;
     if(f.size>25*1024*1024){toast("Ảnh quá lớn (tối đa 25MB)");return;}
@@ -1450,14 +1464,16 @@ function openProductModal(id,prefill={}){
     if(!name){toast("Vui lòng nhập tên sản phẩm");return;}
     if(price<=0){toast("Giá bán phải lớn hơn 0");return;}
     if(cost<0){toast("Giá nhập không được âm");return;}
-    const sku=document.getElementById("fSku").value.trim();
+    const val=k=>document.getElementById(k).value.trim();
+    const sku=val("fSku");
     const dup=sku&&findProductByCode(sku,p?.id);
-    if(dup){toast(`Mã vạch này đã dùng cho: ${dup.name}`);document.getElementById("fSku").focus();return;}
+    if(dup){toast(`Mã sản phẩm này đã dùng cho: ${dup.name}`);document.getElementById("fSku").focus();return;}
     const formStock=Math.max(0,Math.round(+document.getElementById("fStock").value||0));
     const cur=p&&productById(p.id);
     // Đơn online có thể đã trừ kho khi form đang mở: giữ tồn kho mới nếu người dùng không sửa ô này
     const stock=cur&&formStock===openStock?cur.stock:formStock;
-    const rec={name,sku,category:document.getElementById("fCat").value.trim(),cost,price,stock,lowStock:Math.max(0,Math.round(+document.getElementById("fLow").value||0)),supplierId:document.getElementById("fSup").value,image:imgData,note:document.getElementById("fNote").value.trim()};
+    const rec={name,sku,category:document.getElementById("fCat").value.trim(),cost,price,stock,lowStock:Math.max(0,Math.round(+document.getElementById("fLow").value||0)),supplierId:document.getElementById("fSup").value,image:imgData,note:val("fNote"),
+      brand:val("fBrand"),origin:val("fOrigin"),volume:val("fVolume"),expiry:val("fExpiry"),skinType:val("fSkin"),ingredients:val("fIngr"),usage:val("fUsage")};
     if(p&&!cur){toast("Sản phẩm này vừa bị xoá ở nơi khác");closeModal();go(current);return;}
     if(cur)Object.assign(cur,rec);else DB.products.push(Object.assign({id:uid()},rec));
     save();closeModal();toast(p?"Đã cập nhật mặt hàng":"Đã thêm mặt hàng");go(current);
@@ -1783,7 +1799,7 @@ const CLOUD_COLS=["products","categories","suppliers","customers","transactions"
 // Tồn kho và điểm gửi lên dạng cộng/trừ chênh lệch: 2 máy cùng bán một lúc vẫn trừ kho đúng
 const INC_FIELDS={products:["stock"],customers:["points"]};
 // Trang khách chỉ đọc bản sao này, không thấy giá nhập
-const PUBLIC_FIELDS=["id","name","price","category","image","stock","lowStock","sku","note"];
+const PUBLIC_FIELDS=["id","name","price","category","image","stock","lowStock","sku","note","brand","origin","volume","expiry","skinType","ingredients","usage"];
 const CLOUD_USER_KEY="myphamHH_cloudUser";
 let cloudSynced={},cloudUnsubs=[],cloudLoaded=new Set(),cloudReady=false,cloudPending=0,cloudFailed=false,cloudDirty=false,cloudRaf=0,cloudUser="";
 
@@ -2282,59 +2298,6 @@ function submitOrder(){
 window.storeSetCat=storeSetCat;window.addToCart=addToCart;window.changeCartQty=changeCartQty;
 window.openCart=openCart;window.refreshCartModal=refreshCartModal;window.openCheckout=openCheckout;
 
-/* expose globals */
-/* ======= QR SCAN & FETCH PRODUCT ======= */
-async function scanAndFetchProduct(){
-  openQRScanner(async code=>{
-    // Check if it's an existing internal product
-    const existing=findProductByCode(code);
-    if(existing){toast("Tìm thấy sản phẩm trong kho!");openProductModal(existing.id);return;}
-    // Show loading
-    mountModal(`<div class="modal" style="max-width:360px;text-align:center">
-      <div class="modal-body" style="padding:32px 24px">
-        <div style="font-size:36px;margin-bottom:12px">🔍</div>
-        <div style="font-weight:700;margin-bottom:6px">Đang tìm thông tin sản phẩm...</div>
-        <div style="font-size:13px;color:var(--ink-soft)">Mã: ${esc(code)}</div>
-      </div>
-    </div>`);
-    try{
-      const resp=await fetch(`https://world.openbeautyfacts.org/api/v0/product/${encodeURIComponent(code)}.json`);
-      const data=await resp.json();
-      if(data.status===1&&data.product){
-        const prod=data.product;
-        const name=prod.product_name_vi||prod.product_name||prod.product_name_en||"";
-        const brands=prod.brands||"";
-        const ingredients=prod.ingredients_text_vi||prod.ingredients_text||"";
-        const quantity=prod.quantity||"";
-        const imageUrl=prod.image_front_url||prod.image_url||"";
-        const noteLines=[brands&&`Thương hiệu: ${brands}`,quantity&&`Quy cách: ${quantity}`,ingredients&&`Thành phần: ${ingredients}`].filter(Boolean);
-        closeModal();
-        toast("Đã lấy được thông tin sản phẩm!");
-        openProductModal(null,{name,sku:code,note:noteLines.join("\n"),imageUrl,source:"Open Beauty Facts"});
-      }else{
-        // Try Open Food Facts as fallback
-        try{
-          const r2=await fetch(`https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(code)}.json`);
-          const d2=await r2.json();
-          if(d2.status===1&&d2.product){
-            const prod=d2.product;
-            const name=prod.product_name_vi||prod.product_name||"";
-            const brands=prod.brands||"";
-            const imageUrl=prod.image_front_url||prod.image_url||"";
-            closeModal();
-            toast("Đã lấy thông tin từ cơ sở dữ liệu!");
-            openProductModal(null,{name,sku:code,note:brands?`Thương hiệu: ${brands}`:"",imageUrl,source:"Open Food Facts"});
-          }else{
-            closeModal();
-            toast("Không tìm thấy — nhập thủ công");
-            openProductModal(null,{sku:code});
-          }
-        }catch(e2){closeModal();toast("Không có mạng — nhập thủ công");openProductModal(null,{sku:code});}
-      }
-    }catch(e){closeModal();toast("Không có mạng — nhập thủ công");openProductModal(null,{sku:code});}
-  });
-}
-
 /* ======= DANH MỤC HÀNG ======= */
 function renderCategories(){
   if(!isMob())topBtn("＋ Thêm danh mục","primary",()=>openCategoryModal());
@@ -2383,7 +2346,7 @@ function openCategoryModal(id){
 }
 function pickCatIcon(btn,icon){
   document.getElementById("cIcon").value=icon;
-  document.querySelectorAll("#modalWrap button[onclick^='pickCatIcon']").forEach(b=>{
+  document.querySelectorAll("#modalMount button[onclick^='pickCatIcon']").forEach(b=>{
     b.style.border="2px solid var(--line)";b.style.background="var(--surface-2)";
   });
   btn.style.border="2px solid var(--plum)";btn.style.background="var(--plum-soft,#f3e8ff)";
@@ -2420,16 +2383,6 @@ window.go=go;window.openProductModal=openProductModal;window.openTxnModal=openTx
 window.openPartyModal=openPartyModal;window.delProduct=delProduct;window.delTxn=delTxn;window.delParty=delParty;
 window.openQRCode=openQRCode;window.openQRScanner=openQRScanner;window.stopQR=stopQR;
 window.openCategoryModal=openCategoryModal;window.saveCategory=saveCategory;window.delCategory=delCategory;window.pickCatIcon=pickCatIcon;
-window.scanAndFetchProduct=scanAndFetchProduct;
-
-/* Quét mã vạch vào ô Mã vạch trong form sản phẩm */
-function scanFillBarcode(){
-  openQRScanner(code=>{
-    const inp=document.getElementById("fSku");
-    if(inp){inp.value=code;inp.focus();toast("✓ Đã điền mã vạch: "+code);}
-  });
-}
-window.scanFillBarcode=scanFillBarcode;
 
 /* ======= ORDER NOTIFICATION SYSTEM ======= */
 const NOTIFY_KEY='myphamHH_notify';
