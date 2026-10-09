@@ -264,6 +264,10 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
 .pay-toggle button.unpaid.active{background:var(--warn);color:#fff}
 .pay-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
 .pay-row .btn{margin-left:auto}
+.backup-banner{display:flex;gap:14px;align-items:center;background:var(--warn-bg);border:1px solid var(--warn);color:var(--ink);border-radius:14px;padding:14px 16px;margin-bottom:18px}
+.backup-banner>div:first-child{flex:1;min-width:0}
+.backup-banner b{color:var(--warn);display:block;font-size:15px}
+@media(max-width:720px){.backup-banner{flex-direction:column;align-items:stretch}.backup-banner .btn{width:100%}}
 .clickable{cursor:pointer}
 .txn-card.clickable:active{background:var(--surface-2)}
 .bd-more{margin-left:auto;font-size:12.5px;color:var(--rose-deep);font-weight:600}
@@ -695,7 +699,7 @@ function rmProductCode(productId,code){
 window.rmProductCode=rmProductCode;
 function stockStatus(p){if(p.stock<=0)return{cls:"bad",txt:"Tạm hết hàng"};if(p.stock<=p.lowStock)return{cls:"warn",txt:"Sắp hết"};return{cls:"good",txt:"Còn hàng"};}
 function margin(p){if(!p.price)return 0;return(p.price-p.cost)/p.price*100;}
-function thumbHtml(p,sz=40){if(p.image)return`<img class="thumb" src="${p.image}" alt="" style="width:${sz}px;height:${sz}px">`;return`<div class="thumb ph" style="width:${sz}px;height:${sz}px">✦</div>`;}
+function thumbHtml(p,sz=40){if(p.image)return`<img class="thumb" src="${esc(p.image)}" alt="" style="width:${sz}px;height:${sz}px">`;return`<div class="thumb ph" style="width:${sz}px;height:${sz}px">✦</div>`;}
 function fmtDate(d){const[y,m,dd]=d.split("-");return`${dd}/${m}/${y}`;}
 
 let toastTm;
@@ -801,7 +805,9 @@ function computeStats(){
 function renderDashboard(){
   if(!isMob()){topBtn("＋ Lập hóa đơn","primary",()=>openBillModal());topBtn("＋ Nhập hàng","ghost",()=>openTxnModal("purchase"));}
   const s=computeStats();const c=document.getElementById("content");
-  c.innerHTML=`
+  const days=backupDaysAgo();
+  const backupBanner=(days===-1||days>=BACKUP_DAYS)&&(DB.bills||[]).length?`<div class="backup-banner"><div><b>💾 Nên sao lưu dữ liệu${days===-1?"":` — ${days} ngày chưa sao lưu`}</b><div class="muted" style="font-size:12.5px;margin-top:2px">Tải file sao lưu định kỳ để giữ an toàn ngay cả khi mạng/máy chủ sự cố.</div></div><button class="btn primary" onclick="doExportBackup()">⬇ Sao lưu ngay</button></div>`:"";
+  c.innerHTML=`${backupBanner}
     <div class="stat-grid">
       <div class="stat"><div class="label">💰 Doanh thu</div><div class="val rose">${money(s.revenue)}</div><div class="foot">${fmt(s.unitsSold)} sản phẩm đã bán</div></div>
       <div class="stat"><div class="label">📦 Giá trị kho</div><div class="val">${money(s.retail)}</div><div class="foot">Tính theo giá bán</div></div>
@@ -1015,6 +1021,28 @@ function openBillModal(){
   billCart=[];billDiscType="percent";billPayMethod="cash";billPaid=true;
   _renderBillModal();
 }
+const BACKUP_KEY="myphamHH_lastBackup";
+const BACKUP_DAYS=7;
+const lastBackupAt=()=>{try{return +(localStorage.getItem(BACKUP_KEY)||0);}catch(e){return 0;}};
+const setBackupAt=t=>{try{localStorage.setItem(BACKUP_KEY,String(t));}catch(e){}};
+const backupDaysAgo=()=>{const t=lastBackupAt();return t?Math.floor((Date.now()-t)/86400000):-1;};
+async function doExportBackup(){
+  const data=JSON.parse(JSON.stringify(DB));
+  data._exportedAt=Date.now();data._version=1;
+  // Kèm hoá đơn điện tử nếu có
+  if(CLOUD){try{
+    const ids=(DB.bills||[]).map(b=>b.receiptId).filter(Boolean);
+    data.receipts=[];
+    for(const id of ids){const r=await CB.get("receipts",id);if(r)data.receipts.push({id,...r});}
+  }catch(e){}}
+  const date=new Date().toISOString().slice(0,10);
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=`hoanghien-saoluu-${date}.json`;a.click();URL.revokeObjectURL(a.href);
+  setBackupAt(Date.now());toast("✓ Đã tải file sao lưu");
+}
+window.doExportBackup=doExportBackup;
+
 function markBillPaid(id,fromDetail){
   const b=byId(DB.bills||[],id);if(!b||billIsPaid(b))return;
   const cust=byId(DB.customers,b.customerId);
@@ -1519,8 +1547,9 @@ function renderSettings(){
         ${hasLocal?`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><b>Máy này còn dữ liệu cũ (chưa đồng bộ):</b> ${(L.products||[]).length} mặt hàng, ${(L.transactions||[]).length} giao dịch, ${(L.bills||[]).length} hóa đơn.<br><button class="btn primary" id="uploadLocalBtn" style="margin-top:10px">⬆ Đưa dữ liệu máy này lên đám mây</button></div>`:""}
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
           <button class="btn" id="rebuildCatBtn">↻ Làm mới hàng trên trang khách</button>
-          <button class="btn" id="exportJson">⬇ Tải file sao lưu</button>
+          <button class="btn primary" id="exportJson">💾 Sao lưu dữ liệu</button>
         </div>
+        <div class="muted" style="margin-top:10px;font-size:12.5px">${lastBackupAt()?`Lần sao lưu gần nhất: <b>${new Date(lastBackupAt()).toLocaleString("vi-VN",{dateStyle:"short",timeStyle:"short"})}</b> (${backupDaysAgo()} ngày trước)`:"Chưa từng sao lưu dữ liệu — nên sao lưu định kỳ."}</div>
       </div>
     </div>`:`
     <div class="panel">
@@ -1642,13 +1671,7 @@ function renderSettings(){
   themeSel.value=getTheme();
   themeSel.onchange=()=>setTheme(themeSel.value);
 
-  document.getElementById("exportJson").onclick=function(){
-    const json=JSON.stringify(DB,null,2);
-    const blob=new Blob([json],{type:"application/json"});
-    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
-    a.download="hoanghien-data.json";a.click();URL.revokeObjectURL(a.href);
-    toast("Đã tải xuống file dữ liệu!");
-  };
+  document.getElementById("exportJson").onclick=doExportBackup;
   document.getElementById("importFile").addEventListener("change",function(e){
     const f=e.target.files[0];if(!f)return;
     const r=new FileReader();r.onload=()=>{
@@ -1661,7 +1684,7 @@ function renderSettings(){
   document.getElementById("backupOut").value=JSON.stringify(DB);
   document.getElementById("copyBackup").onclick=function(){
     const text=JSON.stringify(DB);const ta=document.getElementById("backupOut");ta.value=text;ta.select();
-    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>toast("Đã sao chép dữ liệu sao lưu")).catch(()=>{try{document.execCommand("copy");}catch(e){}toast("Nhấn Ctrl+C để sao chép");});}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>{setBackupAt(Date.now());toast("Đã sao chép dữ liệu sao lưu");}).catch(()=>{try{document.execCommand("copy");}catch(e){}toast("Nhấn Ctrl+C để sao chép");});}
     else{try{document.execCommand("copy");toast("Đã sao chép");}catch(e){toast("Hãy chọn và Ctrl+C");}}
   };
   document.getElementById("doRestore").onclick=function(){
@@ -1761,7 +1784,7 @@ function openProductModal(id,opts={}){
   if(opts.onDone)pushModal();
   const v=k=>p&&p[k]!=null?esc(p[k]):"";
   const supOpts=`<option value="">— Nhà cung cấp —</option>`+DB.suppliers.map(s=>`<option value="${s.id}" ${p&&p.supplierId===s.id?"selected":""}>${esc(s.name)}</option>`).join("");
-  const previewHtml=p&&p.image?`<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`:"✦";
+  const previewHtml=p&&p.image?`<img src="${esc(p.image)}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`:"✦";
   const origins=["Việt Nam","Hàn Quốc","Nhật Bản","Pháp","Mỹ","Thái Lan","Đức","Anh","Úc","Trung Quốc"];
   const skins=["Mọi loại da","Da dầu","Da khô","Da hỗn hợp","Da nhạy cảm","Da mụn","Da thường"];
   mountModal(`<div class="modal">
@@ -1811,7 +1834,7 @@ function openProductModal(id,opts={}){
   document.getElementById("imgFile").addEventListener("change",e=>{
     const f=e.target.files[0];if(!f)return;
     if(f.size>25*1024*1024){toast("Ảnh quá lớn (tối đa 25MB)");return;}
-    const r=new FileReader();r.onload=async()=>{imgData=await shrinkImage(r.result);prev.innerHTML=`<img src="${imgData}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`;};r.readAsDataURL(f);
+    const r=new FileReader();r.onload=async()=>{imgData=await shrinkImage(r.result);prev.innerHTML=`<img src="${esc(imgData)}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`;};r.readAsDataURL(f);
   });
   document.getElementById("imgClear").onclick=()=>{imgData="";prev.innerHTML="✦";document.getElementById("imgFile").value="";};
   document.getElementById("saveProd").onclick=()=>{
@@ -2610,7 +2633,7 @@ function renderStoreGrid(){
   const el=document.getElementById("storeGrid");
   if(!prods.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="big">✦</div><h3>Không có sản phẩm</h3><p class="muted">Danh mục này đang cập nhật.</p></div>`;return;}
   el.innerHTML=prods.map(p=>`<div class="sp-card">
-    ${p.image?`<div class="sp-img"><img src="${p.image}" alt="${esc(p.name)}"></div>`:`<div class="sp-img">✦</div>`}
+    ${p.image?`<div class="sp-img"><img src="${esc(p.image)}" alt="${esc(p.name)}"></div>`:`<div class="sp-img">✦</div>`}
     <div class="sp-body">
       <div class="sp-name">${esc(p.name)}</div>
       <div class="sp-cat">${esc(p.category||"")}</div>
