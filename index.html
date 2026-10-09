@@ -335,7 +335,7 @@ const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;"
 const money=n=>(Math.round(n||0)).toLocaleString("vi-VN")+"₫";
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 
-const ICONS={"son":"💄","môi":"💋","mắt":"👁️","trang điểm":"💅","phấn":"🪞","chống nắng":"☀️","dưỡng da":"🧴","kem dưỡng":"✨","serum":"💧","mặt nạ":"🌸","tẩy trang":"🌿","nước hoa":"🌹","sữa tắm":"🛁","dầu gội":"💆","tóc":"💇"};
+const ICONS={"son":"💄","môi":"💋","mắt":"👁️","trang điểm":"💅","phấn":"🪞","chống nắng":"☀️","dưỡng da":"🧴","kem dưỡng":"✨","serum":"💧","mặt nạ":"🌸","tẩy trang":"🌿","nước hoa":"🌹","sữa tắm":"🛁","rửa mặt":"🧼","sữa rửa":"🧼","dầu gội":"💆","tóc":"💇"};
 function getIcon(cat){if(!cat)return"✦";const c=cat.toLowerCase();for(const[k,v]of Object.entries(ICONS))if(c.includes(k))return v;return"✦";}
 
 function loadDB(){if(CLOUD)return cloudDB;try{const r=localStorage.getItem(DB_KEY);if(r){const d=JSON.parse(r);if(d&&Array.isArray(d.products)&&d.products.length)return d;}}catch(e){}return null;}
