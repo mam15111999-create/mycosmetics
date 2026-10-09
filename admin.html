@@ -804,8 +804,7 @@ function renderDashboard(){
   c.innerHTML=`
     <div class="stat-grid">
       <div class="stat"><div class="label">💰 Doanh thu</div><div class="val rose">${money(s.revenue)}</div><div class="foot">${fmt(s.unitsSold)} sản phẩm đã bán</div></div>
-      <div class="stat"><div class="label">📈 Lợi nhuận</div><div class="val good">${money(s.profit)}</div><div class="foot">Sau khi trừ giá nhập</div></div>
-      <div class="stat"><div class="label">📦 Giá trị kho</div><div class="val">${money(s.inv)}</div><div class="foot">Bán ra ≈ ${money(s.retail)}</div></div>
+      <div class="stat"><div class="label">📦 Giá trị kho</div><div class="val">${money(s.retail)}</div><div class="foot">Tính theo giá bán</div></div>
       <div class="stat"><div class="label">⚠️ Cần nhập thêm</div><div class="val">${s.lowCount+s.outCount}</div><div class="foot">${s.outCount} hết · ${s.lowCount} sắp hết</div></div>
     </div>
     <div class="two-col">
@@ -861,10 +860,10 @@ function renderProducts(){
     if(!DB.products.length){wrap.innerHTML=emptyState("✦","Chưa có mặt hàng nào","Thêm sản phẩm mỹ phẩm đầu tiên.","＋ Thêm mặt hàng",()=>openProductModal());return;}
     if(!list.length){wrap.innerHTML=`<div class="empty"><div class="big">🔍</div>Không tìm thấy mặt hàng phù hợp.</div>`;return;}
     if(isMob()){
-      wrap.innerHTML=`<div class="card-list">${list.map(p=>{const st=stockStatus(p);const pr=p.price-p.cost;return`<div class="m-card"><div class="m-card-head">${thumbHtml(p,44)}<div class="grow"><div class="prod-name">${esc(p.name)}</div><div class="prod-sku">${esc(p.sku||"—")} · ${esc(p.category||"—")}</div></div><span class="pill ${st.cls}">${st.txt}</span></div><div class="m-card-body"><div class="m-row"><span>Giá nhập</span><b>${money(p.cost)}</b></div><div class="m-row"><span>Giá bán</span><b style="color:var(--ink)">${money(p.price)}</b></div><div class="m-row"><span>Lãi/sản phẩm</span><b style="color:${pr>=0?"var(--good)":"var(--bad)"}">${money(pr)} (${margin(p).toFixed(0)}%)</b></div><div class="m-row"><span>Tồn kho</span><b>${fmt(p.stock)}</b></div></div><div class="m-card-foot"><button class="btn xs" onclick="openQRCode('${p.id}')">QR</button><button class="btn xs" onclick="openProductModal('${p.id}')">✎ Sửa</button><button class="btn xs danger" onclick="delProduct('${p.id}')">🗑</button></div></div>`;}).join("")}</div>`;
+      wrap.innerHTML=`<div class="card-list">${list.map(p=>{const st=stockStatus(p);return`<div class="m-card"><div class="m-card-head">${thumbHtml(p,44)}<div class="grow"><div class="prod-name">${esc(p.name)}</div><div class="prod-sku">${esc(p.category||"—")}</div></div><span class="pill ${st.cls}">${st.txt}</span></div><div class="m-card-body"><div class="m-row"><span>Giá bán</span><b style="color:var(--rose-deep)">${money(p.price)}</b></div><div class="m-row"><span>Tồn kho</span><b>${fmt(p.stock)}</b></div></div><div class="m-card-foot"><button class="btn xs" onclick="openQRCode('${p.id}')">QR</button><button class="btn xs" onclick="openProductModal('${p.id}')">✎ Sửa</button><button class="btn xs danger" onclick="delProduct('${p.id}')">🗑</button></div></div>`;}).join("")}</div>`;
       return;
     }
-    wrap.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Sản phẩm</th><th>Loại</th><th class="num">Giá nhập</th><th class="num">Giá bán</th><th class="num">Lãi/SP</th><th class="num">Tồn</th><th>Trạng thái</th><th></th></tr></thead><tbody>${list.map(p=>{const st=stockStatus(p);const pr=p.price-p.cost;return`<tr><td><div class="prod-cell">${thumbHtml(p)}<div><div class="prod-name">${esc(p.name)}</div><div class="prod-sku">${esc(p.sku||"—")}</div></div></div></td><td><span class="cat-tag">${esc(p.category||"—")}</span></td><td class="num">${money(p.cost)}</td><td class="num"><b>${money(p.price)}</b></td><td class="num" style="color:${pr>=0?"var(--good)":"var(--bad)"}">${money(pr)}<div class="prod-sku">${margin(p).toFixed(0)}%</div></td><td class="num"><b>${fmt(p.stock)}</b></td><td><span class="pill ${st.cls}">${st.txt}</span></td><td class="row-actions"><button class="icon-btn" style="font-size:11px;font-weight:700" onclick="openQRCode('${p.id}')">QR</button><button class="icon-btn" onclick="openProductModal('${p.id}')">✎</button><button class="icon-btn" onclick="delProduct('${p.id}')">🗑</button></td></tr>`;}).join("")}</tbody></table></div>`;
+    wrap.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Sản phẩm</th><th>Loại</th><th class="num">Giá bán</th><th class="num">Tồn</th><th>Trạng thái</th><th></th></tr></thead><tbody>${list.map(p=>{const st=stockStatus(p);return`<tr><td><div class="prod-cell">${thumbHtml(p)}<div class="prod-name">${esc(p.name)}</div></div></td><td><span class="cat-tag">${esc(p.category||"—")}</span></td><td class="num"><b style="color:var(--rose-deep)">${money(p.price)}</b></td><td class="num"><b>${fmt(p.stock)}</b></td><td><span class="pill ${st.cls}">${st.txt}</span></td><td class="row-actions"><button class="icon-btn" style="font-size:11px;font-weight:700" onclick="openQRCode('${p.id}')">QR</button><button class="icon-btn" onclick="openProductModal('${p.id}')">✎</button><button class="icon-btn" onclick="delProduct('${p.id}')">🗑</button></td></tr>`;}).join("")}</tbody></table></div>`;
   };
   draw();
   document.getElementById("pSearch").addEventListener("input",e=>{prodSearch=e.target.value;draw();});
@@ -891,12 +890,12 @@ function renderTransactions(){
     if(!list.length){wrap.innerHTML=`<div class="empty"><div class="big">🔍</div>Không có giao dịch phù hợp.</div>`;return;}
     if(isMob()){
       wrap.innerHTML=`<div class="card-list">${list.map(t=>{
-        const p=productById(t.productId);const total=t.qty*t.unitPrice;const profit=t.type==="sale"?t.qty*(t.unitPrice-t.unitCost):0;
-        return`<div class="txn-card"><div class="txn-card-top"><span class="pill ${t.type}">${t.type==="sale"?"Bán":"Nhập"}</span><div class="grow"><div class="prod-name" style="font-size:14px">${esc(p?p.name:"(đã xoá)")}</div><div class="txn-card-meta">${fmtDate(t.date)} · ${t.type==="sale"?esc(customerName(t.partyId)):esc(supplierName(t.partyId))}</div></div><button class="icon-btn" style="width:32px;height:32px;font-size:13px" onclick="delTxn('${t.id}')">🗑</button></div><div class="txn-card-nums"><div><span class="lbl">Số lượng</span><b>${fmt(t.qty)}</b></div><div><span class="lbl">Đơn giá</span><b>${money(t.unitPrice)}</b></div><div><span class="lbl">Thành tiền</span><b>${money(total)}</b></div>${t.type==="sale"?`<div><span class="lbl">Lãi</span><b style="color:${profit>=0?"var(--good)":"var(--bad)"}">${money(profit)}</b></div>`:""}</div>${t.note?`<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">${esc(t.note)}</div>`:""}</div>`;
+        const p=productById(t.productId);const total=t.qty*t.unitPrice;
+        return`<div class="txn-card"><div class="txn-card-top"><span class="pill ${t.type}">${t.type==="sale"?"Bán":"Nhập"}</span><div class="grow"><div class="prod-name" style="font-size:14px">${esc(p?p.name:"(đã xoá)")}</div><div class="txn-card-meta">${fmtDate(t.date)} · ${t.type==="sale"?esc(customerName(t.partyId)):esc(supplierName(t.partyId))}</div></div><button class="icon-btn" style="width:32px;height:32px;font-size:13px" onclick="delTxn('${t.id}')">🗑</button></div><div class="txn-card-nums"><div><span class="lbl">Số lượng</span><b>${fmt(t.qty)}</b></div>${t.type==="sale"?`<div><span class="lbl">Đơn giá</span><b>${money(t.unitPrice)}</b></div><div><span class="lbl">Thành tiền</span><b>${money(total)}</b></div>`:""}</div>${t.note?`<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">${esc(t.note)}</div>`:""}</div>`;
       }).join("")}</div>`;
       return;
     }
-    wrap.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Loại</th><th>Sản phẩm</th><th class="num">SL</th><th class="num">Đơn giá</th><th class="num">Thành tiền</th><th class="num">Lãi</th><th>Đối tác</th><th></th></tr></thead><tbody>${list.map(t=>{const p=productById(t.productId);const total=t.qty*t.unitPrice;const profit=t.type==="sale"?t.qty*(t.unitPrice-t.unitCost):0;return`<tr><td>${fmtDate(t.date)}</td><td><span class="pill ${t.type}">${t.type==="sale"?"Bán":"Nhập"}</span></td><td><div class="prod-name">${esc(p?p.name:"(đã xoá)")}</div>${t.note?`<div class="prod-sku">${esc(t.note)}</div>`:""}</td><td class="num">${fmt(t.qty)}</td><td class="num">${money(t.unitPrice)}</td><td class="num"><b>${money(total)}</b></td><td class="num" style="color:${t.type==="sale"?(profit>=0?"var(--good)":"var(--bad)"):"var(--ink-soft)"}">${t.type==="sale"?money(profit):"—"}</td><td>${t.type==="sale"?esc(customerName(t.partyId)):esc(supplierName(t.partyId))}</td><td class="row-actions"><button class="icon-btn" onclick="delTxn('${t.id}')">🗑</button></td></tr>`;}).join("")}</tbody></table></div>`;
+    wrap.innerHTML=`<div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Loại</th><th>Sản phẩm</th><th class="num">SL</th><th class="num">Đơn giá</th><th class="num">Thành tiền</th><th>Đối tác</th><th></th></tr></thead><tbody>${list.map(t=>{const p=productById(t.productId);const total=t.qty*t.unitPrice;return`<tr><td>${fmtDate(t.date)}</td><td><span class="pill ${t.type}">${t.type==="sale"?"Bán":"Nhập"}</span></td><td><div class="prod-name">${esc(p?p.name:"(đã xoá)")}</div>${t.note?`<div class="prod-sku">${esc(t.note)}</div>`:""}</td><td class="num">${fmt(t.qty)}</td><td class="num">${t.type==="sale"?money(t.unitPrice):"—"}</td><td class="num"><b>${t.type==="sale"?money(total):"—"}</b></td><td>${t.type==="sale"?esc(customerName(t.partyId)):esc(supplierName(t.partyId))}</td><td class="row-actions"><button class="icon-btn" onclick="delTxn('${t.id}')">🗑</button></td></tr>`;}).join("")}</tbody></table></div>`;
   };
   draw();
   document.getElementById("txnF").addEventListener("change",e=>{txnFilter=e.target.value;draw();});
@@ -991,11 +990,11 @@ function renderPurchases(){
   if(!isMob())topBtn("＋ Nhập hàng","primary",()=>openTxnModal("purchase"));
   const c=document.getElementById("content");
   const list=DB.transactions.filter(t=>t.type==="purchase").slice().sort((a,b)=>(b.date+b.id).localeCompare(a.date+a.id));
-  const totalCost=list.reduce((s,t)=>s+t.qty*t.unitPrice,0);
+  const totalQty=list.reduce((s,t)=>s+t.qty,0);
   c.innerHTML=`
     <div class="stat-grid">
       <div class="stat"><div class="label">📦 Tổng lần nhập</div><div class="val">${fmt(list.length)}</div></div>
-      <div class="stat"><div class="label">💵 Tổng tiền nhập</div><div class="val">${money(totalCost)}</div></div>
+      <div class="stat"><div class="label">🧮 Tổng số lượng</div><div class="val">${fmt(totalQty)}</div><div class="foot">Sản phẩm đã nhập về kho</div></div>
     </div>
     <div class="panel">
       <div class="panel-head"><h2>Lịch sử nhập hàng</h2>${!isMob()?`<button class="btn primary" onclick="openTxnModal('purchase')">＋ Nhập hàng</button>`:""}</div>
@@ -1004,10 +1003,10 @@ function renderPurchases(){
   const wrap=document.getElementById("purchaseList");
   if(!list.length){wrap.innerHTML=`<div class="panel-body">${emptyState("📦","Chưa có lần nhập hàng","Ghi nhận nhập kho đầu tiên.","＋ Nhập hàng",()=>openTxnModal("purchase"))}</div>`;return;}
   if(isMob()){
-    wrap.innerHTML=`<div class="card-list" style="padding:12px">${list.map(t=>{const p=productById(t.productId);const total=t.qty*t.unitPrice;return`<div class="txn-card"><div class="txn-card-top"><span class="pill purchase">Nhập</span><div class="grow"><div class="prod-name" style="font-size:14px">${esc(p?p.name:"(đã xoá)")}</div><div class="txn-card-meta">${fmtDate(t.date)} · ${esc(supplierName(t.partyId))}</div></div><button class="icon-btn" style="width:32px;height:32px;font-size:13px" onclick="delTxn('${t.id}')">🗑</button></div><div class="txn-card-nums"><div><span class="lbl">Số lượng</span><b>${fmt(t.qty)}</b></div><div><span class="lbl">Đơn giá</span><b>${money(t.unitPrice)}</b></div><div><span class="lbl">Thành tiền</span><b>${money(total)}</b></div></div>${t.note?`<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">${esc(t.note)}</div>`:""}</div>`;}).join("")}</div>`;
+    wrap.innerHTML=`<div class="card-list" style="padding:12px">${list.map(t=>{const p=productById(t.productId);return`<div class="txn-card"><div class="txn-card-top"><span class="pill purchase">Nhập</span><div class="grow"><div class="prod-name" style="font-size:14px">${esc(p?p.name:"(đã xoá)")}</div><div class="txn-card-meta">${fmtDate(t.date)} · ${esc(supplierName(t.partyId))}</div></div><button class="icon-btn" style="width:32px;height:32px;font-size:13px" onclick="delTxn('${t.id}')">🗑</button></div><div class="txn-card-nums"><div><span class="lbl">Số lượng</span><b>${fmt(t.qty)}</b></div></div>${t.note?`<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">${esc(t.note)}</div>`:""}</div>`;}).join("")}</div>`;
     return;
   }
-  wrap.innerHTML=`<div class="table-wrap" style="border:0;border-radius:0;box-shadow:none"><table><thead><tr><th>Ngày</th><th>Sản phẩm</th><th class="num">SL</th><th class="num">Đơn giá</th><th class="num">Thành tiền</th><th>Nhà cung cấp</th><th></th></tr></thead><tbody>${list.map(t=>{const p=productById(t.productId);const total=t.qty*t.unitPrice;return`<tr><td>${fmtDate(t.date)}</td><td><div class="prod-name">${esc(p?p.name:"(đã xoá)")}</div>${t.note?`<div class="prod-sku">${esc(t.note)}</div>`:""}</td><td class="num">${fmt(t.qty)}</td><td class="num">${money(t.unitPrice)}</td><td class="num"><b>${money(total)}</b></td><td>${esc(supplierName(t.partyId))}</td><td class="row-actions"><button class="icon-btn" onclick="delTxn('${t.id}')">🗑</button></td></tr>`;}).join("")}</tbody></table></div>`;
+  wrap.innerHTML=`<div class="table-wrap" style="border:0;border-radius:0;box-shadow:none"><table><thead><tr><th>Ngày</th><th>Sản phẩm</th><th class="num">Số lượng</th><th>Nhà cung cấp</th><th>Ghi chú</th><th></th></tr></thead><tbody>${list.map(t=>{const p=productById(t.productId);return`<tr><td>${fmtDate(t.date)}</td><td><div class="prod-name">${esc(p?p.name:"(đã xoá)")}</div></td><td class="num"><b>${fmt(t.qty)}</b></td><td>${esc(supplierName(t.partyId))}</td><td class="muted">${esc(t.note||"")}</td><td class="row-actions"><button class="icon-btn" onclick="delTxn('${t.id}')">🗑</button></td></tr>`;}).join("")}</tbody></table></div>`;
 }
 
 /* ======= HÓA ĐƠN (BILL MODAL) ======= */
@@ -1779,11 +1778,7 @@ function openProductModal(id,opts={}){
       ${p&&productCodes(p).length?`<div class="field"><label>Mã vạch đã lưu <span class="hint">(học từ các lần nhập hàng)</span></label>
         <div class="code-chips">${productCodes(p).map((c,i)=>`<span class="code-chip">${esc(c)}${i>0||p.sku?`<button type="button" aria-label="Bỏ mã" onclick="rmProductCode('${p.id}','${esc(c)}')">×</button>`:""}</span>`).join("")}</div>
       </div>`:""}
-      <div class="grid-2">
-        <div class="field"><label>Giá nhập (₫) *</label><input id="fCost" type="number" min="0" value="${p?p.cost:""}" placeholder="75000"></div>
-        <div class="field"><label>Giá bán (₫) *</label><input id="fPrice" type="number" min="0" value="${p?p.price:""}" placeholder="145000"></div>
-      </div>
-      <div class="calc-note" id="marginNote"></div>
+      <div class="field"><label>Giá bán (₫) *</label><input id="fPrice" type="number" min="0" value="${p?p.price:""}" placeholder="145000"></div>
       <div class="grid-2" style="margin-top:14px">
         <div class="field"><label>Tồn kho hiện tại</label><input id="fStock" type="number" min="0" value="${p?p.stock:0}"></div>
         <div class="field"><label>Ngưỡng báo sắp hết</label><input id="fLow" type="number" min="0" value="${p?p.lowStock:5}"></div>
@@ -1819,14 +1814,12 @@ function openProductModal(id,opts={}){
     const r=new FileReader();r.onload=async()=>{imgData=await shrinkImage(r.result);prev.innerHTML=`<img src="${imgData}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`;};r.readAsDataURL(f);
   });
   document.getElementById("imgClear").onclick=()=>{imgData="";prev.innerHTML="✦";document.getElementById("imgFile").value="";};
-  const upd=()=>{const cost=+document.getElementById("fCost").value||0,price=+document.getElementById("fPrice").value||0;const pr=price-cost;const m=price?pr/price*100:0;document.getElementById("marginNote").innerHTML=`Lợi nhuận/SP: <b style="color:${pr>=0?"var(--good)":"var(--bad)"}">${money(pr)}</b> · Biên ${m.toFixed(0)}%`;};
-  document.getElementById("fCost").addEventListener("input",upd);document.getElementById("fPrice").addEventListener("input",upd);upd();
   document.getElementById("saveProd").onclick=()=>{
     const name=document.getElementById("fName").value.trim();
-    const cost=+document.getElementById("fCost").value||0,price=+document.getElementById("fPrice").value||0;
+    const price=+document.getElementById("fPrice").value||0;
+    const cost=p?p.cost||0:0;// giữ nguyên giá nhập cũ nếu có, hoặc để 0
     if(!name){toast("Vui lòng nhập tên sản phẩm");return;}
     if(price<=0){toast("Giá bán phải lớn hơn 0");return;}
-    if(cost<0){toast("Giá nhập không được âm");return;}
     const val=k=>document.getElementById(k).value.trim();
     const formStock=Math.max(0,Math.round(+document.getElementById("fStock").value||0));
     const cur=p&&productById(p.id);
@@ -1857,35 +1850,35 @@ function openTxnModal(type,presetProd){
   mountModal(`<div class="modal">
     <div class="modal-head"><h2>${isSale?"💰 Bán hàng":"📦 Nhập hàng"}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
-      ${!isSale?`<div class="batch-hint muted">1. Chọn mặt hàng bên dưới. 2. Nhập giá nhập. 3. Bấm <b>📷 Quét hàng loạt</b> và quét lần lượt từng hộp, mỗi lần quét là +1 số lượng.</div>`:""}
+      ${!isSale?`<div class="batch-hint muted">1. Chọn mặt hàng bên dưới. 2. Nhập số lượng, hoặc bấm <b>📷 Quét hàng loạt</b> và quét lần lượt từng hộp — mỗi lần quét là +1 số lượng.</div>`:""}
       <button type="button" class="btn scan-row" id="scanBtn">📷 Quét mã vạch / QR</button>
       <div class="scan-info" id="scanInfo" hidden></div>
       ${cats.length?`<div class="field"><label>Danh mục</label><select id="tCat">${catOpts}</select></div>`:""}
       <div class="field"><label>Sản phẩm *</label>
         <select id="tProd">${makeProdOpts("")||`<option value="">— Chưa có mặt hàng, hãy quét mã để thêm —</option>`}</select>
       </div>
-      <div class="grid-2">
+      ${isSale?`<div class="grid-2">
         <div class="field"><label>Số lượng *</label><input id="tQty" type="number" min="1" inputmode="numeric" value="1"></div>
-        <div class="field"><label>${isSale?"Giá bán":"Giá nhập"} (₫) *</label><input id="tPrice" type="number" min="0" inputmode="numeric"></div>
-      </div>
+        <div class="field"><label>Giá bán (₫) *</label><input id="tPrice" type="number" min="0" inputmode="numeric"></div>
+      </div>`:`<div class="field"><label>Số lượng *</label><input id="tQty" type="number" min="1" inputmode="numeric" value="1"></div>
+      <input id="tPrice" type="hidden" value="0">`}
       ${!isSale?`<button type="button" class="btn primary" id="batchBtn" style="width:100%;padding:14px;margin-bottom:14px">📷 Quét hàng loạt (+1 số lượng mỗi lần quét)</button>`:""}
       <div class="field"><label>Ngày</label><input id="tDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
       <div class="field"><label>${isSale?"Khách hàng":"Nhà cung cấp"}</label><select id="tParty">${partyOpts}</select></div>
       <div class="field"><label>Ghi chú</label><input id="tNote" placeholder="Không bắt buộc"></div>
       <div class="calc-note" id="tSummary"></div>
-      ${!isSale?`<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:12px;cursor:pointer"><input type="checkbox" id="tUpdCost" checked style="width:auto;min-height:auto"> Cập nhật giá nhập theo lần nhập này</label>`:""}
     </div>
     <div class="modal-foot"><button class="btn primary" id="saveTxn" style="flex:1">${isSale?"💾 Ghi nhận bán":"💾 Ghi nhận nhập"}</button></div>
   </div>`,{locked:true});
   const prodSel=document.getElementById("tProd"),priceIn=document.getElementById("tPrice"),qtyIn=document.getElementById("tQty");
   const catSel=document.getElementById("tCat");
   if(catSel){catSel.addEventListener("change",()=>{prodSel.innerHTML=makeProdOpts(catSel.value);fillPrice();});}
-  const fillPrice=()=>{const p=productById(prodSel.value);if(p)priceIn.value=isSale?p.price:p.cost;updateSum();};
+  const fillPrice=()=>{const p=productById(prodSel.value);if(p&&isSale)priceIn.value=p.price;updateSum();};
   const updateSum=()=>{
     const p=productById(prodSel.value);const qty=+qtyIn.value||0;const price=+priceIn.value||0;
-    let html=`Thành tiền: <b>${money(qty*price)}</b>`;
-    if(isSale&&p){const profit=qty*(price-p.cost);html+=` · Lãi: <b style="color:${profit>=0?"var(--good)":"var(--bad)"}">${money(profit)}</b>`;if(qty>p.stock)html+=`<br><span style="color:var(--warn)">⚠️ Kho chỉ còn ${p.stock}</span>`;}
-    if(!isSale&&p)html+=` · Tồn sau nhập: <b>${fmt(p.stock+qty)}</b>`;
+    let html="";
+    if(isSale){html=`Thành tiền: <b>${money(qty*price)}</b>`;if(p&&qty>p.stock)html+=`<br><span style="color:var(--warn)">⚠️ Kho chỉ còn ${p.stock}</span>`;}
+    else if(p)html=`Tồn sau nhập: <b>${fmt(p.stock+qty)}</b>`;
     document.getElementById("tSummary").innerHTML=html;
   };
   prodSel.addEventListener("change",fillPrice);
@@ -1931,7 +1924,7 @@ function openTxnModal(type,presetProd){
     if(price<0){toast("Giá không hợp lệ");return;}
     if(isSale&&qty>p.stock){toast(`Không đủ hàng — kho chỉ còn ${p.stock}`);return;}
     const txn={id:uid(),type,date:document.getElementById("tDate").value||new Date().toISOString().slice(0,10),productId:p.id,qty,unitPrice:price,unitCost:p.cost,partyId:document.getElementById("tParty").value,note:document.getElementById("tNote").value.trim()};
-    if(isSale)p.stock-=qty;else{p.stock+=qty;if(document.getElementById("tUpdCost")?.checked)p.cost=price;}
+    if(isSale)p.stock-=qty;else p.stock+=qty;
     DB.transactions.push(txn);save();closeModal();
     toast(isSale?`Đã bán ${qty} × ${p.name}`:`Đã nhập ${qty} × ${p.name}`);go(current);
   };
