@@ -54,6 +54,7 @@ window.cloudBackend = (() => {
         await b.commit();
       }
     },
-    async add(col, data) { return (await fs.addDoc(fs.collection(db, col), data)).id; }
+    async add(col, data) { return (await fs.addDoc(fs.collection(db, col), data)).id; },
+    async get(col, id) { const s = await fs.getDoc(fs.doc(db, col, id)); return s.exists() ? plain(s.data()) : null; }
   };
 })();

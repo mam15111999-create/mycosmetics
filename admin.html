@@ -278,6 +278,12 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
 .bd-items tbody tr:hover{background:none}
 .bd-items .r{text-align:right;white-space:nowrap}
 .bd-name{font-weight:600}
+.einv{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface-2)}
+.einv-qr{width:110px;height:110px;flex-shrink:0;background:#fff;padding:6px;border-radius:8px;border:1px solid var(--line)}
+.einv-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.einv-ok{font-weight:700;color:var(--good)}
+.einv-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.einv-btns .btn{text-decoration:none}
 /* Phiếu in khổ 80mm */
 #printArea{display:none}
 @media print{
@@ -299,6 +305,8 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
   .rc-items .rc-name{text-align:left;font-weight:700;padding-top:5px}
   .rc-total{font-weight:700;font-size:15px;border-top:1px dashed #000;margin-top:4px;padding-top:4px}
   .rc-note{margin-top:6px;font-size:11px}
+  .rc-qr{text-align:center;margin-top:10px;font-size:10.5px}
+  .rc-qr img{width:28mm;height:28mm;display:block;margin:0 auto 2px}
   .rc-thanks{text-align:center;margin-top:10px;font-style:italic;border-top:1px dashed #000;padding-top:6px}
 }
 .bill-summary .s-row{display:flex;justify-content:space-between;align-items:center}
@@ -529,7 +537,7 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
 </div>
 
 <script src="firebase-config.js?v=2"></script>
-<script src="cloud.js?v=2"></script>
+<script src="cloud.js?v=3"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 "use strict";
@@ -980,7 +988,7 @@ function markBillPaid(id,fromDetail){
 }
 function confirmBillPaid(id,method){
   const b=byId(DB.bills||[],id);
-  if(b&&!billIsPaid(b)){b.paid=true;b.payMethod=method;b.paidAt=Date.now();save();toast(`✓ Đã thu ${money(b.total)} · ${PAY_LABEL[method]}`);}
+  if(b&&!billIsPaid(b)){b.paid=true;b.payMethod=method;b.paidAt=Date.now();save();syncReceipt(b);toast(`✓ Đã thu ${money(b.total)} · ${PAY_LABEL[method]}`);}
   closeModal();go(current);
 }
 function setPayMethod(m){
@@ -1256,7 +1264,7 @@ function saveBill(andPrint){
   for(const item of billCart){const p=productById(item.productId);if(p)p.stock=Math.max(0,p.stock-item.qty);}
   if(!DB.bills)DB.bills=[];
   const billId=uid();
-  DB.bills.push({id:billId,createdAt:Date.now(),date:document.getElementById("bDate").value||new Date().toISOString().slice(0,10),customerId:document.getElementById("bCust").value,items:billCart.map(i=>({...i})),discount:d,discountType:billDiscType,note:document.getElementById("bNote").value.trim(),subtotal,discAmt,total,profit,
+  DB.bills.push({id:billId,createdAt:Date.now(),...(CLOUD?{receiptId:newReceiptId()}:{}),date:document.getElementById("bDate").value||new Date().toISOString().slice(0,10),customerId:document.getElementById("bCust").value,items:billCart.map(i=>({...i})),discount:d,discountType:billDiscType,note:document.getElementById("bNote").value.trim(),subtotal,discAmt,total,profit,
     payMethod:billPayMethod,paid:billPaid,...(billPaid?{paidAt:Date.now()}:{})});
   billCart=[];
   // Tích điểm cho khách hàng (1 điểm / 10,000₫)
@@ -1272,12 +1280,49 @@ function saveBill(andPrint){
       if(earned>0)toastMsg+=` · Tích +${fmt(earned)} điểm`;
     }
   }
-  save();closeModal();toast(toastMsg);go(current);
+  save();syncReceipt(byId(DB.bills,billId));closeModal();toast(toastMsg);go(current);
   if(andPrint)printBill(billId);
 }
 
 /* ---- Chi tiết & in hoá đơn ---- */
 const billCode=b=>"HĐ"+String(b.id).slice(-6).toUpperCase();
+const SHOP={name:"Mỹ Phẩm Hoàng Hiền",address:"Thôn Phú Lương, Vạn Lộc, Thanh Hóa",phone:"0789 686 111",web:"hoanghiencosmetics.com"};
+
+/* ---- Hoá đơn điện tử: bản sao công khai của hoá đơn, mở bằng link có mã ngẫu nhiên ---- */
+function newReceiptId(){const a="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789",r=crypto.getRandomValues(new Uint8Array(22));return[...r].map(x=>a[x%a.length]).join("");}
+const receiptUrl=b=>new URL("hd.html?id="+b.receiptId,location.href).href;
+const maskPhone=p=>{const d=String(p||"").replace(/\D/g,"");return d.length>=7?d.slice(0,3)+"****"+d.slice(-3):"";};
+function receiptData(b,status="active"){
+  const {cust,pts,items,when}=billView(b);
+  return{code:billCode(b),when,customer:cust?cust.name:"Khách lẻ",phone:cust?maskPhone(cust.phone):"",
+    items:items.map(i=>({name:i.name,qty:i.qty,price:i.price,total:i.total})),
+    subtotal:b.subtotal,discAmt:b.discAmt||0,discLabel:b.discAmt&&b.discountType==="percent"?`${b.discount}%`:"",total:b.total,
+    paid:billIsPaid(b),payMethod:b.payMethod||"",points:pts?pts.earned:0,note:b.note||"",status,shop:SHOP,updatedAt:Date.now()};
+}
+function syncReceipt(b,status){
+  if(!CLOUD||!b||!b.receiptId)return;
+  CB.commit([{op:"set",col:"receipts",id:b.receiptId,data:receiptData(b,status)}]).catch(e=>toast("Chưa lưu được hoá đơn điện tử: "+cloudErrText(e)));
+}
+function ensureReceipt(b){
+  if(!CLOUD||b.receiptId)return;
+  b.receiptId=newReceiptId();save();syncReceipt(b);
+}
+function shareReceipt(id){
+  const b=byId(DB.bills||[],id);if(!b||!b.receiptId)return;
+  const url=receiptUrl(b),title=`Hóa đơn ${billCode(b)} – ${SHOP.name}`;
+  if(navigator.share)navigator.share({title,text:`${title}: ${money(b.total)}`,url}).catch(()=>{});
+  else copyReceipt(id);
+}
+function copyReceipt(id){
+  const b=byId(DB.bills||[],id);if(!b||!b.receiptId)return;
+  const url=receiptUrl(b);
+  (navigator.clipboard?.writeText(url)||Promise.reject()).then(()=>toast("Đã sao chép link hóa đơn"),()=>toast(url));
+}
+function qrDataUrl(text,size=160){
+  const tmp=document.createElement("div");
+  try{new QRCode(tmp,{text,width:size,height:size,correctLevel:QRCode.CorrectLevel.M});return tmp.querySelector("canvas")?.toDataURL()||"";}catch(e){return"";}
+}
+window.shareReceipt=shareReceipt;window.copyReceipt=copyReceipt;
 function billView(b){
   const cust=byId(DB.customers,b.customerId);
   const pts=cust?(cust.pointsHistory||[]).find(h=>h.billId===b.id):null;
@@ -1287,7 +1332,21 @@ function billView(b){
 }
 function openBillDetail(id){
   const b=byId(DB.bills||[],id);if(!b)return;
+  ensureReceipt(b);
   const {cust,pts,items,when}=billView(b);
+  const einv=CLOUD&&b.receiptId?`<div class="form-sec">🧾 Hóa đơn điện tử</div>
+      <div class="einv">
+        <img class="einv-qr" src="${qrDataUrl(receiptUrl(b),150)}" alt="QR hóa đơn">
+        <div class="einv-info">
+          <div class="einv-ok">✓ Đã lưu trữ trực tuyến</div>
+          <div class="muted" style="font-size:12.5px">Khách quét mã hoặc mở link để xem lại hóa đơn bất cứ lúc nào.</div>
+          <div class="einv-btns">
+            <button class="btn sm primary" onclick="shareReceipt('${b.id}')">📤 Gửi khách</button>
+            <button class="btn sm" onclick="copyReceipt('${b.id}')">⧉ Sao chép link</button>
+            <a class="btn sm ghost" href="${receiptUrl(b)}" target="_blank" rel="noopener">↗ Mở</a>
+          </div>
+        </div>
+      </div>`:"";
   mountModal(`<div class="modal" style="max-width:520px">
     <div class="modal-head"><h2>🧾 ${billCode(b)}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
@@ -1306,6 +1365,7 @@ function openBillDetail(id){
         <div class="s-row s-total"><span>Tổng cộng</span><span style="color:var(--rose-deep)">${money(b.total)}</span></div>
       </div>
       ${b.note?`<div class="calc-note" style="margin-top:12px">📝 ${esc(b.note)}</div>`:""}
+      ${einv}
     </div>
     <div class="modal-foot">
       <button class="btn ghost" title="Xoá hóa đơn" onclick="closeModal();delBill('${b.id}')">🗑</button>
@@ -1330,6 +1390,7 @@ function receiptHtml(b){
     ${row("Thanh toán:",!billIsPaid(b)?"CHƯA THANH TOÁN":b.payMethod==="transfer"?"Chuyển khoản":b.payMethod==="cash"?"Tiền mặt":"Đã thanh toán")}
     ${pts?row("Điểm tích luỹ:",`+${fmt(pts.earned)} (tổng ${fmt(cust.points||0)})`):""}
     ${b.note?`<div class="rc-note">Ghi chú: ${esc(b.note)}</div>`:""}
+    ${CLOUD&&b.receiptId?`<div class="rc-qr"><img src="${qrDataUrl(receiptUrl(b),140)}" alt=""><div>Quét mã để xem hóa đơn điện tử</div></div>`:""}
     <div class="rc-thanks">Cảm ơn quý khách!<br>Hẹn gặp lại ♥</div>
   </div>`;
 }
@@ -1343,7 +1404,8 @@ function printBill(id){
 window.openBillDetail=openBillDetail;window.printBill=printBill;
 function delBill(id){
   const b=byId(DB.bills||[],id);if(!b)return;
-  confirmModal("Xoá hóa đơn?","Xoá sẽ hoàn lại tồn kho và trừ điểm tích luỹ của khách (nếu có). Tiếp tục?",()=>{
+  confirmModal("Xoá hóa đơn?","Xoá sẽ hoàn lại tồn kho và trừ điểm tích luỹ của khách (nếu có). Hoá đơn điện tử vẫn được lưu và ghi là đã huỷ. Tiếp tục?",()=>{
+    syncReceipt(b,"cancelled");
     for(const item of b.items){const p=productById(item.productId);if(p)p.stock+=item.qty;}
     const cust=b.customerId&&byId(DB.customers,b.customerId);
     const h=cust&&(cust.pointsHistory||[]).find(x=>x.billId===id);
