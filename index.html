@@ -324,8 +324,8 @@ img{max-width:100%;display:block}
   <div class="sheet" id="sheet"></div>
 </div>
 
-<script src="firebase-config.js?v=1"></script>
-<script src="cloud.js?v=1"></script>
+<script src="firebase-config.js?v=2"></script>
+<script src="cloud.js?v=2"></script>
 <script>
 "use strict";
 const DB_KEY="myphamHH_v1";
@@ -564,7 +564,7 @@ renderCats();
 if(CLOUD){
   // Danh sách hàng công khai, cập nhật tức thì khi cửa hàng sửa giá / tồn kho
   let rt=0;
-  const refresh=()=>{if(rt)return;rt=requestAnimationFrame(()=>{
+  const refresh=()=>{if(rt)return;rt=setTimeout(()=>{
     rt=0;renderCats();
     if(document.getElementById("prodView").classList.contains("show"))renderProds();
     const s=document.getElementById("sheet");if(s.dataset.view==="cart")renderCartBody(cloudDB);
