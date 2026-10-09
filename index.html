@@ -431,7 +431,7 @@ function openProductDetail(id){
     :p.stock<=(p.lowStock||5)
       ?`<span class="pd-stock-warn">⚠ Sắp hết · Còn ${p.stock} sản phẩm</span>`
       :`<span class="pd-stock-ok">✓ Còn hàng · ${p.stock} sản phẩm</span>`;
-  const infoRows=[["Thương hiệu",p.brand],["Xuất xứ",p.origin],["Dung tích / Khối lượng",p.volume],["Loại da phù hợp",p.skinType],["Hạn sử dụng",p.expiry],["Mã sản phẩm",p.sku]].filter(r=>r[1]);
+  const infoRows=[["Thương hiệu",p.brand],["Xuất xứ",p.origin],["Dung tích / Khối lượng",p.volume],["Loại da phù hợp",p.skinType],["Mã sản phẩm",p.sku]].filter(r=>r[1]);
   const s=document.getElementById("sheet");s.dataset.view="detail";
   s.innerHTML=`<div class="sheet-drag"></div>
     <div class="sheet-head"><h2>Chi tiết sản phẩm</h2><button class="close-btn" onclick="closeSheet()">✕</button></div>

@@ -1517,9 +1517,8 @@ function openProductModal(id,opts={}){
       </div>
       <div class="grid-2">
         <div class="field"><label>Dung tích / Khối lượng</label><input id="fVolume" value="${v("volume")}" placeholder="VD: 60ml, 50g"></div>
-        <div class="field"><label>Hạn sử dụng</label><input id="fExpiry" value="${v("expiry")}" placeholder="VD: 12/2027"></div>
+        <div class="field"><label>Loại da phù hợp</label><input id="fSkin" value="${v("skinType")}" list="dlSkin" placeholder="VD: Da dầu, da hỗn hợp"></div>
       </div>
-      <div class="field"><label>Loại da phù hợp</label><input id="fSkin" value="${v("skinType")}" list="dlSkin" placeholder="VD: Da dầu, da hỗn hợp"></div>
       <div class="field"><label>Thành phần</label><textarea id="fIngr" rows="3" placeholder="Thành phần chính...">${v("ingredients")}</textarea></div>
       <div class="field"><label>Hướng dẫn sử dụng</label><textarea id="fUsage" rows="3" placeholder="Cách dùng, liều lượng, lưu ý...">${v("usage")}</textarea></div>
       <datalist id="dlOrigin">${origins.map(o=>`<option value="${o}">`).join("")}</datalist>
@@ -1553,7 +1552,7 @@ function openProductModal(id,opts={}){
     // Đơn online có thể đã trừ kho khi form đang mở: giữ tồn kho mới nếu người dùng không sửa ô này
     const stock=cur&&formStock===openStock?cur.stock:formStock;
     const rec={name,sku,category:document.getElementById("fCat").value.trim(),cost,price,stock,lowStock:Math.max(0,Math.round(+document.getElementById("fLow").value||0)),supplierId:document.getElementById("fSup").value,image:imgData,note:val("fNote"),
-      brand:val("fBrand"),origin:val("fOrigin"),volume:val("fVolume"),expiry:val("fExpiry"),skinType:val("fSkin"),ingredients:val("fIngr"),usage:val("fUsage")};
+      brand:val("fBrand"),origin:val("fOrigin"),volume:val("fVolume"),skinType:val("fSkin"),ingredients:val("fIngr"),usage:val("fUsage")};
     if(p&&!cur){toast("Sản phẩm này vừa bị xoá ở nơi khác");closeModal();go(current);return;}
     let saved=cur;
     if(cur)Object.assign(cur,rec);else{saved=Object.assign({id:uid()},rec);DB.products.push(saved);}
@@ -1899,7 +1898,7 @@ const CLOUD_COLS=["products","categories","suppliers","customers","transactions"
 // Tồn kho và điểm gửi lên dạng cộng/trừ chênh lệch: 2 máy cùng bán một lúc vẫn trừ kho đúng
 const INC_FIELDS={products:["stock"],customers:["points"]};
 // Trang khách chỉ đọc bản sao này, không thấy giá nhập
-const PUBLIC_FIELDS=["id","name","price","category","image","stock","lowStock","sku","note","brand","origin","volume","expiry","skinType","ingredients","usage"];
+const PUBLIC_FIELDS=["id","name","price","category","image","stock","lowStock","sku","note","brand","origin","volume","skinType","ingredients","usage"];
 const CLOUD_USER_KEY="myphamHH_cloudUser";
 let cloudSynced={},cloudUnsubs=[],cloudLoaded=new Set(),cloudReady=false,cloudPending=0,cloudFailed=false,cloudDirty=false,cloudRaf=0,cloudUser="";
 
