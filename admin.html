@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#4a2545">
 <title>Mỹ Phẩm Hoàng Hiền – Quản lý</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -236,6 +236,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .modal-head h2{font-size:18px}.modal-head .icon-btn{margin-left:auto}
 .modal-backbtn{display:none;place-items:center;width:40px;height:40px;border:0;background:transparent;color:var(--plum);font-size:24px;line-height:1;cursor:pointer;border-radius:10px;flex-shrink:0;margin-left:-4px}
 .modal-backbtn:active{background:var(--surface-2)}
+.modal-back,.modal-body{overscroll-behavior:contain}
+@media(max-width:720px){body.modal-open{overflow:hidden;overscroll-behavior:none}}
 input[type=date]{-webkit-appearance:none;appearance:none;min-width:0;display:block}
 input[type=date]::-webkit-date-and-time-value{text-align:left}
 .grid-2>*{min-width:0}
@@ -361,6 +363,9 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
   .modal-backbtn{display:grid}
   .modal-body{padding:14px 14px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
   .modal-foot{padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 10px)}
+  /* Form khoá: nút ✕ to, dễ bấm ở góc phải */
+  .is-locked .modal-head{padding-left:16px}
+  .is-locked .modal-head .icon-btn{display:grid;width:42px;height:42px;font-size:18px}
   /* Hộp xác nhận nhỏ vẫn hiện giữa màn hình */
   .modal-back.is-dialog{align-items:center;padding:18px;background:rgba(58,35,51,.5)}
   .is-dialog .modal{height:auto;border-radius:var(--radius);box-shadow:var(--shadow);display:block;max-width:400px!important}
@@ -935,8 +940,8 @@ function _renderBillModal(){
       </div>
       <div class="bill-summary" id="billSummary"></div>
     </div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal()">Huỷ</button><button class="btn primary" id="saveBillBtn" style="flex:1">💾 Lưu hóa đơn</button></div>
-  </div>`);
+    <div class="modal-foot"><button class="btn primary" id="saveBillBtn" style="flex:1">💾 Lưu hóa đơn</button></div>
+  </div>`,{locked:true});
   renderBillCart();
   document.getElementById("saveBillBtn").onclick=saveBill;
 }
@@ -1405,13 +1410,15 @@ function setTheme(t){try{localStorage.setItem(THEME_KEY,t);}catch(e){}if(t==="au
 /* ======= MODALS ======= */
 function mountModal(html,opts={}){
   const m=document.getElementById("modalMount");
-  m.innerHTML=`<div class="modal-back${opts.dialog?" is-dialog":""}" id="mBack">${html}</div>`;
+  m.innerHTML=`<div class="modal-back${opts.dialog?" is-dialog":""}${opts.locked?" is-locked":""}" id="mBack">${html}</div>`;
   const back=document.getElementById("mBack");
   const head=back.querySelector(".modal-head");
-  if(head&&!opts.dialog){
+  if(head&&!opts.dialog&&!opts.locked){
     head.insertAdjacentHTML("afterbegin",`<button type="button" class="modal-backbtn" aria-label="Quay lại">←</button>`);
     head.firstElementChild.onclick=()=>closeModal();
   }
+  // Form bị khoá (hoá đơn, nhập hàng, mặt hàng) chỉ thoát bằng nút ✕
+  if(opts.locked)return syncModalHistory();
   // Máy tính: bấm ra ngoài để đóng. Điện thoại: form là trang riêng, chỉ hộp xác nhận mới đóng khi chạm ra ngoài
   back.addEventListener("mousedown",e=>{if(e.target.id==="mBack")closeModal();});
   let moved=false;
@@ -1441,10 +1448,15 @@ function syncModalHistory(){
   const want=modalDepth();
   while(_histDepth<want){history.pushState({modal:_histDepth+1,view:current},"");_histDepth++;}
   if(_histDepth>want){const n=_histDepth-want;_histDepth=want;_ignorePop++;history.go(-n);}
+  document.body.classList.toggle("modal-open",want>0);
 }
 addEventListener("popstate",e=>{
   if(_ignorePop>0){_ignorePop--;return;}
-  if(_histDepth>0){_histDepth--;closeModal();return;}
+  if(_histDepth>0){
+    // Form bị khoá: giữ nguyên, trả lại bước lịch sử vừa bị lùi
+    if(document.querySelector("#modalMount > .is-locked")&&!_qrOpen){history.pushState({modal:_histDepth,view:current},"");toast("Nhấn ✕ ở góc phải để thoát");return;}
+    _histDepth--;closeModal();return;
+  }
   const v=(e.state&&e.state.view)||viewFromHash()||"dashboard";
   if(VIEWS[v]&&v!==current&&!document.getElementById("appWrap").hidden)go(v,{fromPop:true});
 });
@@ -1513,8 +1525,8 @@ function openProductModal(id,opts={}){
       <datalist id="dlOrigin">${origins.map(o=>`<option value="${o}">`).join("")}</datalist>
       <datalist id="dlSkin">${skins.map(o=>`<option value="${o}">`).join("")}</datalist>
     </div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal()">Huỷ</button><button class="btn primary" id="saveProd">Lưu</button></div>
-  </div>`);
+    <div class="modal-foot"><button class="btn primary" id="saveProd" style="flex:1">💾 Lưu mặt hàng</button></div>
+  </div>`,{locked:true});
   let imgData=p?p.image:"";
   const openStock=p?p.stock:0;
   const prev=document.getElementById("imgPrev");
@@ -1578,8 +1590,8 @@ function openTxnModal(type,presetProd){
       <div class="calc-note" id="tSummary"></div>
       ${!isSale?`<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:12px;cursor:pointer"><input type="checkbox" id="tUpdCost" checked style="width:auto;min-height:auto"> Cập nhật giá nhập theo lần nhập này</label>`:""}
     </div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal()">Huỷ</button><button class="btn primary" id="saveTxn" style="flex:1">${isSale?"Ghi nhận bán":"Ghi nhận nhập"}</button></div>
-  </div>`);
+    <div class="modal-foot"><button class="btn primary" id="saveTxn" style="flex:1">${isSale?"💾 Ghi nhận bán":"💾 Ghi nhận nhập"}</button></div>
+  </div>`,{locked:true});
   const prodSel=document.getElementById("tProd"),priceIn=document.getElementById("tPrice"),qtyIn=document.getElementById("tQty");
   const catSel=document.getElementById("tCat");
   if(catSel){catSel.addEventListener("change",()=>{prodSel.innerHTML=makeProdOpts(catSel.value);fillPrice();});}
