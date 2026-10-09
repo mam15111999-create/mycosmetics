@@ -1850,8 +1850,7 @@ function openTxnModal(type,presetProd){
   mountModal(`<div class="modal">
     <div class="modal-head"><h2>${isSale?"💰 Bán hàng":"📦 Nhập hàng"}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
-      ${!isSale?`<div class="batch-hint muted">1. Chọn mặt hàng bên dưới. 2. Nhập số lượng, hoặc bấm <b>📷 Quét hàng loạt</b> và quét lần lượt từng hộp — mỗi lần quét là +1 số lượng.</div>`:""}
-      <button type="button" class="btn scan-row" id="scanBtn">📷 Quét mã vạch / QR</button>
+      ${!isSale?`<div class="batch-hint muted">1. Chọn mặt hàng bên dưới. 2. Nhập số lượng, hoặc bấm <b>📷 Quét hàng loạt</b> và quét lần lượt từng hộp — mỗi lần quét là +1 số lượng.</div>`:`<button type="button" class="btn scan-row" id="scanBtn">📷 Quét mã vạch / QR</button>`}
       <div class="scan-info" id="scanInfo" hidden></div>
       ${cats.length?`<div class="field"><label>Danh mục</label><select id="tCat">${catOpts}</select></div>`:""}
       <div class="field"><label>Sản phẩm *</label>
@@ -1891,7 +1890,8 @@ function openTxnModal(type,presetProd){
   };
   const showFound=(code,p,note)=>{infoPid=p.id;info.hidden=false;info.className="scan-info ok";info.innerHTML=scanInfoHtml(code,p,note?`<div class="scan-note">${note}</div>`:"");};
   prodSel.addEventListener("change",()=>{if(infoPid&&prodSel.value!==infoPid){info.hidden=true;infoPid="";}});
-  document.getElementById("scanBtn").onclick=()=>openQRScanner(code=>{
+  const scanBtnEl=document.getElementById("scanBtn");
+  if(scanBtnEl)scanBtnEl.onclick=()=>openQRScanner(code=>{
     const found=findProductByCode(code);
     if(found){selectProduct(found);showFound(code,found);return;}
     infoPid="";info.hidden=false;info.className="scan-info warn";
