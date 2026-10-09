@@ -264,6 +264,43 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
 .pay-toggle button.unpaid.active{background:var(--warn);color:#fff}
 .pay-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
 .pay-row .btn{margin-left:auto}
+.clickable{cursor:pointer}
+.txn-card.clickable:active{background:var(--surface-2)}
+.bd-more{margin-left:auto;font-size:12.5px;color:var(--rose-deep);font-weight:600}
+.bd-meta{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:14px}
+.bd-meta>div{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;font-size:14px;border-top:1px solid var(--line)}
+.bd-meta>div:first-child{border-top:0}
+.bd-meta span{color:var(--ink-soft);font-size:13px;flex-shrink:0}
+.bd-meta b{text-align:right}
+.bd-items{width:100%;min-width:0;border-collapse:collapse;margin-bottom:6px}
+.bd-items th{font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);text-align:left;padding:6px 4px;border-bottom:1px solid var(--line);background:none;position:static}
+.bd-items td{padding:9px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+.bd-items tbody tr:hover{background:none}
+.bd-items .r{text-align:right;white-space:nowrap}
+.bd-name{font-weight:600}
+/* Phiếu in khổ 80mm */
+#printArea{display:none}
+@media print{
+  @page{margin:5mm}
+  html,body{background:#fff!important;overflow:visible!important;height:auto!important}
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block!important}
+  .rc{width:72mm;margin:0 auto;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.45;color:#000}
+  .rc-shop{text-align:center;font-weight:700;font-size:16px;letter-spacing:.03em}
+  .rc-sub{text-align:center;font-size:11px;margin:2px 0 8px}
+  .rc-title{text-align:center;font-weight:700;font-size:14px;border-top:1px dashed #000;border-bottom:1px dashed #000;padding:5px 0;margin-bottom:6px}
+  .rc-row{display:flex;justify-content:space-between;gap:8px}
+  .rc-row span:last-child{text-align:right}
+  .rc-items{width:100%;min-width:0;border-collapse:collapse;margin:6px 0;border-top:1px dashed #000;border-bottom:1px dashed #000}
+  .rc-items th{font-size:11px;text-align:right;padding:4px 0;border-bottom:1px solid #000;background:none;color:#000;text-transform:none;letter-spacing:0;position:static}
+  .rc-items th:first-child{text-align:left}
+  .rc-items td{padding:1px 0;text-align:right;border:0;color:#000}
+  .rc-items td:first-child{text-align:left}
+  .rc-items .rc-name{text-align:left;font-weight:700;padding-top:5px}
+  .rc-total{font-weight:700;font-size:15px;border-top:1px dashed #000;margin-top:4px;padding-top:4px}
+  .rc-note{margin-top:6px;font-size:11px}
+  .rc-thanks{text-align:center;margin-top:10px;font-style:italic;border-top:1px dashed #000;padding-top:6px}
+}
 .bill-summary .s-row{display:flex;justify-content:space-between;align-items:center}
 .bill-summary .s-total{font-weight:700;font-size:17px;border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
 .bill-cart-table{width:100%;border-collapse:collapse;min-width:auto}
@@ -630,7 +667,7 @@ const VIEWS={
   settings:{title:"Cài đặt",sub:"Tài khoản, sao lưu, giao diện",render:renderSettings},
 };
 let current="dashboard", partnerTab="supplier";
-let _histDepth=0,_ignorePop=0,_routeReady=false;
+let _histDepth=0,_ignorePop=0,_routeReady=false,_navBusy=false,_syncTimer=0,_pendingView=null;
 const viewFromHash=()=>{const v=(location.hash.match(/^#\/(\w+)/)||[])[1];return v&&VIEWS[v]?v:"";};
 // Mở app: vào đúng màn hình theo địa chỉ (#/products…), từ đó mỗi lần chuyển màn là một bước lịch sử
 function startRoute(){
@@ -641,7 +678,10 @@ function startRoute(){
 function go(view,opts={}){
   const prev=current;
   current=view;
-  if(_routeReady&&!opts.fromPop&&view!==prev&&_histDepth===0)history.pushState({view},"","#/"+view);
+  if(_routeReady&&!opts.fromPop&&view!==prev){
+    if(_navBusy||_syncTimer||_histDepth>0){_pendingView=view;if(!_syncTimer)_syncTimer=setTimeout(reconcileHistory,0);}
+    else history.pushState({view},"","#/"+view);
+  }
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
   document.querySelectorAll(".bnav-btn").forEach(b=>{
     const v=b.dataset.view;
@@ -876,7 +916,7 @@ function renderSalesPos(){
         const custN=(cust||{}).name||"Khách lẻ";
         const pts=b._isBill&&cust?(cust.pointsHistory||[]).find(h=>h.billId===b.id):null;
         const prodSumm=b._isBill?`${b.items.length} sản phẩm`:`${(productById(b.items[0].productId)||{}).name||"(đã xoá)"} ×${b.items[0].qty}`;
-        return`<div class="txn-card"><div class="txn-card-top"><span class="pill sale">Bán</span><div class="grow"><div class="prod-name" style="font-size:14px">${esc(prodSumm)}</div><div class="txn-card-meta">${fmtDate(b.date)} · ${esc(custN)}</div></div><button class="icon-btn" style="width:32px;height:32px;font-size:13px" onclick="${b._isBill?`delBill('${b.id}')`:`delTxn('${b.id}')`}">🗑</button></div><div class="txn-card-nums">${b.discount?`<div><span class="lbl">Giảm</span><b style="color:var(--warn)">-${b.discountType==="percent"?b.discount+"%":money(b.discount)}</b></div>`:""}<div><span class="lbl">Thành tiền</span><b>${money(b.total)}</b></div>${pts?`<div><span class="lbl">Tích điểm</span><b style="color:#b07d00">+${pts.earned}⭐</b></div>`:""}</div>${b._isBill?`<div class="pay-row">${billPayPills(b)}${billIsPaid(b)?"":`<button class="btn sm primary" onclick="markBillPaid('${b.id}')">💰 Thu tiền</button>`}</div>`:""}${b.note?`<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">${esc(b.note)}</div>`:""}</div>`;
+        return`<div class="txn-card${b._isBill?" clickable":""}"${b._isBill?` onclick="openBillDetail('${b.id}')"`:""}><div class="txn-card-top"><span class="pill sale">Bán</span><div class="grow"><div class="prod-name" style="font-size:14px">${esc(prodSumm)}</div><div class="txn-card-meta">${b._isBill?`<b>${billCode(b)}</b> · `:""}${fmtDate(b.date)} · ${esc(custN)}</div></div><button class="icon-btn" style="width:32px;height:32px;font-size:13px" onclick="event.stopPropagation();${b._isBill?`delBill('${b.id}')`:`delTxn('${b.id}')`}">🗑</button></div><div class="txn-card-nums">${b.discount?`<div><span class="lbl">Giảm</span><b style="color:var(--warn)">-${b.discountType==="percent"?b.discount+"%":money(b.discount)}</b></div>`:""}<div><span class="lbl">Thành tiền</span><b>${money(b.total)}</b></div>${pts?`<div><span class="lbl">Tích điểm</span><b style="color:#b07d00">+${pts.earned}⭐</b></div>`:""}</div>${b._isBill?`<div class="pay-row">${billPayPills(b)}${billIsPaid(b)?`<span class="bd-more">Xem chi tiết ›</span>`:`<button class="btn sm primary" onclick="event.stopPropagation();markBillPaid('${b.id}')">💰 Thu tiền</button>`}</div>`:""}${b.note?`<div style="font-size:12px;color:var(--ink-soft);margin-top:6px">${esc(b.note)}</div>`:""}</div>`;
       }).join("")}</div>`;
       return;
     }
@@ -885,7 +925,7 @@ function renderSalesPos(){
       const custN=(cust||{}).name||"Khách lẻ";
       const pts=b._isBill&&cust?(cust.pointsHistory||[]).find(h=>h.billId===b.id):null;
       const prodSumm=b._isBill?b.items.map(i=>`${(productById(i.productId)||{}).name||"?"} ×${i.qty}`).join(", "):`${(productById(b.items[0].productId)||{}).name||"(đã xoá)"} ×${b.items[0].qty}`;
-      return`<tr><td>${fmtDate(b.date)}</td><td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(prodSumm)}">${esc(prodSumm)}</td><td>${esc(custN)}</td><td class="num">${b.discount?(b.discountType==="percent"?b.discount+"%":money(b.discount)):"—"}</td><td class="num"><b style="color:var(--rose-deep)">${money(b.total)}</b></td><td>${b._isBill?`<div class="pay-row" style="margin:0">${billPayPills(b)}${billIsPaid(b)?"":`<button class="btn sm primary" onclick="markBillPaid('${b.id}')">💰 Thu tiền</button>`}</div>`:"—"}</td><td class="num">${pts?`<span class="pts-badge">+${pts.earned}⭐</span>`:"—"}</td><td class="row-actions"><button class="icon-btn" onclick="${b._isBill?`delBill('${b.id}')`:`delTxn('${b.id}')`}">🗑</button></td></tr>`;
+      return`<tr${b._isBill?` class="clickable" onclick="openBillDetail('${b.id}')"`:""}><td>${fmtDate(b.date)}${b._isBill?`<div class="prod-sku">${billCode(b)}</div>`:""}</td><td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(prodSumm)}">${esc(prodSumm)}</td><td>${esc(custN)}</td><td class="num">${b.discount?(b.discountType==="percent"?b.discount+"%":money(b.discount)):"—"}</td><td class="num"><b style="color:var(--rose-deep)">${money(b.total)}</b></td><td>${b._isBill?`<div class="pay-row" style="margin:0">${billPayPills(b)}${billIsPaid(b)?"":`<button class="btn sm primary" onclick="event.stopPropagation();markBillPaid('${b.id}')">💰 Thu tiền</button>`}</div>`:"—"}</td><td class="num">${pts?`<span class="pts-badge">+${pts.earned}⭐</span>`:"—"}</td><td class="row-actions"><button class="icon-btn" onclick="event.stopPropagation();${b._isBill?`delBill('${b.id}')`:`delTxn('${b.id}')`}">🗑</button></td></tr>`;
     }).join("")}<tr style="background:var(--surface-2);font-weight:700"><td colspan="4" style="padding:12px 13px">Tổng (${all.length} hóa đơn)</td><td class="num" style="color:var(--rose-deep)">${money(sumTotal)}</td><td colspan="3"></td></tr></tbody></table></div>`;
   }
   // Filter toolbar
@@ -927,9 +967,10 @@ function openBillModal(){
   billCart=[];billDiscType="percent";billPayMethod="cash";billPaid=true;
   _renderBillModal();
 }
-function markBillPaid(id){
+function markBillPaid(id,fromDetail){
   const b=byId(DB.bills||[],id);if(!b||billIsPaid(b))return;
   const cust=byId(DB.customers,b.customerId);
+  if(fromDetail)pushModal(()=>openBillDetail(id));
   mountModal(`<div class="modal" style="max-width:400px">
     <div class="modal-head"><h2>💰 Thu tiền hóa đơn</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body"><div style="font-size:20px;font-weight:700;color:var(--rose-deep)">${money(b.total)}</div>
@@ -938,10 +979,9 @@ function markBillPaid(id){
   </div>`,{dialog:true});
 }
 function confirmBillPaid(id,method){
-  closeModal();
-  const b=byId(DB.bills||[],id);if(!b||billIsPaid(b))return;
-  b.paid=true;b.payMethod=method;b.paidAt=Date.now();
-  save();toast(`✓ Đã thu ${money(b.total)} · ${PAY_LABEL[method]}`);go(current);
+  const b=byId(DB.bills||[],id);
+  if(b&&!billIsPaid(b)){b.paid=true;b.payMethod=method;b.paidAt=Date.now();save();toast(`✓ Đã thu ${money(b.total)} · ${PAY_LABEL[method]}`);}
+  closeModal();go(current);
 }
 function setPayMethod(m){
   billPayMethod=m;
@@ -1004,10 +1044,11 @@ function _renderBillModal(){
         <div id="payHint" style="font-size:12.5px;color:var(--warn);margin-top:6px"></div>
       </div>
     </div>
-    <div class="modal-foot"><button class="btn primary" id="saveBillBtn" style="flex:1">💾 Lưu hóa đơn</button></div>
+    <div class="modal-foot"><button class="btn" id="savePrintBtn">🖨 Lưu & in</button><button class="btn primary" id="saveBillBtn" style="flex:1">💾 Lưu hóa đơn</button></div>
   </div>`,{locked:true});
   renderBillCart();
-  document.getElementById("saveBillBtn").onclick=saveBill;
+  document.getElementById("saveBillBtn").onclick=()=>saveBill(false);
+  document.getElementById("savePrintBtn").onclick=()=>saveBill(true);
 }
 function lookupPhone(phone){
   const box=document.getElementById("bPhoneBox");
@@ -1202,7 +1243,7 @@ function updateBillSummary(){
   const {subtotal,discAmt,total,profit}=getBillCalc();
   el.innerHTML=`<div class="s-row"><span style="color:var(--ink-soft)">Tạm tính:</span><span>${money(subtotal)}</span></div>${discAmt?`<div class="s-row" style="color:var(--warn)"><span>Giảm giá:</span><span>-${money(discAmt)}</span></div>`:""}<div class="s-row s-total"><span>Tổng cộng:</span><span style="color:var(--rose-deep)">${money(total)}</span></div>`;
 }
-function saveBill(){
+function saveBill(andPrint){
   if(!billCart.length){toast("Chưa có sản phẩm trong hóa đơn");return;}
   for(const item of billCart){
     const p=productById(item.productId);
@@ -1214,7 +1255,8 @@ function saveBill(){
   const d=Math.max(0,+document.getElementById("bDisc").value||0);
   for(const item of billCart){const p=productById(item.productId);if(p)p.stock=Math.max(0,p.stock-item.qty);}
   if(!DB.bills)DB.bills=[];
-  DB.bills.push({id:uid(),date:document.getElementById("bDate").value||new Date().toISOString().slice(0,10),customerId:document.getElementById("bCust").value,items:billCart.map(i=>({...i})),discount:d,discountType:billDiscType,note:document.getElementById("bNote").value.trim(),subtotal,discAmt,total,profit,
+  const billId=uid();
+  DB.bills.push({id:billId,createdAt:Date.now(),date:document.getElementById("bDate").value||new Date().toISOString().slice(0,10),customerId:document.getElementById("bCust").value,items:billCart.map(i=>({...i})),discount:d,discountType:billDiscType,note:document.getElementById("bNote").value.trim(),subtotal,discAmt,total,profit,
     payMethod:billPayMethod,paid:billPaid,...(billPaid?{paidAt:Date.now()}:{})});
   billCart=[];
   // Tích điểm cho khách hàng (1 điểm / 10,000₫)
@@ -1226,12 +1268,79 @@ function saveBill(){
       const earned=Math.floor(total/10000);
       cust.points=(cust.points||0)+earned;
       if(!cust.pointsHistory)cust.pointsHistory=[];
-      cust.pointsHistory.push({date:document.getElementById("bDate").value,billId:DB.bills[DB.bills.length-1].id,earned,balance:cust.points});
+      cust.pointsHistory.push({date:document.getElementById("bDate").value,billId,earned,balance:cust.points});
       if(earned>0)toastMsg+=` · Tích +${fmt(earned)} điểm`;
     }
   }
   save();closeModal();toast(toastMsg);go(current);
+  if(andPrint)printBill(billId);
 }
+
+/* ---- Chi tiết & in hoá đơn ---- */
+const billCode=b=>"HĐ"+String(b.id).slice(-6).toUpperCase();
+function billView(b){
+  const cust=byId(DB.customers,b.customerId);
+  const pts=cust?(cust.pointsHistory||[]).find(h=>h.billId===b.id):null;
+  const items=(b.items||[]).map(i=>{const p=productById(i.productId);return{name:p?p.name:"(sản phẩm đã xoá)",qty:i.qty,price:i.unitPrice,total:i.qty*i.unitPrice};});
+  const when=fmtDate(b.date)+(b.createdAt?" "+new Date(b.createdAt).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"}):"");
+  return{cust,pts,items,when};
+}
+function openBillDetail(id){
+  const b=byId(DB.bills||[],id);if(!b)return;
+  const {cust,pts,items,when}=billView(b);
+  mountModal(`<div class="modal" style="max-width:520px">
+    <div class="modal-head"><h2>🧾 ${billCode(b)}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="bd-meta">
+        <div><span>Thời gian</span><b>${when}</b></div>
+        <div><span>Khách hàng</span><b>${esc(cust?cust.name:"Khách lẻ")}${cust&&cust.phone?` · ${esc(cust.phone)}`:""}</b></div>
+        <div><span>Thanh toán</span><b class="pay-row" style="margin:0;justify-content:flex-end">${billPayPills({...b,_isBill:true})}</b></div>
+        ${pts?`<div><span>Tích điểm</span><b style="color:#b07d00">+${fmt(pts.earned)} ⭐</b></div>`:""}
+      </div>
+      <table class="bd-items"><thead><tr><th>Sản phẩm</th><th class="r">SL</th><th class="r">Thành tiền</th></tr></thead><tbody>
+        ${items.map(i=>`<tr><td><div class="bd-name">${esc(i.name)}</div><div class="muted" style="font-size:12px">${money(i.price)}</div></td><td class="r">${fmt(i.qty)}</td><td class="r">${money(i.total)}</td></tr>`).join("")}
+      </tbody></table>
+      <div class="bill-summary">
+        <div class="s-row"><span style="color:var(--ink-soft)">Tạm tính</span><span>${money(b.subtotal)}</span></div>
+        ${b.discAmt?`<div class="s-row" style="color:var(--warn)"><span>Giảm giá${b.discountType==="percent"?` (${b.discount}%)`:""}</span><span>-${money(b.discAmt)}</span></div>`:""}
+        <div class="s-row s-total"><span>Tổng cộng</span><span style="color:var(--rose-deep)">${money(b.total)}</span></div>
+      </div>
+      ${b.note?`<div class="calc-note" style="margin-top:12px">📝 ${esc(b.note)}</div>`:""}
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" title="Xoá hóa đơn" onclick="closeModal();delBill('${b.id}')">🗑</button>
+      ${billIsPaid(b)?"":`<button class="btn" onclick="markBillPaid('${b.id}',true)">💰 Thu tiền</button>`}
+      <button class="btn primary" style="flex:1" onclick="printBill('${b.id}')">🖨 In hóa đơn</button>
+    </div>
+  </div>`);
+}
+function receiptHtml(b){
+  const {cust,pts,items,when}=billView(b);
+  const row=(k,v,cls="")=>`<div class="rc-row ${cls}"><span>${k}</span><span>${v}</span></div>`;
+  return`<div class="rc">
+    <div class="rc-shop">MỸ PHẨM HOÀNG HIỀN</div>
+    <div class="rc-sub">Thôn Phú Lương, Vạn Lộc, Thanh Hóa<br>ĐT/Zalo: 0789 686 111<br>hoanghiencosmetics.com</div>
+    <div class="rc-title">HÓA ĐƠN BÁN HÀNG</div>
+    ${row("Số HĐ:",billCode(b))}${row("Thời gian:",when)}${row("Khách hàng:",esc(cust?cust.name:"Khách lẻ"))}${cust&&cust.phone?row("SĐT:",esc(cust.phone)):""}
+    <table class="rc-items"><thead><tr><th>SL</th><th>Đơn giá</th><th>T.tiền</th></tr></thead><tbody>
+      ${items.map(i=>`<tr><td colspan="3" class="rc-name">${esc(i.name)}</td></tr><tr><td>${fmt(i.qty)}</td><td>${fmt(i.price)}</td><td>${fmt(i.total)}</td></tr>`).join("")}
+    </tbody></table>
+    ${row("Tạm tính:",fmt(b.subtotal))}${b.discAmt?row(`Giảm giá${b.discountType==="percent"?` (${b.discount}%)`:""}:`,"-"+fmt(b.discAmt)):""}
+    ${row("TỔNG CỘNG:",money(b.total),"rc-total")}
+    ${row("Thanh toán:",!billIsPaid(b)?"CHƯA THANH TOÁN":b.payMethod==="transfer"?"Chuyển khoản":b.payMethod==="cash"?"Tiền mặt":"Đã thanh toán")}
+    ${pts?row("Điểm tích luỹ:",`+${fmt(pts.earned)} (tổng ${fmt(cust.points||0)})`):""}
+    ${b.note?`<div class="rc-note">Ghi chú: ${esc(b.note)}</div>`:""}
+    <div class="rc-thanks">Cảm ơn quý khách!<br>Hẹn gặp lại ♥</div>
+  </div>`;
+}
+function printBill(id){
+  const b=byId(DB.bills||[],id);if(!b)return;
+  let area=document.getElementById("printArea");
+  if(!area){area=document.createElement("div");area.id="printArea";document.body.appendChild(area);}
+  area.innerHTML=receiptHtml(b);
+  setTimeout(()=>window.print(),50);
+}
+window.openBillDetail=openBillDetail;window.printBill=printBill;
 function delBill(id){
   const b=byId(DB.bills||[],id);if(!b)return;
   confirmModal("Xoá hóa đơn?","Xoá sẽ hoàn lại tồn kho và trừ điểm tích luỹ của khách (nếu có). Tiếp tục?",()=>{
@@ -1511,14 +1620,21 @@ window.closeModal=closeModal;
 function modalDepth(){
   return (document.getElementById("modalMount").firstElementChild?1:0)+_modalParents.filter(x=>x.node).length+(_qrOpen&&_qrPrevModal?1:0);
 }
+// Gom các thay đổi trong cùng một lượt rồi mới chỉnh lịch sử; history.go chạy trễ nên phải chờ lùi xong mới pushState
 function syncModalHistory(){
+  document.body.classList.toggle("modal-open",modalDepth()>0);
+  if(!_syncTimer)_syncTimer=setTimeout(reconcileHistory,0);
+}
+function reconcileHistory(){
+  _syncTimer=0;
+  if(_navBusy)return;
   const want=modalDepth();
+  if(_histDepth>want){const n=_histDepth-want;_histDepth=want;_navBusy=true;_ignorePop++;history.go(-n);return;}
+  if(_pendingView&&_histDepth===0){if(_pendingView!==viewFromHash())history.pushState({view:_pendingView},"","#/"+_pendingView);_pendingView=null;}
   while(_histDepth<want){history.pushState({modal:_histDepth+1,view:current},"");_histDepth++;}
-  if(_histDepth>want){const n=_histDepth-want;_histDepth=want;_ignorePop++;history.go(-n);}
-  document.body.classList.toggle("modal-open",want>0);
 }
 addEventListener("popstate",e=>{
-  if(_ignorePop>0){_ignorePop--;return;}
+  if(_ignorePop>0){_ignorePop--;_navBusy=false;reconcileHistory();return;}
   if(_histDepth>0){
     // Form bị khoá: giữ nguyên, trả lại bước lịch sử vừa bị lùi
     if(document.querySelector("#modalMount > .is-locked")&&!_qrOpen){history.pushState({modal:_histDepth,view:current},"");toast("Nhấn ✕ ở góc phải để thoát");return;}
