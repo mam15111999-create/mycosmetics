@@ -234,6 +234,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .modal{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);width:100%;max-width:520px;max-height:90vh;overflow:auto}
 .modal-head{display:flex;align-items:center;padding:17px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
 .modal-head h2{font-size:18px}.modal-head .icon-btn{margin-left:auto}
+.modal-backbtn{display:none;place-items:center;width:40px;height:40px;border:0;background:transparent;color:var(--plum);font-size:24px;line-height:1;cursor:pointer;border-radius:10px;flex-shrink:0;margin-left:-4px}
+.modal-backbtn:active{background:var(--surface-2)}
+input[type=date]{-webkit-appearance:none;appearance:none;min-width:0;display:block}
+input[type=date]::-webkit-date-and-time-value{text-align:left}
+.grid-2>*{min-width:0}
 .modal-body{padding:18px 20px}
 .modal-foot{display:flex;gap:9px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--surface)}
 /* =========== MISC =========== */
@@ -249,6 +254,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .disc-toggle button{border:0;background:var(--surface);color:var(--ink-soft);padding:9px 14px;cursor:pointer;font-size:13px;font-weight:700;transition:.15s}
 .disc-toggle button.active{background:var(--plum);color:#fff}
 .bill-summary{background:var(--surface-2);border-radius:12px;padding:13px 15px;margin-top:8px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.bill-summary:empty{display:none}
 .bill-summary .s-row{display:flex;justify-content:space-between;align-items:center}
 .bill-summary .s-total{font-weight:700;font-size:17px;border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
 .bill-cart-table{width:100%;border-collapse:collapse;min-width:auto}
@@ -346,10 +352,20 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   .topbar-actions{display:none}
   .toast{bottom:calc(env(safe-area-inset-bottom,0px)+80px)}
   .content{padding:12px 12px calc(env(safe-area-inset-bottom,0px)+80px)}
-  /* Bottom sheet modal */
-  .modal-back{align-items:flex-end;padding:0}
-  .modal{border-radius:22px 22px 0 0;max-height:92vh;max-width:100%;width:100%}
-  .modal-body{padding:14px 14px}
+  /* Form mở thành trang riêng toàn màn hình, có nút ← quay lại */
+  .modal-back{align-items:stretch;padding:0;background:var(--bg);backdrop-filter:none}
+  .modal{border-radius:0;height:100%;max-height:none;max-width:100%!important;width:100%;box-shadow:none;display:flex;flex-direction:column;overflow:hidden}
+  .modal-head{padding:calc(env(safe-area-inset-top,0px) + 8px) 10px 8px;gap:4px}
+  .modal-head h2{font-size:17px}
+  .modal-head .icon-btn{display:none}
+  .modal-backbtn{display:grid}
+  .modal-body{padding:14px 14px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .modal-foot{padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 10px)}
+  /* Hộp xác nhận nhỏ vẫn hiện giữa màn hình */
+  .modal-back.is-dialog{align-items:center;padding:18px;background:rgba(58,35,51,.5)}
+  .is-dialog .modal{height:auto;border-radius:var(--radius);box-shadow:var(--shadow);display:block;max-width:400px!important}
+  .is-dialog .modal-head{padding:15px 18px}
+  .is-dialog .modal-head .icon-btn{display:grid}
   .stat-grid{grid-template-columns:1fr 1fr}
   .stat .val{font-size:20px}
   .stat{padding:12px}
@@ -507,7 +523,7 @@ document.getElementById("lBtn").onclick=function(){
   }
   if(doLogin(u,p)){
     try{sessionStorage.setItem(AUTH_KEY,"1");}catch(e){}
-    showApp();seed();go("dashboard");
+    showApp();seed();startRoute();
   } else {
     showErr("Sai tên đăng nhập hoặc mật khẩu.");
     document.getElementById("lPass").value="";
@@ -602,9 +618,18 @@ const VIEWS={
   settings:{title:"Cài đặt",sub:"Tài khoản, sao lưu, giao diện",render:renderSettings},
 };
 let current="dashboard", partnerTab="supplier";
+let _histDepth=0,_ignorePop=0,_routeReady=false;
+const viewFromHash=()=>{const v=(location.hash.match(/^#\/(\w+)/)||[])[1];return v&&VIEWS[v]?v:"";};
+// Mở app: vào đúng màn hình theo địa chỉ (#/products…), từ đó mỗi lần chuyển màn là một bước lịch sử
+function startRoute(){
+  _routeReady=false;go(viewFromHash()||"dashboard");
+  history.replaceState({view:current},"","#/"+current);_routeReady=true;
+}
 
-function go(view){
+function go(view,opts={}){
+  const prev=current;
   current=view;
+  if(_routeReady&&!opts.fromPop&&view!==prev&&_histDepth===0)history.pushState({view},"","#/"+view);
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
   document.querySelectorAll(".bnav-btn").forEach(b=>{
     const v=b.dataset.view;
@@ -997,13 +1022,14 @@ function billScanQR(){
 }
 function billPickProduct(){
   const prods=DB.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"vi"));
+  pushModal(renderBillCart);
   mountModal(`<div class="modal" style="max-width:580px">
-    <div class="modal-head"><h2>📋 Chọn sản phẩm</h2><button class="icon-btn" onclick="_renderBillModal()">✕</button></div>
+    <div class="modal-head"><h2>📋 Chọn sản phẩm</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body" style="padding-bottom:8px">
       <div class="search" style="margin-bottom:14px"><span class="mag">🔍</span><input id="ppQ" placeholder="Tìm tên, loại sản phẩm..." oninput="filterPickerProds(this.value)" autocomplete="off"></div>
       <div id="ppGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;max-height:55vh;overflow-y:auto;padding-bottom:4px"></div>
     </div>
-    <div class="modal-foot"><button class="btn primary" style="flex:1" onclick="_renderBillModal()">✓ Xong (${billCart.length} mặt hàng)</button></div>
+    <div class="modal-foot"><button class="btn primary" style="flex:1" onclick="closeModal()">✓ Xong (${billCart.length} mặt hàng)</button></div>
   </div>`);
   renderPickerGrid(prods);
 }
@@ -1377,49 +1403,58 @@ function getTheme(){try{return localStorage.getItem(THEME_KEY)||"auto";}catch(e)
 function setTheme(t){try{localStorage.setItem(THEME_KEY,t);}catch(e){}if(t==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",t);}
 
 /* ======= MODALS ======= */
-function mountModal(html){
+function mountModal(html,opts={}){
   const m=document.getElementById("modalMount");
-  m.innerHTML=`<div class="modal-back" id="mBack">${html}</div>`;
+  m.innerHTML=`<div class="modal-back${opts.dialog?" is-dialog":""}" id="mBack">${html}</div>`;
   const back=document.getElementById("mBack");
-  // Desktop: click backdrop to close
-  back.addEventListener("mousedown",e=>{if(e.target.id==="mBack")closeModal();});
-  // Mobile: backdrop close only when tap didn't move (not accidental scroll)
-  let _bkMoved=false;
-  back.addEventListener("touchstart",()=>{_bkMoved=false;},{passive:true});
-  back.addEventListener("touchmove",()=>{_bkMoved=true;},{passive:true});
-  back.addEventListener("touchend",e=>{if(!_bkMoved&&e.target.id==="mBack")closeModal();},{passive:true});
-  // Bottom sheet swipe-down: only close on deliberate downward swipe (≥130px, mostly vertical)
-  if(isMob()){
-    const modal=back.querySelector(".modal");
-    if(modal){
-      let _sy=0,_sx=0,_scrolled=false;
-      modal.addEventListener("touchstart",e=>{_sy=e.touches[0].clientY;_sx=e.touches[0].clientX;_scrolled=false;},{passive:true});
-      modal.addEventListener("touchmove",e=>{if(Math.abs(e.touches[0].clientX-_sx)>Math.abs(e.touches[0].clientY-_sy))_scrolled=true;},{passive:true});
-      modal.addEventListener("touchend",e=>{
-        if(_scrolled)return;
-        const dy=e.changedTouches[0].clientY-_sy,dx=Math.abs(e.changedTouches[0].clientX-_sx);
-        if(dy>130&&dx<70)closeModal();
-      },{passive:true});
-    }
+  const head=back.querySelector(".modal-head");
+  if(head&&!opts.dialog){
+    head.insertAdjacentHTML("afterbegin",`<button type="button" class="modal-backbtn" aria-label="Quay lại">←</button>`);
+    head.firstElementChild.onclick=()=>closeModal();
   }
+  // Máy tính: bấm ra ngoài để đóng. Điện thoại: form là trang riêng, chỉ hộp xác nhận mới đóng khi chạm ra ngoài
+  back.addEventListener("mousedown",e=>{if(e.target.id==="mBack")closeModal();});
+  let moved=false;
+  back.addEventListener("touchstart",()=>{moved=false;},{passive:true});
+  back.addEventListener("touchmove",()=>{moved=true;},{passive:true});
+  back.addEventListener("touchend",e=>{if(!moved&&e.target.id==="mBack")closeModal();},{passive:true});
+  syncModalHistory();
 }
 // Mở form con (VD: Thêm mặt hàng từ trong Nhập hàng): cất form cha, đóng form con thì trả form cha lại nguyên vẹn
 let _modalParents=[];
-function pushModal(){const m=document.getElementById("modalMount");const parent=m.firstElementChild;if(parent)parent.remove();_modalParents.push(parent);}
+function pushModal(onReturn){const m=document.getElementById("modalMount");const node=m.firstElementChild;if(node)node.remove();_modalParents.push({node,onReturn});}
 function closeModal(){
   if(_qrOpen){stopQR();return;}
   const m=document.getElementById("modalMount");m.innerHTML="";
-  const parent=_modalParents.pop();if(parent)m.appendChild(parent);
+  const top=_modalParents.pop();if(top&&top.node)m.appendChild(top.node);
+  syncModalHistory();
+  if(top&&top.onReturn)top.onReturn();
   if(cloudDirty)cloudRerender();
 }
 window.closeModal=closeModal;
+
+/* Mỗi lớp form đang mở = một bước trong lịch sử trình duyệt: vuốt/bấm Back trên điện thoại sẽ đóng form thay vì thoát app */
+function modalDepth(){
+  return (document.getElementById("modalMount").firstElementChild?1:0)+_modalParents.filter(x=>x.node).length+(_qrOpen&&_qrPrevModal?1:0);
+}
+function syncModalHistory(){
+  const want=modalDepth();
+  while(_histDepth<want){history.pushState({modal:_histDepth+1,view:current},"");_histDepth++;}
+  if(_histDepth>want){const n=_histDepth-want;_histDepth=want;_ignorePop++;history.go(-n);}
+}
+addEventListener("popstate",e=>{
+  if(_ignorePop>0){_ignorePop--;return;}
+  if(_histDepth>0){_histDepth--;closeModal();return;}
+  const v=(e.state&&e.state.view)||viewFromHash()||"dashboard";
+  if(VIEWS[v]&&v!==current&&!document.getElementById("appWrap").hidden)go(v,{fromPop:true});
+});
 
 function confirmModal(title,body,onYes){
   mountModal(`<div class="modal" style="max-width:400px">
     <div class="modal-head"><h2>${title}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body">${body}</div>
     <div class="modal-foot"><button class="btn" onclick="closeModal()">Huỷ</button><button class="btn primary" id="cfmYes">Đồng ý</button></div>
-  </div>`);
+  </div>`,{dialog:true});
   document.getElementById("cfmYes").onclick=()=>{closeModal();onYes();};
 }
 
@@ -1754,6 +1789,7 @@ function stopQR(doClose=true){
   _qrOpen=false;
   const m=document.getElementById("modalMount");m.innerHTML="";
   if(_qrPrevModal){m.appendChild(_qrPrevModal);_qrPrevModal=null;}
+  syncModalHistory();
 }
 
 function qrDone(val){const cb=_qrFoundCb;stopQR();if(cb)cb(val);}
@@ -1975,7 +2011,7 @@ function cloudStart(){
       if(col==="orders")onOrderChanges(changes);
       if(!cloudReady){
         cloudLoaded.add(col);
-        if(cloudLoaded.size===CLOUD_COLS.length){cloudReady=true;updateOrderBadge();go(current==="orders"?"orders":"dashboard");}
+        if(cloudLoaded.size===CLOUD_COLS.length){cloudReady=true;updateOrderBadge();startRoute();}
         return;
       }
       cloudRerender();
@@ -2175,7 +2211,7 @@ window.setOrderFilter=setOrderFilter;window.confirmOrder=confirmOrder;window.can
     seed();initStore();return;
   }
   if(CLOUD){cloudInit();return;}
-  if(isLoggedIn()){showApp();seed();go("dashboard");}
+  if(isLoggedIn()){showApp();seed();startRoute();}
   else showLogin();
 })();
 
