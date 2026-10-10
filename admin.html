@@ -2118,7 +2118,8 @@ function openTxnModal(type,presetProd){
         <div class="field"><label>Giá bán (₫) *</label><input id="tPrice" type="number" min="0" inputmode="numeric"></div>
       </div>`:`<div class="field"><label>Số lượng *</label><input id="tQty" type="number" min="1" inputmode="numeric" value="1"></div>
       <input id="tPrice" type="hidden" value="0">`}
-      ${!isSale?`<button type="button" class="btn primary" id="batchBtn" style="width:100%;padding:14px;margin-bottom:14px">📷 Quét hàng loạt (+1 số lượng mỗi lần quét)</button>`:""}
+      ${!isSale?`<button type="button" class="btn primary" id="batchBtn" style="width:100%;padding:14px;margin-bottom:8px">📷 Quét hàng loạt (+1 số lượng mỗi lần quét)</button>
+      <button type="button" class="btn" id="printLblBtn" style="width:100%;padding:12px;margin-bottom:14px">🏷 In tem dán sản phẩm (có giá + QR)</button>`:""}
       <div class="field"><label>Ngày</label><input id="tDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
       <div class="field"><label>${isSale?"Khách hàng":"Nhà cung cấp"}</label><select id="tParty">${partyOpts}</select></div>
       <div class="field"><label>Ghi chú</label><input id="tNote" placeholder="Không bắt buộc"></div>
@@ -2174,6 +2175,12 @@ function openTxnModal(type,presetProd){
     if(!p){toast("Chọn mặt hàng trước khi quét hàng loạt");prodSel.focus();return;}
     const base=+qtyIn.value||0;
     openBatchScanner(p,n=>{qtyIn.value=base+n;updateSum();},n=>{qtyIn.value=base+n;updateSum();});
+  };
+  const printLblBtn=document.getElementById("printLblBtn");
+  if(printLblBtn)printLblBtn.onclick=()=>{
+    const p=productById(prodSel.value);
+    if(!p){toast("Chọn mặt hàng trước khi in tem");prodSel.focus();return;}
+    askPrintLabels(p.id,+qtyIn.value||1);
   };
   document.getElementById("saveTxn").onclick=()=>{
     const p=productById(prodSel.value);if(!p){toast("Chọn sản phẩm");return;}
