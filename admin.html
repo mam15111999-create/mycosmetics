@@ -1482,6 +1482,8 @@ function billView(b){
 function openBillDetail(id){
   const b=byId(DB.bills||[],id);if(!b)return;
   ensureReceipt(b);
+  // Hoá đơn tạo bằng bản app cũ có thể thiếu QR/bank trong receipt — cập nhật mỗi lần mở
+  if(CLOUD&&b.receiptId)syncReceipt(b);
   const {cust,pts,items,when}=billView(b);
   const unpaidQR=!billIsPaid(b)&&(b.payMethod==="transfer"||!b.payMethod)?`<div class="form-sec">🏦 Chuyển khoản ngân hàng</div>${vietqrBlock(b.total,billCode(b))}`:"";
   const einv=CLOUD&&b.receiptId?`<div class="form-sec">🧾 Hóa đơn điện tử</div>
