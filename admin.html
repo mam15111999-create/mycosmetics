@@ -266,6 +266,17 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
 .pay-row .btn{margin-left:auto}
 .backup-banner{display:flex;gap:14px;align-items:center;background:var(--warn-bg);border:1px solid var(--warn);color:var(--ink);border-radius:14px;padding:14px 16px;margin-bottom:18px}
 .backup-banner>div:first-child{flex:1;min-width:0}
+.vqr{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:14px;background:#f8fcff;margin-top:10px}
+.vqr-img{flex-shrink:0;width:160px;height:160px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:4px;object-fit:contain}
+.vqr-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.vqr-h{font-weight:700;color:var(--plum);margin-bottom:4px}
+.vqr-row{display:flex;justify-content:space-between;gap:10px;font-size:13.5px}
+.vqr-row span{color:var(--ink-soft);flex-shrink:0}
+.vqr-row b{text-align:right;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vqr-copy{cursor:pointer;border-bottom:1px dashed var(--ink-soft)}
+.vqr-copy:active{opacity:.6}
+.vqr-hint{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.4}
+@media(max-width:420px){.vqr{flex-direction:column;align-items:center}.vqr-info{width:100%}}
 .backup-banner b{color:var(--warn);display:block;font-size:15px}
 @media(max-width:720px){.backup-banner{flex-direction:column;align-items:stretch}.backup-banner .btn{width:100%}}
 .clickable{cursor:pointer}
@@ -1047,13 +1058,28 @@ function markBillPaid(id,fromDetail){
   const b=byId(DB.bills||[],id);if(!b||billIsPaid(b))return;
   const cust=byId(DB.customers,b.customerId);
   if(fromDetail)pushModal(()=>openBillDetail(id));
-  mountModal(`<div class="modal" style="max-width:400px">
+  mountModal(`<div class="modal" style="max-width:420px">
     <div class="modal-head"><h2>💰 Thu tiền hóa đơn</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
-    <div class="modal-body"><div style="font-size:20px;font-weight:700;color:var(--rose-deep)">${money(b.total)}</div>
-      <div class="muted" style="margin:4px 0 12px">${esc(cust?cust.name:"Khách lẻ")} · ${fmtDate(b.date)}</div>Khách đã trả bằng:</div>
-    <div class="modal-foot"><button class="btn" style="flex:1" onclick="confirmBillPaid('${id}','cash')">💵 Tiền mặt</button><button class="btn primary" style="flex:1" onclick="confirmBillPaid('${id}','transfer')">🏦 Chuyển khoản</button></div>
+    <div class="modal-body"><div style="font-size:22px;font-weight:700;color:var(--rose-deep)">${money(b.total)}</div>
+      <div class="muted" style="margin:4px 0 14px">${esc(cust?cust.name:"Khách lẻ")} · ${fmtDate(b.date)}</div>
+      <div style="font-weight:600;margin-bottom:8px">Khách đã trả bằng:</div>
+      <div class="pay-toggle" id="payPickT">
+        <button type="button" data-v="cash" class="active" onclick="pickPay('cash','${id}')">💵 Tiền mặt</button>
+        <button type="button" data-v="transfer" onclick="pickPay('transfer','${id}')">🏦 Chuyển khoản</button>
+      </div>
+      <div id="payPickQR" style="margin-top:14px"></div>
+    </div>
+    <div class="modal-foot"><button class="btn primary" style="flex:1" id="payPickConfirm" onclick="confirmBillPaid('${id}','cash')">✓ Xác nhận đã thu tiền mặt</button></div>
   </div>`,{dialog:true});
 }
+function pickPay(method,id){
+  document.querySelectorAll("#payPickT button").forEach(b=>b.classList.toggle("active",b.dataset.v===method));
+  const b=byId(DB.bills||[],id);if(!b)return;
+  const qr=document.getElementById("payPickQR"),btn=document.getElementById("payPickConfirm");
+  if(method==="transfer"){qr.innerHTML=vietqrBlock(b.total,"Thanh toan "+billCode(b));btn.textContent="✓ Xác nhận đã nhận chuyển khoản";btn.onclick=()=>confirmBillPaid(id,"transfer");}
+  else{qr.innerHTML="";btn.textContent="✓ Xác nhận đã thu tiền mặt";btn.onclick=()=>confirmBillPaid(id,"cash");}
+}
+window.pickPay=pickPay;
 function confirmBillPaid(id,method){
   const b=byId(DB.bills||[],id);
   if(b&&!billIsPaid(b)){b.paid=true;b.payMethod=method;b.paidAt=Date.now();save();syncReceipt(b);toast(`✓ Đã thu ${money(b.total)} · ${PAY_LABEL[method]}`);}
@@ -1062,11 +1088,19 @@ function confirmBillPaid(id,method){
 function setPayMethod(m){
   billPayMethod=m;
   document.querySelectorAll("#payMethodT button").forEach(b=>b.classList.toggle("active",b.dataset.v===m));
+  renderPayQR();
+}
+function billNote(){const cust=byId(DB.customers,document.getElementById("bCust")?.value);return "Thanh toan "+(cust?.name||"khach").slice(0,20);}
+function renderPayQR(){
+  const el=document.getElementById("payQR");if(!el)return;
+  const {total}=getBillCalc();
+  if(billPayMethod==="transfer"&&total>0&&!billPaid)el.innerHTML=vietqrBlock(total,billNote());
+  else el.innerHTML="";
 }
 function setPaid(paid){
   billPaid=paid;
   document.querySelectorAll("#payStatusT button").forEach(b=>b.classList.toggle("active",(b.dataset.v==="paid")===paid));
-  updatePayHint();
+  updatePayHint();renderPayQR();
 }
 function updatePayHint(){
   const h=document.getElementById("payHint");if(!h)return;
@@ -1119,6 +1153,7 @@ function _renderBillModal(){
         </div>
         <div id="payHint" style="font-size:12.5px;color:var(--warn);margin-top:6px"></div>
       </div>
+      <div id="payQR"></div>
     </div>
     <div class="modal-foot"><button class="btn" id="savePrintBtn">🖨 Lưu & in</button><button class="btn primary" id="saveBillBtn" style="flex:1">💾 Lưu hóa đơn</button></div>
   </div>`,{locked:true});
@@ -1315,9 +1350,10 @@ function getBillCalc(){
 }
 function updateBillSummary(){
   const el=document.getElementById("billSummary");if(!el)return;
-  if(!billCart.length){el.innerHTML="";return;}
+  if(!billCart.length){el.innerHTML="";renderPayQR();return;}
   const {subtotal,discAmt,total,profit}=getBillCalc();
   el.innerHTML=`<div class="s-row"><span style="color:var(--ink-soft)">Tạm tính:</span><span>${money(subtotal)}</span></div>${discAmt?`<div class="s-row" style="color:var(--warn)"><span>Giảm giá:</span><span>-${money(discAmt)}</span></div>`:""}<div class="s-row s-total"><span>Tổng cộng:</span><span style="color:var(--rose-deep)">${money(total)}</span></div>`;
+  renderPayQR();
 }
 function saveBill(andPrint){
   if(!billCart.length){toast("Chưa có sản phẩm trong hóa đơn");return;}
@@ -1355,6 +1391,41 @@ function saveBill(andPrint){
 /* ---- Chi tiết & in hoá đơn ---- */
 const billCode=b=>"HĐ"+String(b.id).slice(-6).toUpperCase();
 const SHOP={name:"Mỹ Phẩm Hoàng Hiền",address:"Thôn Phú Lương, Vạn Lộc, Thanh Hóa",phone:"0789 686 111",web:"hoanghiencosmetics.com"};
+// Thông tin ngân hàng để tạo QR chuyển khoản tự động (VietQR)
+const BANK={bin:"970407",code:"TCB",name:"Techcombank",acc:"1510038386",holder:"MY PHAM HOANG HIEN"};
+const BANK_KEY="myphamHH_bank";
+function getBank(){try{return Object.assign({},BANK,JSON.parse(localStorage.getItem(BANK_KEY)||"null"));}catch(e){return BANK;}}
+function saveBank(b){try{localStorage.setItem(BANK_KEY,JSON.stringify(b));}catch(e){}}
+function vietqrUrl(amount,note){
+  const b=getBank();
+  const acc=String(b.acc||"").replace(/\s+/g,"");
+  if(!acc)return"";
+  const bin=b.bin||b.code||"970407";
+  const q=new URLSearchParams();
+  if(amount>0)q.set("amount",Math.round(amount));
+  if(note)q.set("addInfo",String(note).slice(0,25));
+  if(b.holder)q.set("accountName",b.holder);
+  return`https://img.vietqr.io/image/${encodeURIComponent(bin)}-${encodeURIComponent(acc)}-compact2.png?${q}`;
+}
+function vietqrBlock(amount,note,opts={}){
+  const b=getBank(),acc=String(b.acc||"").replace(/\s+/g,"");
+  if(!acc||!amount)return"";
+  const sz=opts.size||170;
+  return`<div class="vqr">
+    <img class="vqr-img" src="${vietqrUrl(amount,note)}" width="${sz}" height="${sz}" alt="Mã QR chuyển khoản" loading="lazy">
+    <div class="vqr-info">
+      <div class="vqr-h">Quét mã để chuyển khoản</div>
+      <div class="vqr-row"><span>Ngân hàng</span><b>${esc(b.name||"")}</b></div>
+      <div class="vqr-row"><span>Số TK</span><b class="vqr-copy" data-copy="${esc(acc)}">${esc(acc)}</b></div>
+      <div class="vqr-row"><span>Chủ TK</span><b>${esc(b.holder||"")}</b></div>
+      <div class="vqr-row"><span>Số tiền</span><b style="color:var(--rose-deep)">${money(amount)}</b></div>
+      ${note?`<div class="vqr-row"><span>Nội dung</span><b class="vqr-copy" data-copy="${esc(note)}">${esc(note)}</b></div>`:""}
+      <div class="vqr-hint">Số tiền và nội dung đã nhúng sẵn — khách quét là chuyển ngay.</div>
+    </div>
+  </div>`;
+}
+// Click to copy cho các giá trị VietQR
+document.addEventListener("click",e=>{const t=e.target.closest(".vqr-copy");if(!t)return;const v=t.dataset.copy||t.textContent;navigator.clipboard?.writeText(v).then(()=>toast("Đã sao chép "+v),()=>{});});
 
 /* ---- Hoá đơn điện tử: bản sao công khai của hoá đơn, mở bằng link có mã ngẫu nhiên ---- */
 function newReceiptId(){const a="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789",r=crypto.getRandomValues(new Uint8Array(22));return[...r].map(x=>a[x%a.length]).join("");}
@@ -1402,6 +1473,7 @@ function openBillDetail(id){
   const b=byId(DB.bills||[],id);if(!b)return;
   ensureReceipt(b);
   const {cust,pts,items,when}=billView(b);
+  const unpaidQR=!billIsPaid(b)&&(b.payMethod==="transfer"||!b.payMethod)?`<div class="form-sec">🏦 Chuyển khoản ngân hàng</div>${vietqrBlock(b.total,"Thanh toan "+billCode(b))}`:"";
   const einv=CLOUD&&b.receiptId?`<div class="form-sec">🧾 Hóa đơn điện tử</div>
       <div class="einv">
         <img class="einv-qr" src="${qrDataUrl(receiptUrl(b),150)}" alt="QR hóa đơn">
@@ -1433,6 +1505,7 @@ function openBillDetail(id){
         <div class="s-row s-total"><span>Tổng cộng</span><span style="color:var(--rose-deep)">${money(b.total)}</span></div>
       </div>
       ${b.note?`<div class="calc-note" style="margin-top:12px">📝 ${esc(b.note)}</div>`:""}
+      ${unpaidQR}
       ${einv}
     </div>
     <div class="modal-foot">
@@ -1582,6 +1655,21 @@ function renderSettings(){
       </div>
     </div>
     <div class="panel">
+      <div class="panel-head"><h2>🏦 Thông tin chuyển khoản</h2></div>
+      <div class="panel-body">
+        <p class="muted">Dùng để tạo mã QR chuyển khoản tự động khi khách thanh toán hoá đơn.</p>
+        <div class="grid-2">
+          <div class="field"><label>Ngân hàng</label>
+            <select id="bankSel"></select>
+          </div>
+          <div class="field"><label>Số tài khoản</label><input id="bankAcc" inputmode="numeric" placeholder="Số TK"></div>
+        </div>
+        <div class="field"><label>Chủ tài khoản <span class="hint">(không dấu, in hoa)</span></label><input id="bankHolder" placeholder="VD: NGUYEN VAN A"></div>
+        <button class="btn primary" id="saveBankBtn">💾 Lưu thông tin ngân hàng</button>
+        <div id="bankPreview" style="margin-top:14px"></div>
+      </div>
+    </div>
+    <div class="panel">
       <div class="panel-head"><h2>🛍️ Giao diện khách hàng</h2></div>
       <div class="panel-body">
         <p class="muted">Khách hàng có thể mở link dưới đây để xem sản phẩm và đặt hàng. Không cần đăng nhập.</p>
@@ -1646,6 +1734,21 @@ function renderSettings(){
   document.getElementById("copyStoreLink").onclick=()=>{
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(storeUrl).then(()=>toast("Đã sao chép link cửa hàng")).catch(()=>toast(storeUrl));
     else toast(storeUrl);
+  };
+  // Ngân hàng
+  const BANKS=[["970407","TCB","Techcombank"],["970436","VCB","Vietcombank"],["970418","BIDV","BIDV"],["970415","VTB","Vietinbank"],["970422","MB","MB Bank"],["970432","VPB","VPBank"],["970423","TPB","TPBank"],["970403","STB","Sacombank"],["970437","HDB","HDBank"],["970416","ACB","ACB"],["970448","OCB","OCB"],["970454","VCCB","Bản Việt"],["970429","SCB","SCB"],["970441","IVB","Indovina"],["970412","PVCB","PVcomBank"],["970457","WVN","Woori"],["970449","LPB","LienVietPostBank"],["970426","MSB","MSB"],["970409","BAB","Bắc Á"],["970458","UOB","UOB"],["970431","EIB","Eximbank"],["970446","COOPBANK","Co-opBank"],["970400","SGICB","SaigonBank"],["970406","DOB","DongABank"]];
+  const curBank=getBank();const bankSel=document.getElementById("bankSel");
+  bankSel.innerHTML=BANKS.map(([bin,code,name])=>`<option value="${bin}|${code}|${name}" ${curBank.bin===bin?"selected":""}>${esc(name)}</option>`).join("");
+  document.getElementById("bankAcc").value=curBank.acc||"";
+  document.getElementById("bankHolder").value=curBank.holder||"";
+  const updBankPreview=()=>{const el=document.getElementById("bankPreview");if(el)el.innerHTML=vietqrBlock(100000,"TEST");};
+  updBankPreview();
+  document.getElementById("saveBankBtn").onclick=()=>{
+    const [bin,code,name]=bankSel.value.split("|");
+    const acc=document.getElementById("bankAcc").value.trim().replace(/\s+/g,"");
+    const holder=document.getElementById("bankHolder").value.trim().toUpperCase();
+    if(!acc||!/^\d{6,20}$/.test(acc)){toast("Số tài khoản không hợp lệ");return;}
+    saveBank({bin,code,name,acc,holder});toast("✓ Đã lưu thông tin ngân hàng");updBankPreview();
   };
   if(CLOUD){
     document.getElementById("resetPwBtn").onclick=()=>CB.resetPassword(cloudUser).then(()=>toast("Đã gửi email đổi mật khẩu tới "+cloudUser),e=>toast(authErrMsg(e)));
