@@ -319,6 +319,9 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
 .batch-line.new{color:var(--rose-deep);font-weight:700}
 .batch-line.warn{color:var(--warn)}
 .batch-line.err{color:var(--bad)}
+.batch-line .code{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:inherit}
+.batch-x{border:0;background:transparent;color:var(--ink-soft);width:28px;height:28px;border-radius:50%;font-size:16px;line-height:1;cursor:pointer;flex-shrink:0}
+.batch-x:active{background:var(--surface-2);color:var(--bad)}
 /* Phiếu in khổ 80mm */
 #printArea{display:none}
 @media print{
@@ -2233,9 +2236,9 @@ function stopQR(doClose=true){
 function qrDone(val){const cb=_qrFoundCb;stopQR();if(cb)cb(val);}
 
 /* ======= QUÉT HÀNG LOẠT (nhập hàng) ======= */
-let _batchP=null,_batchCount=0,_batchNewCodes=[],_batchLast="",_batchLastT=0,_batchDone=null,_bbStream=null,_bbReader=null,_bbAF=null,_bbCtx=null;
+let _batchP=null,_batchCount=0,_batchNewCodes=[],_batchScans=[],_batchLast="",_batchLastT=0,_batchDone=null,_bbStream=null,_bbReader=null,_bbAF=null,_bbCtx=null;
 function openBatchScanner(product,onDone){
-  _batchP=product;_batchCount=0;_batchNewCodes=[];_batchLast="";_batchLastT=0;_batchDone=onDone;
+  _batchP=product;_batchCount=0;_batchNewCodes=[];_batchScans=[];_batchLast="";_batchLastT=0;_batchDone=onDone;
   try{_bbCtx=_bbCtx||new(window.AudioContext||window.webkitAudioContext)();}catch(e){}
   pushModal();
   mountModal(`<div class="modal batch-modal">
@@ -2272,23 +2275,45 @@ function startBatchCamera(){
 }
 function batchHit(code){
   const now=Date.now();
-  // chống đếm trùng: cùng mã trong 1500ms chỉ đếm một lần
+  // chống đếm trùng do camera bắt liên tục: cùng mã trong 1500ms chỉ xét một lần
   if(code===_batchLast&&now-_batchLastT<1500)return;
   _batchLast=code;_batchLastT=now;
   const other=findProductByCode(code);
-  if(other&&other.id!==_batchP.id){batchLog("warn","Mã "+code+" là của: "+other.name);batchBeep(false);return;}
-  if(!other){addBarcodeToProduct(_batchP,code);_batchNewCodes.push(code);batchLog("new","+1 · Học mã mới "+code);}
-  else batchLog("ok","+1 · "+code);
-  _batchCount++;batchFlash();batchBeep(true);
+  if(other&&other.id!==_batchP.id){toast("⚠ Mã "+code+" là của: "+other.name);batchBeep(false);return;}
+  // Mã này đã được quét trong phiên hiện tại — xác nhận trước khi cộng thêm
+  if(_batchScans.some(s=>s.code===code)){
+    batchBeep(false);
+    if(!confirm(`Mã ${code} đã được quét ${_batchScans.filter(s=>s.code===code).length} lần trong phiên này. Vẫn cộng thêm 1 cái nữa?`))return;
+    _batchLastT=Date.now();
+  }
+  const isNew=!other;
+  if(isNew){addBarcodeToProduct(_batchP,code);_batchNewCodes.push(code);}
+  _batchScans.push({uid:"s"+Math.random().toString(36).slice(2,10),code,isNew,at:Date.now()});
+  _batchCount++;batchFlash();batchBeep(true);renderBatchList();
+}
+function removeBatchScan(uid){
+  const i=_batchScans.findIndex(s=>s.uid===uid);if(i<0)return;
+  const s=_batchScans.splice(i,1)[0];_batchCount--;
+  // Nếu là mã mới vừa học và không còn lần quét nào dùng mã này → gỡ khỏi danh sách mã của sản phẩm
+  if(s.isNew&&!_batchScans.some(x=>x.code===s.code)){
+    _batchNewCodes=_batchNewCodes.filter(c=>c!==s.code);
+    if(_batchP&&Array.isArray(_batchP.barcodes))_batchP.barcodes=_batchP.barcodes.filter(c=>c!==s.code);
+  }
+  if(_batchLast===s.code)_batchLast="";
+  renderBatchList();
+}
+window.removeBatchScan=removeBatchScan;
+function renderBatchList(){
+  const log=document.getElementById("batchLog");if(!log)return;
   const el=document.getElementById("batchCount");if(el)el.textContent=_batchCount;
   const n=document.getElementById("batchDoneN");if(n)n.textContent=_batchCount;
+  if(!_batchScans.length){log.innerHTML=`<div class="muted" style="padding:14px;text-align:center">Đưa mã vạch vào khung · tiếng beep báo đã đếm</div>`;return;}
+  log.innerHTML=_batchScans.slice().reverse().map(s=>{
+    const cls=s.isNew?"new":"ok",label=(s.isNew?"⭐ Mã mới · ":"")+s.code;
+    return `<div class="batch-line ${cls}"><span>${new Date(s.at).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span><span class="code">${esc(label)}</span><button class="batch-x" onclick="removeBatchScan('${s.uid}')" title="Bỏ lần quét này">✕</button></div>`;
+  }).join("");
 }
-function batchLog(cls,msg){
-  const log=document.getElementById("batchLog");if(!log)return;
-  if(log.querySelector(".muted"))log.innerHTML="";
-  const row=document.createElement("div");row.className="batch-line "+cls;row.innerHTML=`<span>${new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span>${esc(msg)}`;
-  log.insertBefore(row,log.firstChild);while(log.children.length>8)log.lastChild.remove();
-}
+function batchLog(cls,msg){toast(msg);}
 function batchFlash(){const f=document.getElementById("batchFlash");if(!f)return;f.classList.remove("on");void f.offsetWidth;f.classList.add("on");}
 function batchBeep(ok){try{if(!_bbCtx)return;const t=_bbCtx.currentTime,o=_bbCtx.createOscillator(),g=_bbCtx.createGain();o.frequency.value=ok?1200:400;o.connect(g);g.connect(_bbCtx.destination);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.15);o.start(t);o.stop(t+.17);}catch(e){}}
 function finishBatch(){
