@@ -1777,6 +1777,19 @@ function renderSettings(){
       </div>
     </div>
     <div class="panel">
+      <div class="panel-head"><h2>🤖 Chatbot AI tư vấn khách</h2></div>
+      <div class="panel-body">
+        <p class="muted">Khách vào trang shop sẽ thấy nút chat 💬 ở góc để hỏi AI về sản phẩm. AI biết toàn bộ danh mục của bạn và trả lời tiếng Việt.</p>
+        <div class="field"><label>URL Cloudflare Worker</label>
+          <input id="aiWorkerUrl" placeholder="https://hoanghien-ai.xxx.workers.dev" style="font-family:monospace;font-size:13px">
+        </div>
+        <div class="muted" style="font-size:12.5px;margin:-6px 0 10px">Chưa có? Deploy miễn phí theo hướng dẫn trong <code>worker/README.md</code> ở repo. ~10 phút setup, không cần thẻ.</div>
+        <button class="btn primary" id="saveAiBtn">💾 Lưu & bật chatbot</button>
+        <button class="btn ghost" id="testAiBtn" style="margin-left:8px">🧪 Thử gọi Worker</button>
+        <div id="aiMsg" style="margin-top:10px;font-size:13px"></div>
+      </div>
+    </div>
+    <div class="panel">
       <div class="panel-head"><h2>🛍️ Giao diện khách hàng</h2></div>
       <div class="panel-body">
         <p class="muted">Khách hàng có thể mở link dưới đây để xem sản phẩm và đặt hàng. Không cần đăng nhập.</p>
@@ -1866,6 +1879,32 @@ function renderSettings(){
   if(seedBtn)seedBtn.onclick=()=>importSeedMasks();
   const seedShopBtn=document.getElementById("seedShopBtn");
   if(seedShopBtn)seedShopBtn.onclick=()=>importSeedShop();
+  // Chatbot AI — load URL hiện tại từ Firestore settings/public
+  const aiUrlEl=document.getElementById("aiWorkerUrl"),aiMsgEl=document.getElementById("aiMsg");
+  if(aiUrlEl&&CLOUD){
+    CB.get("settings","public").then(s=>{if(s&&s.aiWorkerUrl)aiUrlEl.value=s.aiWorkerUrl;}).catch(()=>{});
+  }
+  const saveAi=document.getElementById("saveAiBtn");
+  if(saveAi)saveAi.onclick=async()=>{
+    const url=(aiUrlEl.value||"").trim();
+    if(url&&!/^https:\/\/.+\.workers\.dev\/?$/.test(url)&&!/^https:\/\//.test(url)){aiMsgEl.innerHTML='<span style="color:var(--bad)">URL không hợp lệ. Phải bắt đầu bằng https://</span>';return;}
+    try{
+      await CB.commit([{op:"set",col:"settings",id:"public",data:{aiWorkerUrl:url,updatedAt:Date.now()},merge:true}]);
+      aiMsgEl.innerHTML=url?'<span style="color:var(--good)">✓ Đã lưu. Khách vào trang shop sẽ thấy chat 💬.</span>':'<span style="color:var(--warn)">Đã xoá URL — chatbot tắt.</span>';
+    }catch(e){aiMsgEl.innerHTML='<span style="color:var(--bad)">Lưu lỗi: '+cloudErrText(e)+'</span>';}
+  };
+  const testAi=document.getElementById("testAiBtn");
+  if(testAi)testAi.onclick=async()=>{
+    const url=(aiUrlEl.value||"").trim();
+    if(!url){aiMsgEl.innerHTML='<span style="color:var(--warn)">Chưa có URL để thử.</span>';return;}
+    aiMsgEl.innerHTML='<span class="muted">Đang gọi Worker…</span>';
+    try{
+      const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:"Chào bạn, test kết nối"}],products:(DB.products||[]).slice(0,20),shop:{name:"Mỹ Phẩm Hoàng Hiền",phone:"0789 686 111"}})});
+      const j=await r.json();
+      if(r.ok&&j.reply)aiMsgEl.innerHTML='<span style="color:var(--good)">✓ Worker chạy OK. Phản hồi mẫu:</span><div style="margin-top:6px;padding:10px;background:var(--surface-2);border-radius:8px;font-size:13px">'+esc(j.reply)+'</div>';
+      else aiMsgEl.innerHTML='<span style="color:var(--bad)">Lỗi '+r.status+': '+esc(j.error||JSON.stringify(j))+'</span>';
+    }catch(e){aiMsgEl.innerHTML='<span style="color:var(--bad)">Không gọi được Worker: '+esc(String(e.message||e))+'</span>';}
+  };
   /* credentials */
   if(!CLOUD)document.getElementById("saveCredBtn").onclick=function(){
     const newUser=document.getElementById("newUser").value.trim();

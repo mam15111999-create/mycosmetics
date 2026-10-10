@@ -33,6 +33,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Cấu hình công khai (URL chatbot, cài đặt khác) — ai cũng đọc được, chỉ admin ghi
+    match /settings/{id} {
+      allow get: if true;
+      allow write: if isAdmin();
+    }
+
     // Mọi dữ liệu còn lại (mặt hàng, giá nhập, khách hàng, hoá đơn…) chỉ admin
     match /{col}/{id} {
       allow read, write: if isAdmin();

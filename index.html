@@ -604,6 +604,145 @@ if(CLOUD){
       for(const id of Object.keys(cart))if(!list.some(p=>p.id===id&&p.stock>0))delete cart[id];
       refresh();
     },()=>{cloudErr=true;refresh();});
+    // Chatbot AI — chỉ bật nếu admin đã cấu hình Worker URL
+    window.cloudBackend.get("settings","public").then(s=>{if(s&&s.aiWorkerUrl)initChatbot(s.aiWorkerUrl);}).catch(()=>{});
   },()=>{cloudErr=true;refresh();});
+}
+
+/* =============== CHATBOT AI =============== */
+function initChatbot(workerUrl){
+  if(document.getElementById("chatFab"))return;
+  const SHOP={name:"Mỹ Phẩm Hoàng Hiền",phone:"0789 686 111"};
+  const SKEY="hhc_chat_v1";
+  const loadMsgs=()=>{try{return JSON.parse(sessionStorage.getItem(SKEY)||"[]");}catch(e){return[];}};
+  const saveMsgs=m=>{try{sessionStorage.setItem(SKEY,JSON.stringify(m.slice(-20)));}catch(e){}};
+  let msgs=loadMsgs(),open=false,busy=false;
+
+  const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+  const fmtMsg=t=>esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\n/g,"<br>");
+
+  const style=document.createElement("style");
+  style.textContent=`
+    .chat-fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 86px);width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#c64f7b,#a83a63);color:#fff;border:0;box-shadow:0 8px 24px rgba(74,37,69,.3);display:grid;place-items:center;font-size:24px;cursor:pointer;z-index:40;transition:.2s}
+    body.has-cart .chat-fab{bottom:calc(env(safe-area-inset-bottom,0px) + 98px)}
+    .chat-fab:active{transform:scale(.92)}
+    .chat-fab::after{content:"";position:absolute;top:4px;right:4px;width:10px;height:10px;background:#4ade80;border-radius:50%;border:2px solid #fff}
+    .chat-wrap{position:fixed;inset:0;z-index:70;background:rgba(58,35,51,.5);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center}
+    .chat-wrap.open{display:flex}
+    .chat-box{background:var(--surface);width:100%;max-width:480px;height:85dvh;max-height:720px;border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 28px rgba(74,37,69,.2);animation:slideUp .25s}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .chat-head{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,#6a1040,#9a2060);color:#fff}
+    .chat-avatar{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);display:grid;place-items:center;font-size:20px;flex-shrink:0}
+    .chat-info{flex:1;min-width:0}
+    .chat-title{font-family:"Playfair Display",serif;font-weight:700;font-size:15px}
+    .chat-sub{font-size:11.5px;opacity:.85;display:flex;align-items:center;gap:5px}
+    .chat-sub::before{content:"";width:7px;height:7px;background:#4ade80;border-radius:50%;display:inline-block}
+    .chat-close{border:0;background:rgba(255,255,255,.15);color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer}
+    .chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+    .chat-msg{max-width:85%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.5;word-wrap:break-word}
+    .chat-msg.user{align-self:flex-end;background:var(--rose);color:#fff;border-bottom-right-radius:5px}
+    .chat-msg.bot{align-self:flex-start;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-bottom-left-radius:5px}
+    .chat-msg.typing{display:flex;gap:4px;align-items:center;padding:14px 16px}
+    .chat-dot{width:8px;height:8px;background:var(--rose-soft);border-radius:50%;animation:cDot 1.4s infinite}
+    .chat-dot:nth-child(2){animation-delay:.2s}.chat-dot:nth-child(3){animation-delay:.4s}
+    @keyframes cDot{0%,60%,100%{opacity:.3;transform:scale(.8)}30%{opacity:1;transform:scale(1)}}
+    .chat-sug{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 10px}
+    .chat-sug button{background:var(--surface-2);border:1px solid var(--line);color:var(--plum);padding:7px 12px;border-radius:16px;font-size:12.5px;cursor:pointer;font-family:inherit}
+    .chat-sug button:active{background:var(--rose-soft);color:#fff}
+    .chat-foot{padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 10px);border-top:1px solid var(--line);background:var(--surface);display:flex;gap:8px;align-items:flex-end}
+    .chat-input{flex:1;border:1.5px solid var(--line);border-radius:20px;padding:10px 14px;background:var(--surface-2);color:var(--ink);font-family:inherit;font-size:15px;resize:none;max-height:100px;min-height:40px;line-height:1.4}
+    .chat-input:focus{outline:0;border-color:var(--rose)}
+    .chat-send{width:40px;height:40px;border-radius:50%;background:var(--rose);color:#fff;border:0;font-size:16px;cursor:pointer;flex-shrink:0}
+    .chat-send:disabled{opacity:.4;cursor:not-allowed}
+    .chat-dis{text-align:center;padding:20px;color:var(--ink-soft);font-size:13px}
+  `;
+  document.head.appendChild(style);
+
+  const fab=document.createElement("button");
+  fab.id="chatFab";fab.className="chat-fab";fab.title="Chat với trợ lý shop";
+  fab.innerHTML="💬";
+  document.body.appendChild(fab);
+
+  const wrap=document.createElement("div");
+  wrap.className="chat-wrap";
+  wrap.innerHTML=`<div class="chat-box">
+    <div class="chat-head">
+      <div class="chat-avatar">🌸</div>
+      <div class="chat-info"><div class="chat-title">Trợ lý ${esc(SHOP.name)}</div><div class="chat-sub">Đang hoạt động · tư vấn 24/7</div></div>
+      <button class="chat-close" id="chatClose">✕</button>
+    </div>
+    <div class="chat-body" id="chatBody"></div>
+    <div class="chat-sug" id="chatSug"></div>
+    <form class="chat-foot" id="chatForm">
+      <textarea class="chat-input" id="chatInput" placeholder="Nhập câu hỏi..." rows="1"></textarea>
+      <button class="chat-send" id="chatSend" type="submit" aria-label="Gửi">➤</button>
+    </form>
+  </div>`;
+  document.body.appendChild(wrap);
+
+  const body=document.getElementById("chatBody");
+  const sug=document.getElementById("chatSug");
+  const input=document.getElementById("chatInput");
+  const sendBtn=document.getElementById("chatSend");
+  const form=document.getElementById("chatForm");
+
+  const SUGGESTIONS=["Tư vấn da dầu mụn","Có son màu đỏ nào?","Mặt nạ dưới 50k","So sánh 2 SP cấp ẩm","Sản phẩm cho người mới"];
+
+  function renderMsgs(){
+    body.innerHTML="";
+    if(!msgs.length){
+      body.innerHTML=`<div class="chat-msg bot">Chào bạn 🌸 Mình là trợ lý của <b>${esc(SHOP.name)}</b>, có thể giúp bạn chọn mỹ phẩm phù hợp. Bạn muốn hỏi gì? (loại da, công dụng, ngân sách, so sánh SP...)</div>`;
+    }else{
+      for(const m of msgs){
+        const d=document.createElement("div");
+        d.className="chat-msg "+(m.role==="user"?"user":"bot");
+        d.innerHTML=fmtMsg(m.content);
+        body.appendChild(d);
+      }
+    }
+    if(busy){const t=document.createElement("div");t.className="chat-msg bot typing";t.innerHTML='<div class="chat-dot"></div><div class="chat-dot"></div><div class="chat-dot"></div>';body.appendChild(t);}
+    body.scrollTop=body.scrollHeight;
+  }
+  function renderSug(){
+    sug.innerHTML="";
+    if(msgs.length||busy)return;
+    for(const s of SUGGESTIONS){
+      const b=document.createElement("button");
+      b.type="button";b.textContent=s;
+      b.onclick=()=>{input.value=s;send();};
+      sug.appendChild(b);
+    }
+  }
+
+  async function send(){
+    const text=input.value.trim();if(!text||busy)return;
+    msgs.push({role:"user",content:text});saveMsgs(msgs);
+    input.value="";input.style.height="auto";
+    busy=true;sendBtn.disabled=true;renderMsgs();renderSug();
+    try{
+      const products=(cloudDB?.products||[]).filter(p=>p.stock>0||p.price>0).map(p=>({
+        name:p.name,brand:p.brand,origin:p.origin,volume:p.volume,skinType:p.skinType,
+        category:p.category,price:p.price,stock:p.stock,note:p.note
+      }));
+      const r=await fetch(workerUrl,{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({messages:msgs.slice(-10),products,shop:SHOP})
+      });
+      const j=await r.json();
+      if(r.ok&&j.reply){msgs.push({role:"assistant",content:j.reply});saveMsgs(msgs);}
+      else msgs.push({role:"assistant",content:"Xin lỗi, mình gặp lỗi khi kết nối tới trợ lý. Bạn có thể nhắn Zalo shop qua số "+SHOP.phone+" để được tư vấn trực tiếp nhé."});
+    }catch(e){
+      msgs.push({role:"assistant",content:"Lỗi mạng, vui lòng thử lại hoặc nhắn Zalo "+SHOP.phone});
+    }
+    busy=false;sendBtn.disabled=false;renderMsgs();renderSug();
+  }
+
+  input.addEventListener("input",()=>{input.style.height="auto";input.style.height=Math.min(100,input.scrollHeight)+"px";});
+  input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
+  form.addEventListener("submit",e=>{e.preventDefault();send();});
+
+  fab.onclick=()=>{open=true;wrap.classList.add("open");document.body.style.overflow="hidden";renderMsgs();renderSug();setTimeout(()=>input.focus(),200);};
+  document.getElementById("chatClose").onclick=()=>{open=false;wrap.classList.remove("open");document.body.style.overflow="";};
+  wrap.addEventListener("click",e=>{if(e.target===wrap)document.getElementById("chatClose").click();});
 }
 </script>
