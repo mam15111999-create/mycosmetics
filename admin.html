@@ -7,6 +7,10 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<script>
+// Ép Safari không bám HTML cache cũ: nếu URL chưa có query ?v=... thì chuyển sang có timestamp mới
+(function(){try{if(!/[?&]v=/.test(location.search))location.replace(location.pathname+"?v="+Date.now()+location.hash);}catch(e){}})();
+</script>
 <title>Mỹ Phẩm Hoàng Hiền – Quản lý</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
