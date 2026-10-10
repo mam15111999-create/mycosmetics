@@ -47,6 +47,14 @@ body{font-family:"DM Sans",system-ui,-apple-system,sans-serif;font-size:15px;lin
 .sum .total span:last-child{color:var(--rose-deep)}
 .note{margin-top:12px;font-size:13px;color:var(--ink-soft)}
 .cancel{margin:0 0 14px;padding:12px;border-radius:12px;background:#f8e2e2;color:var(--bad);font-weight:700;text-align:center}
+.vqr{display:flex;flex-direction:column;align-items:center;gap:10px;border:1px solid var(--line);border-radius:14px;padding:16px;background:#f8fcff;margin-top:14px}
+.vqr-h{font-weight:700;color:var(--plum);font-size:15px;text-align:center}
+.vqr-img{width:min(300px,80vw);height:auto;aspect-ratio:540/640;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px}
+.vqr-amt{font-family:"Playfair Display",serif;font-weight:700;font-size:22px;color:var(--rose-deep);text-align:center}
+.vqr-info{width:100%;max-width:340px;display:flex;flex-direction:column;gap:5px;background:var(--surface);border-radius:10px;padding:10px 12px}
+.vqr-row{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.vqr-row span{color:var(--ink-soft)}
+.vqr-row b{text-align:right;font-variant-numeric:tabular-nums}
 .foot{padding:14px 18px 18px;text-align:center;border-top:1px dashed var(--line)}
 .thanks{font-family:"Playfair Display",Georgia,serif;font-size:17px;color:var(--plum)}
 .actions{display:flex;gap:8px;margin-top:14px}
@@ -105,6 +113,16 @@ function render(r){
         <div class="total"><span>Tổng cộng</span><span>${money(r.total)}</span></div>
       </div>
       ${r.note?`<div class="note">Ghi chú: ${esc(r.note)}</div>`:""}
+      ${!r.paid&&r.status!=="cancelled"&&r.qrUrl&&r.bank?`<div class="vqr">
+        <div class="vqr-h">📱 Quét mã để thanh toán</div>
+        <img class="vqr-img" src="${esc(r.qrUrl)}" alt="QR chuyển khoản">
+        <div class="vqr-amt">${money(r.total)}</div>
+        <div class="vqr-info">
+          <div class="vqr-row"><span>Ngân hàng</span><b>${esc(r.bank.name||"")}</b></div>
+          <div class="vqr-row"><span>Số TK</span><b>${esc(r.bank.acc)}</b></div>
+          <div class="vqr-row"><span>Chủ TK</span><b>${esc(r.bank.holder||"")}</b></div>
+        </div>
+      </div>`:""}
     </div>
     <div class="foot">
       <div class="thanks">Cảm ơn quý khách! ♥</div>
