@@ -266,17 +266,16 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
 .pay-row .btn{margin-left:auto}
 .backup-banner{display:flex;gap:14px;align-items:center;background:var(--warn-bg);border:1px solid var(--warn);color:var(--ink);border-radius:14px;padding:14px 16px;margin-bottom:18px}
 .backup-banner>div:first-child{flex:1;min-width:0}
-.vqr{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:14px;background:#f8fcff;margin-top:10px}
-.vqr-img{flex-shrink:0;width:160px;height:160px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:4px;object-fit:contain}
-.vqr-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
-.vqr-h{font-weight:700;color:var(--plum);margin-bottom:4px}
-.vqr-row{display:flex;justify-content:space-between;gap:10px;font-size:13.5px}
+.vqr{display:flex;flex-direction:column;align-items:center;gap:14px;border:1px solid var(--line);border-radius:14px;padding:18px 16px;background:#f8fcff;margin-top:10px}
+.vqr-h{font-weight:700;color:var(--plum);font-size:15px;text-align:center}
+.vqr-img{width:min(280px,80vw);height:auto;aspect-ratio:540/640;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px;object-fit:contain;display:block}
+.vqr-info{width:100%;max-width:340px;display:flex;flex-direction:column;gap:6px}
+.vqr-row{display:flex;justify-content:space-between;gap:10px;font-size:14px}
 .vqr-row span{color:var(--ink-soft);flex-shrink:0}
 .vqr-row b{text-align:right;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vqr-copy{cursor:pointer;border-bottom:1px dashed var(--ink-soft)}
 .vqr-copy:active{opacity:.6}
-.vqr-hint{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.4}
-@media(max-width:420px){.vqr{flex-direction:column;align-items:center}.vqr-info{width:100%}}
+.vqr-hint{font-size:12.5px;color:var(--ink-soft);text-align:center;line-height:1.5;max-width:320px}
 .backup-banner b{color:var(--warn);display:block;font-size:15px}
 @media(max-width:720px){.backup-banner{flex-direction:column;align-items:stretch}.backup-banner .btn{width:100%}}
 .clickable{cursor:pointer}
@@ -1409,21 +1408,20 @@ function vietqrUrl(amount,note){
   if(b.holder)q.set("accountName",b.holder);
   return`https://img.vietqr.io/image/${encodeURIComponent(bin)}-${encodeURIComponent(acc)}-compact2.png?${q}`;
 }
-function vietqrBlock(amount,note,opts={}){
+function vietqrBlock(amount,note){
   const b=getBank(),acc=String(b.acc||"").replace(/\s+/g,"");
   if(!acc||!amount)return"";
-  const sz=opts.size||170;
   return`<div class="vqr">
-    <img class="vqr-img" src="${vietqrUrl(amount,note)}" width="${sz}" height="${sz}" alt="Mã QR chuyển khoản" loading="lazy">
+    <div class="vqr-h">📱 Quét mã để chuyển khoản</div>
+    <img class="vqr-img" src="${vietqrUrl(amount,note)}" alt="Mã QR chuyển khoản" loading="lazy">
     <div class="vqr-info">
-      <div class="vqr-h">Quét mã để chuyển khoản</div>
       <div class="vqr-row"><span>Ngân hàng</span><b>${esc(b.name||"")}</b></div>
       <div class="vqr-row"><span>Số TK</span><b class="vqr-copy" data-copy="${esc(acc)}">${esc(acc)}</b></div>
       <div class="vqr-row"><span>Chủ TK</span><b>${esc(b.holder||"")}</b></div>
-      <div class="vqr-row"><span>Số tiền</span><b style="color:var(--rose-deep)">${money(amount)}</b></div>
+      <div class="vqr-row"><span>Số tiền</span><b style="color:var(--rose-deep);font-size:16px">${money(amount)}</b></div>
       ${note?`<div class="vqr-row"><span>Nội dung</span><b class="vqr-copy" data-copy="${esc(note)}">${esc(note)}</b></div>`:""}
-      <div class="vqr-hint">Số tiền và nội dung đã nhúng sẵn — khách quét là chuyển ngay.</div>
     </div>
+    <div class="vqr-hint">Số tiền và nội dung đã nhúng sẵn — khách quét là chuyển ngay.</div>
   </div>`;
 }
 // Click to copy cho các giá trị VietQR
