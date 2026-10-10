@@ -266,16 +266,17 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
 .pay-row .btn{margin-left:auto}
 .backup-banner{display:flex;gap:14px;align-items:center;background:var(--warn-bg);border:1px solid var(--warn);color:var(--ink);border-radius:14px;padding:14px 16px;margin-bottom:18px}
 .backup-banner>div:first-child{flex:1;min-width:0}
-.vqr{display:flex;flex-direction:column;align-items:center;gap:14px;border:1px solid var(--line);border-radius:14px;padding:18px 16px;background:#f8fcff;margin-top:10px}
+.vqr{display:flex!important;flex-direction:column!important;align-items:center!important;gap:12px;border:1px solid var(--line);border-radius:16px;padding:20px 16px;background:#f8fcff;margin-top:10px;width:100%}
 .vqr-h{font-weight:700;color:var(--plum);font-size:15px;text-align:center}
-.vqr-img{width:min(280px,80vw);height:auto;aspect-ratio:540/640;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px;object-fit:contain;display:block}
-.vqr-info{width:100%;max-width:340px;display:flex;flex-direction:column;gap:6px}
+.vqr-img{width:min(320px,85vw)!important;height:auto!important;aspect-ratio:540/640;max-width:100%;background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px;object-fit:contain;display:block;margin:0 auto!important}
+.vqr-amt{font-family:"Fraunces",serif;font-weight:700;font-size:22px;color:var(--rose-deep);text-align:center;font-variant-numeric:tabular-nums}
+.vqr-info{width:100%;max-width:360px;display:flex;flex-direction:column;gap:6px;background:var(--surface);border-radius:12px;padding:10px 14px}
 .vqr-row{display:flex;justify-content:space-between;gap:10px;font-size:14px}
 .vqr-row span{color:var(--ink-soft);flex-shrink:0}
 .vqr-row b{text-align:right;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vqr-copy{cursor:pointer;border-bottom:1px dashed var(--ink-soft)}
 .vqr-copy:active{opacity:.6}
-.vqr-hint{font-size:12.5px;color:var(--ink-soft);text-align:center;line-height:1.5;max-width:320px}
+.vqr-hint{font-size:12.5px;color:var(--ink-soft);text-align:center;line-height:1.55;max-width:340px}
 .backup-banner b{color:var(--warn);display:block;font-size:15px}
 @media(max-width:720px){.backup-banner{flex-direction:column;align-items:stretch}.backup-banner .btn{width:100%}}
 .clickable{cursor:pointer}
@@ -1075,7 +1076,7 @@ function pickPay(method,id){
   document.querySelectorAll("#payPickT button").forEach(b=>b.classList.toggle("active",b.dataset.v===method));
   const b=byId(DB.bills||[],id);if(!b)return;
   const qr=document.getElementById("payPickQR"),btn=document.getElementById("payPickConfirm");
-  if(method==="transfer"){qr.innerHTML=vietqrBlock(b.total,"Thanh toan "+billCode(b));btn.textContent="✓ Xác nhận đã nhận chuyển khoản";btn.onclick=()=>confirmBillPaid(id,"transfer");}
+  if(method==="transfer"){qr.innerHTML=vietqrBlock(b.total,billCode(b));btn.textContent="✓ Xác nhận đã nhận chuyển khoản";btn.onclick=()=>confirmBillPaid(id,"transfer");}
   else{qr.innerHTML="";btn.textContent="✓ Xác nhận đã thu tiền mặt";btn.onclick=()=>confirmBillPaid(id,"cash");}
 }
 window.pickPay=pickPay;
@@ -1091,7 +1092,7 @@ function setPayMethod(m){
   if(m==="transfer"&&billPaid)setPaid(false);
   else renderPayQR();
 }
-function billNote(){const cust=byId(DB.customers,document.getElementById("bCust")?.value);return "Thanh toan "+(cust?.name||"khach").slice(0,20);}
+function billNote(){return "";}
 function renderPayQR(){
   const el=document.getElementById("payQR");if(!el)return;
   const {total}=getBillCalc();
@@ -1397,31 +1398,31 @@ const BANK={bin:"970407",code:"TCB",name:"Techcombank",acc:"1510038386",holder:"
 const BANK_KEY="myphamHH_bank";
 function getBank(){try{return Object.assign({},BANK,JSON.parse(localStorage.getItem(BANK_KEY)||"null"));}catch(e){return BANK;}}
 function saveBank(b){try{localStorage.setItem(BANK_KEY,JSON.stringify(b));}catch(e){}}
-function vietqrUrl(amount,note){
+// Mã rút gọn của hoá đơn, nhúng vào nội dung chuyển khoản để đối chiếu tự động về sau
+function vietqrUrl(amount,ref){
   const b=getBank();
   const acc=String(b.acc||"").replace(/\s+/g,"");
   if(!acc)return"";
   const bin=b.bin||b.code||"970407";
   const q=new URLSearchParams();
   if(amount>0)q.set("amount",Math.round(amount));
-  if(note)q.set("addInfo",String(note).slice(0,25));
+  if(ref)q.set("addInfo",String(ref).slice(0,25));
   if(b.holder)q.set("accountName",b.holder);
   return`https://img.vietqr.io/image/${encodeURIComponent(bin)}-${encodeURIComponent(acc)}-compact2.png?${q}`;
 }
-function vietqrBlock(amount,note){
+function vietqrBlock(amount,ref){
   const b=getBank(),acc=String(b.acc||"").replace(/\s+/g,"");
   if(!acc||!amount)return"";
   return`<div class="vqr">
     <div class="vqr-h">📱 Quét mã để chuyển khoản</div>
-    <img class="vqr-img" src="${vietqrUrl(amount,note)}" alt="Mã QR chuyển khoản" loading="lazy">
+    <img class="vqr-img" src="${vietqrUrl(amount,ref)}" alt="Mã QR chuyển khoản" loading="lazy">
+    <div class="vqr-amt">${money(amount)}</div>
     <div class="vqr-info">
       <div class="vqr-row"><span>Ngân hàng</span><b>${esc(b.name||"")}</b></div>
       <div class="vqr-row"><span>Số TK</span><b class="vqr-copy" data-copy="${esc(acc)}">${esc(acc)}</b></div>
       <div class="vqr-row"><span>Chủ TK</span><b>${esc(b.holder||"")}</b></div>
-      <div class="vqr-row"><span>Số tiền</span><b style="color:var(--rose-deep);font-size:16px">${money(amount)}</b></div>
-      ${note?`<div class="vqr-row"><span>Nội dung</span><b class="vqr-copy" data-copy="${esc(note)}">${esc(note)}</b></div>`:""}
     </div>
-    <div class="vqr-hint">Số tiền và nội dung đã nhúng sẵn — khách quét là chuyển ngay.</div>
+    <div class="vqr-hint">Số tiền đã nhúng sẵn trong mã — khách quét là chuyển ngay.<br>Nội dung chuyển khoản sẽ mặc định theo ngân hàng.</div>
   </div>`;
 }
 // Click to copy cho các giá trị VietQR
@@ -1473,7 +1474,7 @@ function openBillDetail(id){
   const b=byId(DB.bills||[],id);if(!b)return;
   ensureReceipt(b);
   const {cust,pts,items,when}=billView(b);
-  const unpaidQR=!billIsPaid(b)&&(b.payMethod==="transfer"||!b.payMethod)?`<div class="form-sec">🏦 Chuyển khoản ngân hàng</div>${vietqrBlock(b.total,"Thanh toan "+billCode(b))}`:"";
+  const unpaidQR=!billIsPaid(b)&&(b.payMethod==="transfer"||!b.payMethod)?`<div class="form-sec">🏦 Chuyển khoản ngân hàng</div>${vietqrBlock(b.total,billCode(b))}`:"";
   const einv=CLOUD&&b.receiptId?`<div class="form-sec">🧾 Hóa đơn điện tử</div>
       <div class="einv">
         <img class="einv-qr" src="${qrDataUrl(receiptUrl(b),150)}" alt="QR hóa đơn">
