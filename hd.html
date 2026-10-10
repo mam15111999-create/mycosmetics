@@ -82,6 +82,17 @@ const fmt=n=>(Math.round(n||0)).toLocaleString("vi-VN");
 const money=n=>fmt(n)+"₫";
 const app=document.getElementById("app");
 const fail=(ico,msg)=>{app.innerHTML=`<div class="msg"><div class="ico">${ico}</div>${msg}</div>`;};
+// Số TK mặc định của cửa hàng — dùng khi hoá đơn điện tử cũ không nhúng sẵn QR
+const DEFAULT_BANK={bin:"970407",name:"Techcombank",acc:"1510038386",holder:"MY PHAM HOANG HIEN"};
+function buildQrUrl(bank,amount,ref){
+  const acc=String(bank.acc||"").replace(/\s+/g,"");
+  if(!acc)return"";
+  const q=new URLSearchParams();
+  if(amount>0)q.set("amount",Math.round(amount));
+  if(ref)q.set("addInfo",String(ref).slice(0,25));
+  if(bank.holder)q.set("accountName",bank.holder);
+  return`https://img.vietqr.io/image/${encodeURIComponent(bank.bin||"970407")}-${encodeURIComponent(acc)}-compact2.png?${q}`;
+}
 
 function render(r){
   document.title=`Hóa đơn ${r.code} – ${r.shop.name}`;
@@ -89,6 +100,10 @@ function render(r){
     :r.paid?`<span class="pill ok">✓ Đã thanh toán${r.payMethod==="transfer"?" · Chuyển khoản":r.payMethod==="cash"?" · Tiền mặt":""}</span>`
     :`<span class="pill warn">⏳ Chưa thanh toán</span>`;
   const tel=String(r.shop.phone||"").replace(/\D/g,"");
+  // Fallback cho hoá đơn cũ không nhúng sẵn QR/bank
+  const bank=r.bank||DEFAULT_BANK;
+  const qrUrl=r.qrUrl||buildQrUrl(bank,r.total,r.code);
+  const showQR=!r.paid&&r.status!=="cancelled"&&qrUrl&&bank&&bank.acc&&r.total>0;
   app.innerHTML=`<div class="card">
     <div class="head">
       <div class="shop">${esc(r.shop.name)}</div>
@@ -113,14 +128,14 @@ function render(r){
         <div class="total"><span>Tổng cộng</span><span>${money(r.total)}</span></div>
       </div>
       ${r.note?`<div class="note">Ghi chú: ${esc(r.note)}</div>`:""}
-      ${!r.paid&&r.status!=="cancelled"&&r.qrUrl&&r.bank?`<div class="vqr">
+      ${showQR?`<div class="vqr">
         <div class="vqr-h">📱 Quét mã để thanh toán</div>
-        <img class="vqr-img" src="${esc(r.qrUrl)}" alt="QR chuyển khoản">
+        <img class="vqr-img" src="${esc(qrUrl)}" alt="QR chuyển khoản">
         <div class="vqr-amt">${money(r.total)}</div>
         <div class="vqr-info">
-          <div class="vqr-row"><span>Ngân hàng</span><b>${esc(r.bank.name||"")}</b></div>
-          <div class="vqr-row"><span>Số TK</span><b>${esc(r.bank.acc)}</b></div>
-          <div class="vqr-row"><span>Chủ TK</span><b>${esc(r.bank.holder||"")}</b></div>
+          <div class="vqr-row"><span>Ngân hàng</span><b>${esc(bank.name||"")}</b></div>
+          <div class="vqr-row"><span>Số TK</span><b>${esc(bank.acc)}</b></div>
+          <div class="vqr-row"><span>Chủ TK</span><b>${esc(bank.holder||"")}</b></div>
         </div>
       </div>`:""}
     </div>
