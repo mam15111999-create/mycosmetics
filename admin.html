@@ -357,16 +357,16 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
   .rc-qr{text-align:center;margin-top:10px;font-size:10.5px}
   .rc-qr img{width:28mm;height:28mm;display:block;margin:0 auto 2px}
   .rc-thanks{text-align:center;margin-top:10px;font-style:italic;border-top:1px dashed #000;padding-top:6px}
-  /* Tem dán sản phẩm 30×20mm (khổ nhỏ, dán hàng mỹ phẩm thỏi/hũ) */
+  /* Tem dán sản phẩm 15×30mm — khổ dọc, hẹp, dán cho son thỏi, bút kẻ, hũ bé */
   .labels{display:block}
-  .lbl{width:30mm;height:20mm;padding:.8mm 1mm;box-sizing:border-box;display:flex;flex-direction:column;font-family:Arial,Helvetica,sans-serif;color:#000;break-inside:avoid;page-break-inside:avoid;border:0}
-  .lbl-shop{font-size:4.8pt;letter-spacing:.02em;text-align:center;font-weight:700;line-height:1}
-  .lbl-name{font-weight:700;font-size:5.6pt;line-height:1.1;margin-top:.3mm;height:5mm;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-  .lbl-row{display:flex;gap:1mm;align-items:center;margin-top:.6mm;flex:1}
-  .lbl-qr{width:10mm;height:10mm;flex-shrink:0}
-  .lbl-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
-  .lbl-price{font-weight:700;font-size:8.4pt;line-height:1}
-  .lbl-code{font-size:4.8pt;font-variant-numeric:tabular-nums;margin-top:.4mm;word-break:break-all;line-height:1.1}
+  .lbl{width:15mm;height:30mm;padding:.6mm;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;font-family:Arial,Helvetica,sans-serif;color:#000;break-inside:avoid;page-break-inside:avoid;border:0}
+  .lbl-shop{font-size:3.8pt;font-weight:700;line-height:1;letter-spacing:.02em}
+  .lbl-name{font-weight:700;font-size:4.4pt;line-height:1.1;margin-top:.3mm;height:7.4mm;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;width:100%}
+  .lbl-row{display:flex;flex-direction:column;align-items:center;gap:.4mm;margin-top:.5mm;flex:1;width:100%}
+  .lbl-qr{width:12mm;height:12mm;flex-shrink:0}
+  .lbl-info{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3mm}
+  .lbl-price{font-weight:700;font-size:7.4pt;line-height:1}
+  .lbl-code{font-size:3.8pt;font-variant-numeric:tabular-nums;line-height:1.1;word-break:break-all;max-width:100%}
 }
 .bill-summary .s-row{display:flex;justify-content:space-between;align-items:center}
 .bill-summary .s-total{font-weight:700;font-size:17px;border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
@@ -1624,7 +1624,7 @@ function askPrintLabels(productId,defaultQty){
         <span style="font-size:12.5px">Mã này đã được lưu vào sản phẩm. Khi bán hàng, quét QR trên tem sẽ ra đúng sản phẩm và tự trừ kho.</span>
       </div>
       <div class="field"><label>Số tem cần in</label><input id="lblQty" type="number" min="1" max="200" value="${n}" inputmode="numeric"></div>
-      <div class="muted" style="font-size:12.5px">Khổ tem: <b>30×20mm</b>. Dùng máy in nhiệt tem (Xprinter, Gprinter…) hoặc in trên giấy decal A4 rồi cắt.</div>
+      <div class="muted" style="font-size:12.5px">Khổ tem: <b>15×30mm</b> (dọc). Dùng máy in nhiệt tem (Xprinter, Gprinter…) hoặc in trên giấy decal A4 rồi cắt.</div>
     </div>
     <div class="modal-foot">
       <button class="btn ghost" onclick="closeModal()">Bỏ qua</button>
