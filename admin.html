@@ -357,6 +357,16 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
   .rc-qr{text-align:center;margin-top:10px;font-size:10.5px}
   .rc-qr img{width:28mm;height:28mm;display:block;margin:0 auto 2px}
   .rc-thanks{text-align:center;margin-top:10px;font-style:italic;border-top:1px dashed #000;padding-top:6px}
+  /* Tem dán sản phẩm 40x30mm (nhiều tem/trang) */
+  .labels{display:block}
+  .lbl{width:40mm;height:30mm;padding:1.6mm 2mm;box-sizing:border-box;display:flex;flex-direction:column;font-family:Arial,Helvetica,sans-serif;color:#000;break-inside:avoid;page-break-inside:avoid;border:0}
+  .lbl-shop{font-size:6pt;letter-spacing:.03em;text-align:center;font-weight:700}
+  .lbl-name{font-weight:700;font-size:7.4pt;line-height:1.15;margin-top:.6mm;height:7mm;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .lbl-row{display:flex;gap:1.8mm;align-items:center;margin-top:1mm;flex:1}
+  .lbl-qr{width:13.5mm;height:13.5mm;flex-shrink:0}
+  .lbl-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+  .lbl-price{font-weight:700;font-size:11pt;line-height:1}
+  .lbl-code{font-size:6.2pt;font-variant-numeric:tabular-nums;margin-top:.8mm;word-break:break-all;line-height:1.1}
 }
 .bill-summary .s-row{display:flex;justify-content:space-between;align-items:center}
 .bill-summary .s-total{font-weight:700;font-size:17px;border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
@@ -1568,6 +1578,60 @@ function printBill(id){
   setTimeout(()=>window.print(),50);
 }
 window.openBillDetail=openBillDetail;window.printBill=printBill;
+
+/* ---- In tem dán sản phẩm (40x30mm) ---- */
+// Trả về mã dán lên tem — ưu tiên mã vạch đã có, nếu chưa thì tự sinh mã nội bộ HHxxxxxx và gán cho SP
+function ensureLabelCode(p){
+  const codes=productCodes(p);
+  if(codes.length)return codes[0];
+  const code="HH"+String(p.id||"").slice(-6).toUpperCase();
+  p.barcodes=Array.isArray(p.barcodes)?p.barcodes.concat([code]):[code];
+  save();return code;
+}
+function labelHtml(p,qty){
+  const code=ensureLabelCode(p);
+  const qr=qrDataUrl(code,200);
+  const one=`<div class="lbl">
+    <div class="lbl-shop">MỸ PHẨM HOÀNG HIỀN</div>
+    <div class="lbl-name">${esc(p.name)}</div>
+    <div class="lbl-row">
+      <img class="lbl-qr" src="${qr}" alt="">
+      <div class="lbl-info"><div class="lbl-price">${money(p.price||0)}</div><div class="lbl-code">${esc(code)}</div></div>
+    </div>
+  </div>`;
+  return`<div class="labels">${Array(qty).fill(one).join("")}</div>`;
+}
+function printLabels(id,qty){
+  const p=byId(DB.products||[],id);if(!p){toast("Không tìm thấy sản phẩm");return;}
+  const n=Math.max(1,Math.min(200,+qty||1));
+  let area=document.getElementById("printArea");
+  if(!area){area=document.createElement("div");area.id="printArea";document.body.appendChild(area);}
+  area.innerHTML=labelHtml(p,n);
+  setTimeout(()=>window.print(),80);
+}
+function askPrintLabels(productId,defaultQty){
+  const p=byId(DB.products||[],productId);if(!p)return;
+  const n=Math.max(1,Math.min(200,+defaultQty||1));
+  mountModal(`<div class="modal" style="max-width:380px">
+    <div class="modal-head"><h2>🏷 In tem dán sản phẩm</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="muted" style="margin-bottom:12px">Mỗi tem có tên, giá bán và mã QR để quét khi bán. Khổ tem khuyến nghị: <b>40×30mm</b>.</div>
+      <div style="font-weight:700;color:var(--plum)">${esc(p.name)}</div>
+      <div class="muted" style="font-size:13px;margin-bottom:14px">${money(p.price||0)}</div>
+      <div class="field"><label>Số tem cần in</label><input id="lblQty" type="number" min="1" max="200" value="${n}" inputmode="numeric"></div>
+      <div class="calc-note">Dùng máy in nhiệt tem (Xprinter, Gprinter…) khổ 40×30mm, hoặc in trên giấy decal A4 rồi cắt.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" onclick="closeModal()">Bỏ qua</button>
+      <button class="btn primary" style="flex:1" id="doPrintLbl">🖨 In ngay</button>
+    </div>
+  </div>`,{dialog:true});
+  document.getElementById("doPrintLbl").onclick=()=>{
+    const q=+document.getElementById("lblQty").value||1;
+    closeModal();printLabels(productId,q);
+  };
+}
+window.printLabels=printLabels;window.askPrintLabels=askPrintLabels;
 function delBill(id){
   const b=byId(DB.bills||[],id);if(!b)return;
   confirmModal("Xoá hóa đơn?","Xoá sẽ hoàn lại tồn kho và trừ điểm tích luỹ của khách (nếu có). Hoá đơn điện tử vẫn được lưu và ghi là đã huỷ. Tiếp tục?",()=>{
@@ -1972,8 +2036,10 @@ function openProductModal(id,opts={}){
       <datalist id="dlOrigin">${origins.map(o=>`<option value="${o}">`).join("")}</datalist>
       <datalist id="dlSkin">${skins.map(o=>`<option value="${o}">`).join("")}</datalist>
     </div>
-    <div class="modal-foot"><button class="btn primary" id="saveProd" style="flex:1">💾 Lưu mặt hàng</button></div>
+    <div class="modal-foot">${p?`<button class="btn" type="button" id="printLblProd" title="In tem dán sản phẩm">🏷 In tem</button>`:""}<button class="btn primary" id="saveProd" style="flex:1">💾 Lưu mặt hàng</button></div>
   </div>`,{locked:true});
+  const printLblBtn=document.getElementById("printLblProd");
+  if(printLblBtn)printLblBtn.onclick=()=>askPrintLabels(p.id,1);
   let imgData=p?p.image:"";
   const openStock=p?p.stock:0;
   const prev=document.getElementById("imgPrev");
@@ -2119,6 +2185,7 @@ function openTxnModal(type,presetProd){
     if(isSale)p.stock-=qty;else p.stock+=qty;
     DB.transactions.push(txn);save();closeModal();
     toast(isSale?`Đã bán ${qty} × ${p.name}`:`Đã nhập ${qty} × ${p.name}`);go(current);
+    if(!isSale)setTimeout(()=>askPrintLabels(p.id,qty),250);
   };
 }
 
