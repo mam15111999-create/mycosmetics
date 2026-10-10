@@ -1691,6 +1691,14 @@ function renderSettings(){
       </div>
     </div>
     <div class="panel">
+      <div class="panel-head"><h2>📥 Nhập sản phẩm mẫu</h2></div>
+      <div class="panel-body">
+        <p class="muted">Thêm nhanh 10 loại mặt nạ bán chạy ở Việt Nam. Bạn chỉnh lại giá cho phù hợp, chụp ảnh thật, và quét mã vạch khi nhập hàng.</p>
+        <button class="btn primary" id="seedMasksBtn" style="margin-top:4px">📥 Thêm 10 mặt nạ phổ biến</button>
+        <div class="muted" id="seedMasksMsg" style="margin-top:10px;font-size:12.5px"></div>
+      </div>
+    </div>
+    <div class="panel">
       <div class="panel-head"><h2>🛍️ Giao diện khách hàng</h2></div>
       <div class="panel-body">
         <p class="muted">Khách hàng có thể mở link dưới đây để xem sản phẩm và đặt hàng. Không cần đăng nhập.</p>
@@ -1776,6 +1784,8 @@ function renderSettings(){
     document.getElementById("rebuildCatBtn").onclick=cloudRebuildCatalog;
     document.getElementById("uploadLocalBtn")?.addEventListener("click",cloudUploadLocal);
   }
+  const seedBtn=document.getElementById("seedMasksBtn");
+  if(seedBtn)seedBtn.onclick=()=>importSeedMasks();
   /* credentials */
   if(!CLOUD)document.getElementById("saveCredBtn").onclick=function(){
     const newUser=document.getElementById("newUser").value.trim();
@@ -2718,6 +2728,70 @@ function ding(){
 addEventListener("pointerdown",()=>{try{_ac=_ac||new(window.AudioContext||window.webkitAudioContext)();_ac.resume&&_ac.resume();}catch(e){}},{once:true});
 
 /* ---- Ảnh, dữ liệu cũ, trang khách ---- */
+// Danh sách mặt nạ bán chạy ở VN để nhập nhanh — bạn chỉnh giá, ảnh, mã vạch sau khi có hàng thật
+const SEED_MASKS=[
+  {name:"Innisfree My Real Squeeze Mask - Trà xanh",brand:"Innisfree",origin:"Hàn Quốc",volume:"20ml",category:"Mặt nạ",skinType:"Mọi loại da",price:22000,
+    note:"Mặt nạ giấy chiết xuất trà xanh Jeju tươi, cấp ẩm sâu, làm dịu và se khít lỗ chân lông. Thấm nhanh, không nhờn rít.",
+    ingredients:"Chiết xuất lá trà xanh Jeju, Niacinamide, Adenosine, Hyaluronic Acid",
+    usage:"Rửa mặt sạch, dùng toner, đắp mặt nạ 10-15 phút, vỗ nhẹ phần tinh chất còn lại. Dùng 2-3 lần/tuần."},
+  {name:"Innisfree My Real Squeeze Mask - Lô hội",brand:"Innisfree",origin:"Hàn Quốc",volume:"20ml",category:"Mặt nạ",skinType:"Da nhạy cảm",price:22000,
+    note:"Chiết xuất lô hội Jeju, làm dịu da kích ứng, cấp ẩm tức thì. Phù hợp sau khi phơi nắng hoặc da đang nhạy cảm.",
+    ingredients:"Chiết xuất lá lô hội Jeju, Panthenol, Allantoin",
+    usage:"Đắp 10-15 phút sau khi làm sạch da. Dùng 2-3 lần/tuần hoặc khi da cần làm dịu."},
+  {name:"Mediheal N.M.F Aquaring Ampoule Mask",brand:"Mediheal",origin:"Hàn Quốc",volume:"27ml",category:"Mặt nạ",skinType:"Da khô, da thường",price:40000,
+    note:"Mặt nạ cấp ẩm chuyên sâu với công thức N.M.F (Natural Moisturizing Factor) và Hyaluronic Acid. Giúp da căng mọng, mịn màng.",
+    ingredients:"Hyaluronic Acid, N.M.F, Chiết xuất tảo biển, Panthenol",
+    usage:"Rửa mặt sạch, đắp 15-20 phút, vỗ nhẹ phần tinh chất còn lại. Dùng 2-3 lần/tuần."},
+  {name:"Mediheal Tea Tree Care Solution Mask",brand:"Mediheal",origin:"Hàn Quốc",volume:"25ml",category:"Mặt nạ",skinType:"Da dầu mụn",price:40000,
+    note:"Mặt nạ tràm trà chuyên biệt cho da mụn, da dầu. Giảm viêm, kiểm soát bã nhờn, làm sạch lỗ chân lông.",
+    ingredients:"Chiết xuất lá tràm trà, Salicylic Acid, Niacinamide, Centella Asiatica",
+    usage:"Dùng 2-3 lần/tuần, đắp 15 phút. Tránh vùng mắt."},
+  {name:"SOME BY MI Snail Truecica Miracle Repair Mask",brand:"SOME BY MI",origin:"Hàn Quốc",volume:"22ml",category:"Mặt nạ",skinType:"Da yếu, da tổn thương",price:28000,
+    note:"Mặt nạ dưỡng chất ốc sên và Truecica, phục hồi da hư tổn, mờ sẹo thâm, tái tạo tế bào.",
+    ingredients:"Chiết xuất ốc sên 73%, Truecica, Niacinamide, Peptide",
+    usage:"Đắp 15-20 phút sau khi làm sạch da. Dùng 2-3 lần/tuần."},
+  {name:"The Face Shop Real Nature Mask - Trà xanh",brand:"The Face Shop",origin:"Hàn Quốc",volume:"20g",category:"Mặt nạ",skinType:"Da dầu",price:25000,
+    note:"Mặt nạ giấy chiết xuất trà xanh, kiểm soát dầu, se khít lỗ chân lông, cho da sáng mịn.",
+    ingredients:"Chiết xuất trà xanh, Niacinamide, Adenosine",
+    usage:"Đắp 10-20 phút, không cần rửa lại. Dùng 2-3 lần/tuần."},
+  {name:"The Face Shop Real Nature Mask - Nha đam",brand:"The Face Shop",origin:"Hàn Quốc",volume:"20g",category:"Mặt nạ",skinType:"Mọi loại da",price:25000,
+    note:"Mặt nạ nha đam làm dịu, cấp ẩm, phục hồi da sau khi tiếp xúc ánh nắng hoặc kích ứng nhẹ.",
+    ingredients:"Chiết xuất nha đam, Allantoin, Panthenol",
+    usage:"Đắp 10-20 phút, không cần rửa lại. Dùng 2-3 lần/tuần."},
+  {name:"Cỏ Mềm Mặt nạ đất sét Nghệ Mật Ong",brand:"Cỏ Mềm Homelab",origin:"Việt Nam",volume:"50ml",category:"Mặt nạ",skinType:"Da dầu mụn",price:85000,
+    note:"Mặt nạ đất sét kết hợp nghệ nguyên chất và mật ong rừng, hút dầu thừa, kháng viêm, làm sạch sâu lỗ chân lông, mờ thâm.",
+    ingredients:"Đất sét trắng Kaolin, tinh chất nghệ, mật ong rừng, chiết xuất trà xanh",
+    usage:"Đắp lớp mỏng lên da sạch, chừa vùng mắt và môi. Để 10-15 phút rồi rửa sạch. Dùng 1-2 lần/tuần."},
+  {name:"SNP Gold Collagen Diamond Mask",brand:"SNP",origin:"Hàn Quốc",volume:"25ml",category:"Mặt nạ",skinType:"Da lão hoá",price:45000,
+    note:"Mặt nạ vàng 24k và collagen, chống lão hoá, săn chắc da, tăng độ đàn hồi và sáng da.",
+    ingredients:"Vàng 24k dạng phân tử, Collagen thuỷ phân, Peptide, Niacinamide",
+    usage:"Đắp 20 phút sau khi làm sạch da. Dùng 1-2 lần/tuần, buổi tối trước khi ngủ."},
+  {name:"Mamonde Flower Essence Mask - Rose",brand:"Mamonde",origin:"Hàn Quốc",volume:"23ml",category:"Mặt nạ",skinType:"Da khô, da thường",price:45000,
+    note:"Mặt nạ chiết xuất tinh dầu hoa hồng Damask, cấp ẩm, làm mềm và nuôi dưỡng da mịn màng, hương thơm thư giãn.",
+    ingredients:"Nước hoa hồng Damask, Hyaluronic Acid, Glycerin, Panthenol",
+    usage:"Đắp 10-15 phút sau khi làm sạch da. Dùng 2-3 lần/tuần."}
+];
+async function importSeedMasks(){
+  const btn=document.getElementById("seedMasksBtn"),msg=document.getElementById("seedMasksMsg");
+  if(!confirm(`Thêm ${SEED_MASKS.length} loại mặt nạ phổ biến vào danh sách mặt hàng? Mỗi loại tồn kho = 0, bạn chỉnh giá và nhập hàng sau.`))return;
+  if(btn){btn.disabled=true;btn.textContent="Đang thêm…";}
+  const existing=new Set((DB.products||[]).map(p=>(p.name||"").toLowerCase().trim()));
+  let added=0,skipped=0;
+  // Đảm bảo danh mục "Mặt nạ" có trong DB
+  DB.categories=DB.categories||[];
+  if(!DB.categories.some(c=>c.name==="Mặt nạ"))DB.categories.push({id:uid(),name:"Mặt nạ",icon:"🧴"});
+  for(const m of SEED_MASKS){
+    if(existing.has(m.name.toLowerCase().trim())){skipped++;continue;}
+    DB.products.push(Object.assign({id:uid(),stock:0,lowStock:10,cost:0,image:"",supplierId:"",barcodes:[]},m));
+    added++;
+  }
+  save();
+  const txt=`✓ Đã thêm ${added} mặt hàng${skipped?` · bỏ qua ${skipped} đã tồn tại`:""}. Vào mục Mặt hàng để chỉnh giá và chụp ảnh.`;
+  if(msg){msg.textContent=txt;msg.style.color="var(--good)";}
+  if(btn){btn.disabled=false;btn.textContent="📥 Thêm 10 mặt nạ phổ biến";}
+  toast(txt);
+}
+window.importSeedMasks=importSeedMasks;
 // Tra cứu thông tin sản phẩm theo mã vạch từ Open Beauty Facts / Open Food Facts (miễn phí, có CORS)
 async function fetchProductByBarcode(code){
   const urls=[
