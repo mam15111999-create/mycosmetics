@@ -2062,7 +2062,8 @@ function openTxnModal(type,presetProd){
   if(batchBtn)batchBtn.onclick=()=>{
     const p=productById(prodSel.value);
     if(!p){toast("Chọn mặt hàng trước khi quét hàng loạt");prodSel.focus();return;}
-    openBatchScanner(p,n=>{qtyIn.value=(+qtyIn.value||0)+n;updateSum();});
+    const base=+qtyIn.value||0;
+    openBatchScanner(p,n=>{qtyIn.value=base+n;updateSum();},n=>{qtyIn.value=base+n;updateSum();});
   };
   document.getElementById("saveTxn").onclick=()=>{
     const p=productById(prodSel.value);if(!p){toast("Chọn sản phẩm");return;}
@@ -2239,9 +2240,9 @@ function stopQR(doClose=true){
 function qrDone(val){const cb=_qrFoundCb;stopQR();if(cb)cb(val);}
 
 /* ======= QUÉT HÀNG LOẠT (nhập hàng) ======= */
-let _batchP=null,_batchCount=0,_batchNewCodes=[],_batchScans=[],_batchLast="",_batchLastT=0,_batchDone=null,_bbStream=null,_bbReader=null,_bbAF=null,_bbCtx=null;
-function openBatchScanner(product,onDone){
-  _batchP=product;_batchCount=0;_batchNewCodes=[];_batchScans=[];_batchLast="";_batchLastT=0;_batchDone=onDone;
+let _batchP=null,_batchCount=0,_batchNewCodes=[],_batchScans=[],_batchLast="",_batchLastT=0,_batchDone=null,_batchProgress=null,_bbStream=null,_bbReader=null,_bbAF=null,_bbCtx=null;
+function openBatchScanner(product,onDone,onProgress){
+  _batchP=product;_batchCount=0;_batchNewCodes=[];_batchScans=[];_batchLast="";_batchLastT=0;_batchDone=onDone;_batchProgress=onProgress||null;
   try{_bbCtx=_bbCtx||new(window.AudioContext||window.webkitAudioContext)();}catch(e){}
   pushModal();
   mountModal(`<div class="modal batch-modal">
@@ -2306,6 +2307,7 @@ function renderBatchList(){
   const log=document.getElementById("batchLog");if(!log)return;
   const el=document.getElementById("batchCount");if(el)el.textContent=_batchCount;
   const n=document.getElementById("batchDoneN");if(n)n.textContent=_batchCount;
+  if(_batchProgress)try{_batchProgress(_batchCount);}catch(e){}
   if(!_batchScans.length){log.innerHTML=`<div class="muted" style="padding:14px;text-align:center">Đưa mã vạch vào khung · tiếng beep báo đã đếm</div>`;return;}
   log.innerHTML=_batchScans.slice().reverse().map(s=>{
     const cls=s.dup?"warn":(s.isNew?"new":"ok");
@@ -2321,7 +2323,7 @@ function finishBatch(){
   if(_bbReader){try{_bbReader.reset();}catch(e){}_bbReader=null;}
   if(_bbStream){_bbStream.getTracks().forEach(t=>t.stop());_bbStream=null;}
   if(_batchNewCodes.length&&_batchP)save();
-  const n=_batchCount,cb=_batchDone;_batchP=null;_batchDone=null;
+  const n=_batchCount,cb=_batchDone;_batchP=null;_batchDone=null;_batchProgress=null;
   closeModal();
   if(n>0)toast(`✓ Đã quét ${n} cái${_batchNewCodes.length?` · học ${_batchNewCodes.length} mã mới`:""}`);
   if(cb)cb(n);
