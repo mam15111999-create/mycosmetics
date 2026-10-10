@@ -148,7 +148,8 @@ img{max-width:100%;display:block}
 .sheet-drag{width:40px;height:4px;border-radius:2px;background:var(--line);margin:10px auto 0}
 .sheet-head{display:flex;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
 .sheet-head h2{font-size:17px;flex:1}
-.close-btn{width:33px;height:33px;border-radius:9px;background:var(--surface-2);border:0;font-size:14px;display:grid;place-items:center;color:var(--ink-soft)}
+.close-btn{width:42px;height:42px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);font-size:18px;display:grid;place-items:center;color:var(--ink);cursor:pointer}
+.close-btn:active{background:var(--line)}
 .sheet-body{padding:14px 18px}
 .sheet-foot{padding:11px 18px calc(env(safe-area-inset-bottom,0px)+11px);border-top:1px solid var(--line);background:var(--surface);position:sticky;bottom:0;display:flex;gap:9px}
 .sheet-foot .btn{flex:1}
@@ -495,7 +496,13 @@ function updateCartUI(db){
 }
 
 /* Sheet */
-function ovClick(e){if(e.target.id==="overlay")closeSheet();}
+const LOCKED_SHEETS=["cart","checkout"];
+function ovClick(e){
+  if(e.target.id!=="overlay")return;
+  const v=document.getElementById("sheet").dataset.view;
+  if(LOCKED_SHEETS.includes(v)){toast("Nhấn ✕ ở góc phải để thoát");return;}
+  closeSheet();
+}
 function closeSheet(){document.getElementById("overlay").classList.remove("show");const s=document.getElementById("sheet");s.innerHTML="";s.dataset.view="";}
 window.ovClick=ovClick;window.closeSheet=closeSheet;
 
@@ -503,7 +510,7 @@ function openCartSheet(){
   if(cartCount()===0){toast("Giỏ hàng đang trống");return;}
   const db=loadDB()||{products:[]};
   const s=document.getElementById("sheet");s.dataset.view="cart";
-  s.innerHTML=`<div class="sheet-drag"></div><div class="sheet-head"><h2>🛒 Giỏ hàng</h2><button class="close-btn" onclick="closeSheet()">✕</button></div><div class="sheet-body" id="cartBody"></div><div class="sheet-foot"><button class="btn" onclick="closeSheet()">Tiếp tục mua</button><button class="btn primary" onclick="openCheckout()">Đặt hàng →</button></div>`;
+  s.innerHTML=`<div class="sheet-head"><h2>🛒 Giỏ hàng</h2><button class="close-btn" onclick="closeSheet()">✕</button></div><div class="sheet-body" id="cartBody"></div><div class="sheet-foot"><button class="btn primary" style="flex:1" onclick="openCheckout()">Đặt hàng →</button></div>`;
   document.getElementById("overlay").classList.add("show");renderCartBody(db);
 }
 window.openCartSheet=openCartSheet;
@@ -517,7 +524,7 @@ function renderCartBody(db){
 function openCheckout(){
   const db=loadDB()||{products:[]};const total=cartTotal(db);
   const s=document.getElementById("sheet");s.dataset.view="checkout";
-  s.innerHTML=`<div class="sheet-drag"></div><div class="sheet-head"><h2>📋 Thông tin đặt hàng</h2><button class="close-btn" onclick="closeSheet()">✕</button></div>
+  s.innerHTML=`<div class="sheet-head"><h2>📋 Thông tin đặt hàng</h2><button class="close-btn" onclick="closeSheet()">✕</button></div>
   <div class="sheet-body">
     <div class="order-sum"><div class="lbl">Tổng (${cartCount()} sản phẩm)</div><div class="val">${money(total)}</div></div>
     <div class="field"><label>Họ và tên *</label><input id="coName" placeholder="Nguyễn Văn A" autocomplete="name"></div>
@@ -525,7 +532,7 @@ function openCheckout(){
     <div class="field"><label>Địa chỉ giao hàng</label><input id="coAddr" placeholder="Số nhà, tên đường, phường/xã..." autocomplete="street-address"></div>
     <div class="field"><label>Ghi chú</label><textarea id="coNote" placeholder="Màu sắc, số lượng cụ thể..."></textarea></div>
   </div>
-  <div class="sheet-foot"><button class="btn" onclick="openCartSheet()">← Giỏ hàng</button><button class="btn primary" onclick="submitOrder()" style="flex:1">✓ Xác nhận đặt hàng</button></div>`;
+  <div class="sheet-foot"><button class="btn primary" onclick="submitOrder()" style="flex:1">✓ Xác nhận đặt hàng</button></div>`;
   document.getElementById("coName").focus();
 }
 window.openCheckout=openCheckout;
