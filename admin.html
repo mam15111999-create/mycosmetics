@@ -2278,21 +2278,17 @@ function startBatchCamera(){
 }
 function batchHit(code){
   const now=Date.now();
-  // chống đếm trùng do camera bắt liên tục: cùng mã trong 1500ms chỉ xét một lần
-  if(code===_batchLast&&now-_batchLastT<1500)return;
+  // Chống đếm trùng do camera bắt liên tục: cùng mã trong 2 giây chỉ xét một lần
+  if(code===_batchLast&&now-_batchLastT<2000)return;
   _batchLast=code;_batchLastT=now;
   const other=findProductByCode(code);
   if(other&&other.id!==_batchP.id){toast("⚠ Mã "+code+" là của: "+other.name);batchBeep(false);return;}
-  // Mã này đã được quét trong phiên hiện tại — xác nhận trước khi cộng thêm
-  if(_batchScans.some(s=>s.code===code)){
-    batchBeep(false);
-    if(!confirm(`Mã ${code} đã được quét ${_batchScans.filter(s=>s.code===code).length} lần trong phiên này. Vẫn cộng thêm 1 cái nữa?`))return;
-    _batchLastT=Date.now();
-  }
+  const dupCount=_batchScans.filter(s=>s.code===code).length;
   const isNew=!other;
-  if(isNew){addBarcodeToProduct(_batchP,code);_batchNewCodes.push(code);}
-  _batchScans.push({uid:"s"+Math.random().toString(36).slice(2,10),code,isNew,at:Date.now()});
+  if(isNew&&dupCount===0){addBarcodeToProduct(_batchP,code);_batchNewCodes.push(code);}
+  _batchScans.push({uid:"s"+Math.random().toString(36).slice(2,10),code,isNew,dup:dupCount>0,at:Date.now()});
   _batchCount++;batchFlash();batchBeep(true);renderBatchList();
+  if(dupCount>0)toast(`Trùng mã lần ${dupCount+1} · nhầm thì bấm ✕ để bỏ`);
 }
 function removeBatchScan(uid){
   const i=_batchScans.findIndex(s=>s.uid===uid);if(i<0)return;
@@ -2312,7 +2308,8 @@ function renderBatchList(){
   const n=document.getElementById("batchDoneN");if(n)n.textContent=_batchCount;
   if(!_batchScans.length){log.innerHTML=`<div class="muted" style="padding:14px;text-align:center">Đưa mã vạch vào khung · tiếng beep báo đã đếm</div>`;return;}
   log.innerHTML=_batchScans.slice().reverse().map(s=>{
-    const cls=s.isNew?"new":"ok",label=(s.isNew?"⭐ Mã mới · ":"")+s.code;
+    const cls=s.dup?"warn":(s.isNew?"new":"ok");
+    const label=(s.isNew&&!s.dup?"⭐ Mã mới · ":"")+(s.dup?"🔁 Trùng · ":"")+s.code;
     return `<div class="batch-line ${cls}"><span>${new Date(s.at).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span><span class="code">${esc(label)}</span><button class="batch-x" onclick="removeBatchScan('${s.uid}')" title="Bỏ lần quét này">✕</button></div>`;
   }).join("");
 }
