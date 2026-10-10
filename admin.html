@@ -2591,7 +2591,7 @@ function cloudStart(){
       if(col==="orders")onOrderChanges(changes);
       if(!cloudReady){
         cloudLoaded.add(col);
-        if(cloudLoaded.size===CLOUD_COLS.length){cloudReady=true;updateOrderBadge();startRoute();}
+        if(cloudLoaded.size===CLOUD_COLS.length){cloudReady=true;updateOrderBadge();startRoute();autoSeedShopOnce();}
         return;
       }
       cloudRerender();
@@ -2851,6 +2851,22 @@ async function importSeedShop(){
   toast(txt);
 }
 window.importSeedShop=importSeedShop;
+// Lần đầu cloud sẵn sàng: tự thêm 6 SP shop vào Firestore (chỉ chạy 1 lần duy nhất trên mỗi máy)
+function autoSeedShopOnce(){
+  const KEY="myphamHH_seedShopAuto_v1";
+  try{if(localStorage.getItem(KEY))return;}catch(e){return;}
+  const existing=new Set((DB.products||[]).map(p=>(p.name||"").toLowerCase().trim()));
+  DB.categories=DB.categories||[];
+  let added=0;
+  for(const m of SEED_SHOP){
+    if(existing.has(m.name.toLowerCase().trim()))continue;
+    if(m.category&&!DB.categories.some(c=>c.name===m.category))DB.categories.push({id:uid(),name:m.category,icon:"🧴"});
+    DB.products.push(Object.assign({id:uid(),stock:0,lowStock:5,cost:0,supplierId:"",barcodes:[]},m));
+    added++;
+  }
+  try{localStorage.setItem(KEY,"1");}catch(e){}
+  if(added){save();toast(`✓ Đã tự thêm ${added} sản phẩm mẫu của shop. Vào Mặt hàng để chỉnh giá.`);}
+}
 // Tra cứu thông tin sản phẩm theo mã vạch từ Open Beauty Facts / Open Food Facts (miễn phí, có CORS)
 async function fetchProductByBarcode(code){
   const urls=[
