@@ -1914,6 +1914,7 @@ function openProductModal(id,opts={}){
   mountModal(`<div class="modal">
     <div class="modal-head"><h2>${p?"Sửa mặt hàng":"Thêm mặt hàng"}</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
+      ${!p?`<button type="button" class="btn primary" id="autoFillBtn" style="width:100%;padding:12px;margin-bottom:14px">📷 Quét mã vạch để tự điền thông tin</button><div class="muted" id="autoFillHint" style="font-size:12.5px;margin:-8px 0 14px;text-align:center">Tự tra Open Beauty Facts — có data cho ~30-50% sản phẩm</div>`:""}
       <div class="field"><label>Ảnh sản phẩm <span class="hint">(không bắt buộc)</span></label>
         <div class="img-pick"><div class="img-preview" id="imgPrev">${previewHtml}</div>
         <div><input type="file" id="imgFile" accept="image/*"><button type="button" class="btn sm ghost" id="imgClear" style="margin-top:6px">Bỏ ảnh</button></div></div>
@@ -1961,6 +1962,28 @@ function openProductModal(id,opts={}){
     const r=new FileReader();r.onload=async()=>{imgData=await shrinkImage(r.result);prev.innerHTML=`<img src="${esc(imgData)}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`;};r.readAsDataURL(f);
   });
   document.getElementById("imgClear").onclick=()=>{imgData="";prev.innerHTML="✦";document.getElementById("imgFile").value="";};
+  const autoBtn=document.getElementById("autoFillBtn");
+  if(autoBtn)autoBtn.onclick=()=>openQRScanner(async code=>{
+    const hint=document.getElementById("autoFillHint");
+    if(hint){hint.textContent="Đang tra cứu mã "+code+"…";hint.style.color="var(--rose-deep)";}
+    const info=await fetchProductByBarcode(code);
+    if(!info){if(hint){hint.textContent="Không tìm thấy thông tin cho mã "+code+". Vui lòng nhập thủ công.";hint.style.color="var(--warn)";}toast("Không tìm thấy mã "+code+" trong CSDL");
+      // vẫn lưu mã vạch cho sản phẩm sắp tạo
+      opts.sku=code;return;}
+    opts.sku=code;
+    const set=(id,val)=>{const el=document.getElementById(id);if(el&&val&&!el.value)el.value=val;};
+    set("fName",info.name);set("fBrand",info.brand);set("fVolume",info.volume);set("fOrigin",info.origin);set("fIngr",info.ingredients);
+    if(info.image&&!imgData){
+      try{
+        const resp=await fetch(info.image);const blob=await resp.blob();
+        const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(blob);});
+        imgData=await shrinkImage(data);
+        prev.innerHTML=`<img src="${esc(imgData)}" style="width:100%;height:100%;object-fit:cover;border-radius:11px">`;
+      }catch(e){}
+    }
+    if(hint){hint.textContent="✓ Đã tự điền từ Open Beauty Facts. Kiểm tra lại và chỉnh nếu cần.";hint.style.color="var(--good)";}
+    toast("✓ Đã tự điền thông tin");
+  });
   document.getElementById("saveProd").onclick=()=>{
     const name=document.getElementById("fName").value.trim();
     const price=+document.getElementById("fPrice").value||0;
@@ -2695,6 +2718,32 @@ function ding(){
 addEventListener("pointerdown",()=>{try{_ac=_ac||new(window.AudioContext||window.webkitAudioContext)();_ac.resume&&_ac.resume();}catch(e){}},{once:true});
 
 /* ---- Ảnh, dữ liệu cũ, trang khách ---- */
+// Tra cứu thông tin sản phẩm theo mã vạch từ Open Beauty Facts / Open Food Facts (miễn phí, có CORS)
+async function fetchProductByBarcode(code){
+  const urls=[
+    `https://world.openbeautyfacts.org/api/v2/product/${encodeURIComponent(code)}.json`,
+    `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`
+  ];
+  for(const u of urls){
+    try{
+      const r=await fetch(u);if(!r.ok)continue;
+      const j=await r.json();
+      if(j.status!==1||!j.product)continue;
+      const p=j.product;
+      const country=(p.countries_tags||[]).map(x=>x.replace(/^en:/,"")).join(", ").replace(/\b\w/g,c=>c.toUpperCase());
+      return{
+        name:p.product_name_vi||p.product_name||p.product_name_en||p.generic_name||"",
+        brand:((p.brands||"").split(",")[0]||"").trim(),
+        volume:p.quantity||"",
+        ingredients:p.ingredients_text_vi||p.ingredients_text||"",
+        origin:country,
+        image:p.image_front_url||p.image_url||""
+      };
+    }catch(e){}
+  }
+  return null;
+}
+
 function shrinkImage(src,max=480,q=0.75){
   return new Promise(res=>{
     const img=new Image();
