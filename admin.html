@@ -2741,43 +2741,43 @@ addEventListener("pointerdown",()=>{try{_ac=_ac||new(window.AudioContext||window
 /* ---- Ảnh, dữ liệu cũ, trang khách ---- */
 // Danh sách mặt nạ bán chạy ở VN để nhập nhanh — bạn chỉnh giá, ảnh, mã vạch sau khi có hàng thật
 const SEED_MASKS=[
-  {name:"Innisfree My Real Squeeze Mask - Trà xanh",brand:"Innisfree",origin:"Hàn Quốc",volume:"20ml",category:"Mặt nạ",skinType:"Mọi loại da",price:22000,
+  {name:"Mặt nạ giấy trà xanh Jeju Innisfree My Real Squeeze 20ml",brand:"Innisfree",origin:"Hàn Quốc",volume:"20ml",category:"Mặt nạ",skinType:"Mọi loại da",price:22000,
     note:"Mặt nạ giấy chiết xuất trà xanh Jeju tươi, cấp ẩm sâu, làm dịu và se khít lỗ chân lông. Thấm nhanh, không nhờn rít.",
     ingredients:"Chiết xuất lá trà xanh Jeju, Niacinamide, Adenosine, Hyaluronic Acid",
     usage:"Rửa mặt sạch, dùng toner, đắp mặt nạ 10-15 phút, vỗ nhẹ phần tinh chất còn lại. Dùng 2-3 lần/tuần."},
-  {name:"Innisfree My Real Squeeze Mask - Lô hội",brand:"Innisfree",origin:"Hàn Quốc",volume:"20ml",category:"Mặt nạ",skinType:"Da nhạy cảm",price:22000,
+  {name:"Mặt nạ giấy lô hội Jeju Innisfree My Real Squeeze 20ml",brand:"Innisfree",origin:"Hàn Quốc",volume:"20ml",category:"Mặt nạ",skinType:"Da nhạy cảm",price:22000,
     note:"Chiết xuất lô hội Jeju, làm dịu da kích ứng, cấp ẩm tức thì. Phù hợp sau khi phơi nắng hoặc da đang nhạy cảm.",
     ingredients:"Chiết xuất lá lô hội Jeju, Panthenol, Allantoin",
     usage:"Đắp 10-15 phút sau khi làm sạch da. Dùng 2-3 lần/tuần hoặc khi da cần làm dịu."},
-  {name:"Mediheal N.M.F Aquaring Ampoule Mask",brand:"Mediheal",origin:"Hàn Quốc",volume:"27ml",category:"Mặt nạ",skinType:"Da khô, da thường",price:40000,
+  {name:"Mặt nạ cấp ẩm Mediheal N.M.F Aquaring Ampoule 27ml",brand:"Mediheal",origin:"Hàn Quốc",volume:"27ml",category:"Mặt nạ",skinType:"Da khô, da thường",price:40000,
     note:"Mặt nạ cấp ẩm chuyên sâu với công thức N.M.F (Natural Moisturizing Factor) và Hyaluronic Acid. Giúp da căng mọng, mịn màng.",
     ingredients:"Hyaluronic Acid, N.M.F, Chiết xuất tảo biển, Panthenol",
     usage:"Rửa mặt sạch, đắp 15-20 phút, vỗ nhẹ phần tinh chất còn lại. Dùng 2-3 lần/tuần."},
-  {name:"Mediheal Tea Tree Care Solution Mask",brand:"Mediheal",origin:"Hàn Quốc",volume:"25ml",category:"Mặt nạ",skinType:"Da dầu mụn",price:40000,
+  {name:"Mặt nạ tràm trà kiểm soát dầu mụn Mediheal Tea Tree 25ml",brand:"Mediheal",origin:"Hàn Quốc",volume:"25ml",category:"Mặt nạ",skinType:"Da dầu mụn",price:40000,
     note:"Mặt nạ tràm trà chuyên biệt cho da mụn, da dầu. Giảm viêm, kiểm soát bã nhờn, làm sạch lỗ chân lông.",
     ingredients:"Chiết xuất lá tràm trà, Salicylic Acid, Niacinamide, Centella Asiatica",
     usage:"Dùng 2-3 lần/tuần, đắp 15 phút. Tránh vùng mắt."},
-  {name:"SOME BY MI Snail Truecica Miracle Repair Mask",brand:"SOME BY MI",origin:"Hàn Quốc",volume:"22ml",category:"Mặt nạ",skinType:"Da yếu, da tổn thương",price:28000,
+  {name:"Mặt nạ phục hồi da ốc sên SOME BY MI Snail Truecica Repair 22ml",brand:"SOME BY MI",origin:"Hàn Quốc",volume:"22ml",category:"Mặt nạ",skinType:"Da yếu, da tổn thương",price:28000,
     note:"Mặt nạ dưỡng chất ốc sên và Truecica, phục hồi da hư tổn, mờ sẹo thâm, tái tạo tế bào.",
     ingredients:"Chiết xuất ốc sên 73%, Truecica, Niacinamide, Peptide",
     usage:"Đắp 15-20 phút sau khi làm sạch da. Dùng 2-3 lần/tuần."},
-  {name:"The Face Shop Real Nature Mask - Trà xanh",brand:"The Face Shop",origin:"Hàn Quốc",volume:"20g",category:"Mặt nạ",skinType:"Da dầu",price:25000,
+  {name:"Mặt nạ giấy trà xanh The Face Shop Real Nature 20g",brand:"The Face Shop",origin:"Hàn Quốc",volume:"20g",category:"Mặt nạ",skinType:"Da dầu",price:25000,
     note:"Mặt nạ giấy chiết xuất trà xanh, kiểm soát dầu, se khít lỗ chân lông, cho da sáng mịn.",
     ingredients:"Chiết xuất trà xanh, Niacinamide, Adenosine",
     usage:"Đắp 10-20 phút, không cần rửa lại. Dùng 2-3 lần/tuần."},
-  {name:"The Face Shop Real Nature Mask - Nha đam",brand:"The Face Shop",origin:"Hàn Quốc",volume:"20g",category:"Mặt nạ",skinType:"Mọi loại da",price:25000,
+  {name:"Mặt nạ giấy nha đam The Face Shop Real Nature 20g",brand:"The Face Shop",origin:"Hàn Quốc",volume:"20g",category:"Mặt nạ",skinType:"Mọi loại da",price:25000,
     note:"Mặt nạ nha đam làm dịu, cấp ẩm, phục hồi da sau khi tiếp xúc ánh nắng hoặc kích ứng nhẹ.",
     ingredients:"Chiết xuất nha đam, Allantoin, Panthenol",
     usage:"Đắp 10-20 phút, không cần rửa lại. Dùng 2-3 lần/tuần."},
-  {name:"Cỏ Mềm Mặt nạ đất sét Nghệ Mật Ong",brand:"Cỏ Mềm Homelab",origin:"Việt Nam",volume:"50ml",category:"Mặt nạ",skinType:"Da dầu mụn",price:85000,
+  {name:"Mặt nạ đất sét nghệ mật ong Cỏ Mềm Homelab 50ml",brand:"Cỏ Mềm Homelab",origin:"Việt Nam",volume:"50ml",category:"Mặt nạ",skinType:"Da dầu mụn",price:85000,
     note:"Mặt nạ đất sét kết hợp nghệ nguyên chất và mật ong rừng, hút dầu thừa, kháng viêm, làm sạch sâu lỗ chân lông, mờ thâm.",
     ingredients:"Đất sét trắng Kaolin, tinh chất nghệ, mật ong rừng, chiết xuất trà xanh",
     usage:"Đắp lớp mỏng lên da sạch, chừa vùng mắt và môi. Để 10-15 phút rồi rửa sạch. Dùng 1-2 lần/tuần."},
-  {name:"SNP Gold Collagen Diamond Mask",brand:"SNP",origin:"Hàn Quốc",volume:"25ml",category:"Mặt nạ",skinType:"Da lão hoá",price:45000,
+  {name:"Mặt nạ chống lão hoá vàng 24k collagen SNP Diamond 25ml",brand:"SNP",origin:"Hàn Quốc",volume:"25ml",category:"Mặt nạ",skinType:"Da lão hoá",price:45000,
     note:"Mặt nạ vàng 24k và collagen, chống lão hoá, săn chắc da, tăng độ đàn hồi và sáng da.",
     ingredients:"Vàng 24k dạng phân tử, Collagen thuỷ phân, Peptide, Niacinamide",
     usage:"Đắp 20 phút sau khi làm sạch da. Dùng 1-2 lần/tuần, buổi tối trước khi ngủ."},
-  {name:"Mamonde Flower Essence Mask - Rose",brand:"Mamonde",origin:"Hàn Quốc",volume:"23ml",category:"Mặt nạ",skinType:"Da khô, da thường",price:45000,
+  {name:"Mặt nạ giấy tinh chất hoa hồng Damask Mamonde Flower Essence 23ml",brand:"Mamonde",origin:"Hàn Quốc",volume:"23ml",category:"Mặt nạ",skinType:"Da khô, da thường",price:45000,
     note:"Mặt nạ chiết xuất tinh dầu hoa hồng Damask, cấp ẩm, làm mềm và nuôi dưỡng da mịn màng, hương thơm thư giãn.",
     ingredients:"Nước hoa hồng Damask, Hyaluronic Acid, Glycerin, Panthenol",
     usage:"Đắp 10-15 phút sau khi làm sạch da. Dùng 2-3 lần/tuần."}
@@ -2856,11 +2856,15 @@ function autoSeedShopOnce(){
   const KEY="myphamHH_seedShopAuto_v1";
   const RENAME_KEY="myphamHH_seedShopRename_v2";
   let changed=false;
-  // Migration: SP seed đã nhập bản tiếng Anh — tự đổi sang tên tiếng Việt theo ảnh
+  // Migration: SP seed đã nhập bản tiếng Anh — tự đổi sang tên tiếng Việt theo ảnh (SEED_SHOP) hoặc theo mô tả (SEED_MASKS)
   try{if(!localStorage.getItem(RENAME_KEY)){
     const byImg={};for(const m of SEED_SHOP)byImg[m.image]=m.name;
+    // SEED_MASKS không có ảnh — match bằng mô tả (note) duy nhất cho mỗi SP
+    const byNote={};for(const m of SEED_MASKS)if(m.note)byNote[m.note]=m.name;
     for(const p of (DB.products||[])){
-      if(p&&p.image&&byImg[p.image]&&p.name!==byImg[p.image]){p.name=byImg[p.image];changed=true;}
+      if(!p)continue;
+      if(p.image&&byImg[p.image]&&p.name!==byImg[p.image]){p.name=byImg[p.image];changed=true;}
+      else if(p.note&&byNote[p.note]&&p.name!==byNote[p.note]){p.name=byNote[p.note];changed=true;}
     }
     localStorage.setItem(RENAME_KEY,"1");
   }}catch(e){}
