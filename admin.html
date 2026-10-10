@@ -459,7 +459,9 @@ input[type=date]::-webkit-date-and-time-value{text-align:left}
   .is-locked .modal-head .icon-btn{display:grid;width:42px;height:42px;font-size:18px}
   /* Hộp xác nhận nhỏ vẫn hiện giữa màn hình */
   .modal-back.is-dialog{align-items:center;padding:18px;background:rgba(58,35,51,.5)}
-  .is-dialog .modal{height:auto;border-radius:var(--radius);box-shadow:var(--shadow);display:block;max-width:400px!important}
+  .is-dialog .modal{height:auto;border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;max-width:400px!important;max-height:calc(100dvh - 36px);overflow:hidden}
+  .is-dialog .modal-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .is-dialog .modal-foot{position:static;flex-shrink:0}
   .is-dialog .modal-head{padding:15px 18px}
   .is-dialog .modal-head .icon-btn{display:grid}
   .stat-grid{grid-template-columns:1fr 1fr}
