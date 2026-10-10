@@ -1612,14 +1612,19 @@ function printLabels(id,qty){
 function askPrintLabels(productId,defaultQty){
   const p=byId(DB.products||[],productId);if(!p)return;
   const n=Math.max(1,Math.min(200,+defaultQty||1));
-  mountModal(`<div class="modal" style="max-width:380px">
+  const code=ensureLabelCode(p); // tạo mã nếu SP chưa có, lưu luôn vào p.barcodes để scan khi bán nhận ra
+  const hadBefore=productCodes(p).length>1||(p.sku&&normCode(p.sku)!==normCode(code));
+  mountModal(`<div class="modal" style="max-width:400px">
     <div class="modal-head"><h2>🏷 In tem dán sản phẩm</h2><button class="icon-btn" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
-      <div class="muted" style="margin-bottom:12px">Mỗi tem có tên, giá bán và mã QR để quét khi bán. Khổ tem khuyến nghị: <b>40×30mm</b>.</div>
       <div style="font-weight:700;color:var(--plum)">${esc(p.name)}</div>
-      <div class="muted" style="font-size:13px;margin-bottom:14px">${money(p.price||0)}</div>
+      <div class="muted" style="font-size:13px;margin-bottom:12px">${money(p.price||0)}</div>
+      <div class="calc-note" style="margin-bottom:14px;background:#eaf7ef;border-color:#c5e9d4;color:#1b6a40">
+        <b>Mã sẽ in trên tem: ${esc(code)}</b><br>
+        <span style="font-size:12.5px">Mã này đã được lưu vào sản phẩm. Khi bán hàng, quét QR trên tem sẽ ra đúng sản phẩm và tự trừ kho.</span>
+      </div>
       <div class="field"><label>Số tem cần in</label><input id="lblQty" type="number" min="1" max="200" value="${n}" inputmode="numeric"></div>
-      <div class="calc-note">Dùng máy in nhiệt tem (Xprinter, Gprinter…) khổ 40×30mm, hoặc in trên giấy decal A4 rồi cắt.</div>
+      <div class="muted" style="font-size:12.5px">Khổ tem khuyến nghị: <b>40×30mm</b>. Dùng máy in nhiệt tem (Xprinter, Gprinter…) hoặc in trên giấy decal A4 rồi cắt.</div>
     </div>
     <div class="modal-foot">
       <button class="btn ghost" onclick="closeModal()">Bỏ qua</button>
