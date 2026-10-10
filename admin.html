@@ -1700,6 +1700,11 @@ function renderSettings(){
         <p class="muted">Thêm nhanh 10 loại mặt nạ bán chạy ở Việt Nam. Bạn chỉnh lại giá cho phù hợp, chụp ảnh thật, và quét mã vạch khi nhập hàng.</p>
         <button class="btn primary" id="seedMasksBtn" style="margin-top:4px">📥 Thêm 10 mặt nạ phổ biến</button>
         <div class="muted" id="seedMasksMsg" style="margin-top:10px;font-size:12.5px"></div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
+          <p class="muted" style="margin:0 0 10px">Thêm 6 sản phẩm thực tế của shop (có ảnh): d'Alba Truffle Cleanser, LUMOS Acne Serum, USOLAB Tone Up, Neutrogena Body Oil, WHISIS Rose Hair Removal, ALUCOS Cotton Pads.</p>
+          <button class="btn primary" id="seedShopBtn">📦 Thêm 6 sản phẩm thực tế của shop</button>
+          <div class="muted" id="seedShopMsg" style="margin-top:10px;font-size:12.5px"></div>
+        </div>
       </div>
     </div>
     <div class="panel">
@@ -1790,6 +1795,8 @@ function renderSettings(){
   }
   const seedBtn=document.getElementById("seedMasksBtn");
   if(seedBtn)seedBtn.onclick=()=>importSeedMasks();
+  const seedShopBtn=document.getElementById("seedShopBtn");
+  if(seedShopBtn)seedShopBtn.onclick=()=>importSeedShop();
   /* credentials */
   if(!CLOUD)document.getElementById("saveCredBtn").onclick=function(){
     const newUser=document.getElementById("newUser").value.trim();
@@ -2796,6 +2803,54 @@ async function importSeedMasks(){
   toast(txt);
 }
 window.importSeedMasks=importSeedMasks;
+
+// 6 sản phẩm thực tế của shop (ảnh do shop tự chụp, không vướng bản quyền)
+const SEED_SHOP=[
+  {name:"d'Alba Piedmont White Truffle Return Oil Cream Cleanser",brand:"d'Alba",origin:"Hàn Quốc",volume:"150ml",category:"Sữa rửa mặt",skinType:"Mọi loại da",price:0,image:"images/seed/dalba-truffle-cleanser.webp",
+    note:"Sữa rửa mặt dạng dầu-tới-bọt kết hợp nấm truffle trắng Ý. Làm sạch sâu lớp trang điểm, kem chống nắng, bụi bẩn mà vẫn giữ da mềm mịn, không khô căng.",
+    ingredients:"Chiết xuất nấm truffle trắng, dầu olive, Squalane, Panthenol, Vitamin E",
+    usage:"1. Lấy 2-3 pump lên tay khô massage lên mặt khô 1 phút để hoà tan cặn mỹ phẩm. 2. Thêm chút nước để tạo bọt massage tiếp. 3. Rửa sạch với nước ấm. Dùng sáng/tối."},
+  {name:"LUMOS Acne Serum",brand:"LUMOS",origin:"Hàn Quốc",volume:"5ml",category:"Serum",skinType:"Da dầu mụn",price:0,image:"images/seed/lumos-acne-serum.png",
+    note:"Serum chấm mụn chuyên biệt, giảm sưng viêm nhanh, se nhân mụn và mờ thâm sau mụn. Thiết kế nhỏ gọn, tiện mang theo.",
+    ingredients:"Salicylic Acid (BHA), Niacinamide, chiết xuất tràm trà, Centella Asiatica, Zinc PCA",
+    usage:"Sau khi rửa mặt và toner, nhỏ 1-2 giọt chấm trực tiếp lên nốt mụn. Dùng tối, có thể dùng cả sáng. Dùng kem chống nắng khi ra ngoài."},
+  {name:"USOLAB Bio Tone Up Whitening Face Mask",brand:"USOLAB",origin:"Hàn Quốc",volume:"50ml",category:"Kem dưỡng",skinType:"Mọi loại da",price:0,image:"images/seed/usolab-biotoneup.webp",
+    note:"Kem dưỡng nâng tông tức thì kết hợp dưỡng trắng lâu dài. Da sáng đều màu, bóng khoẻ như vừa dùng filter. Thấm nhanh, không bết dính.",
+    ingredients:"Tranexamic Acid, Niacinamide, Angitrin, Glutathione, chiết xuất sữa dê",
+    usage:"Sau các bước dưỡng, lấy 1 lượng vừa đủ thoa đều lên mặt và cổ. Có thể dùng thay kem lót trước trang điểm hoặc trước khi ra ngoài."},
+  {name:"Neutrogena Body Oil Light Sesame Formula",brand:"Neutrogena",origin:"Mỹ",volume:"250ml",category:"Dưỡng thể",skinType:"Da khô",price:0,image:"images/seed/neutrogena-body-oil.webp",
+    note:"Dầu dưỡng thể huyền thoại chiết xuất từ mè nhẹ. Thấm nhanh, không bết dính, giúp da luôn mềm mượt, căng bóng. Có thể dùng sau khi tắm hoặc pha vào bồn tắm.",
+    ingredients:"Isopropyl Myristate, Sesame Oil, PPG-15 Stearyl Ether, hương liệu nhẹ",
+    usage:"Thoa đều lên da ẩm sau khi tắm, massage nhẹ cho thấm. Hoặc nhỏ vài giọt vào bồn tắm nước ấm và ngâm 10-15 phút."},
+  {name:"WHISIS Rose Hair Removal Cream",brand:"WHISIS",origin:"Hàn Quốc",volume:"160g",category:"Tẩy lông",skinType:"Mọi loại da",price:0,image:"images/seed/whisis-rose-hair-removal.webp",
+    note:"Kem tẩy lông chiết xuất hoa hồng, loại bỏ lông nhanh trong 5-10 phút không đau. Dưỡng ẩm, làm mềm da sau khi tẩy, hạn chế lông mọc lại thô ráp.",
+    ingredients:"Thioglycolic Acid, chiết xuất hoa hồng, Hydrolyzed Collagen, dầu hạt mơ, Marula Oil",
+    usage:"Thoa 1 lớp dày lên vùng cần tẩy, để 5-10 phút (không quá 10 phút). Gạt nhẹ bằng que đi kèm, rửa sạch với nước mát. Thử trên vùng da nhỏ trước khi dùng diện rộng."},
+  {name:"ALUCOS Luxury Cotton Pads 210 miếng (70x75mm)",brand:"ALUCOS",origin:"Việt Nam",volume:"210 miếng",category:"Phụ kiện làm đẹp",skinType:"Mọi loại da",price:0,image:"images/seed/alucos-cotton-pads.webp",
+    note:"Bông tẩy trang cao cấp sợi dài, kích thước rộng 70x75mm, mềm mịn, ít sơ bông. Dùng được cả tẩy trang, lau toner, đắp mask dưỡng.",
+    ingredients:"100% cotton tự nhiên",
+    usage:"Nhỏ nước tẩy trang/toner lên bông, lau nhẹ nhàng theo chiều từ trong ra ngoài. Dùng mỗi sáng và tối."}
+];
+async function importSeedShop(){
+  const btn=document.getElementById("seedShopBtn"),msg=document.getElementById("seedShopMsg");
+  if(!confirm(`Thêm ${SEED_SHOP.length} sản phẩm thực tế của shop (có kèm ảnh)? Giá bán để 0, bạn sửa sau. Tồn kho = 0.`))return;
+  if(btn){btn.disabled=true;btn.textContent="Đang thêm…";}
+  const existing=new Set((DB.products||[]).map(p=>(p.name||"").toLowerCase().trim()));
+  DB.categories=DB.categories||[];
+  let added=0,skipped=0;
+  for(const m of SEED_SHOP){
+    if(existing.has(m.name.toLowerCase().trim())){skipped++;continue;}
+    if(m.category&&!DB.categories.some(c=>c.name===m.category))DB.categories.push({id:uid(),name:m.category,icon:"🧴"});
+    DB.products.push(Object.assign({id:uid(),stock:0,lowStock:5,cost:0,supplierId:"",barcodes:[]},m));
+    added++;
+  }
+  save();
+  const txt=`✓ Đã thêm ${added} sản phẩm${skipped?` · bỏ qua ${skipped} đã tồn tại`:""}. Vào mục Mặt hàng để chỉnh giá.`;
+  if(msg){msg.textContent=txt;msg.style.color="var(--good)";}
+  if(btn){btn.disabled=false;btn.textContent="📦 Thêm 6 sản phẩm thực tế của shop";}
+  toast(txt);
+}
+window.importSeedShop=importSeedShop;
 // Tra cứu thông tin sản phẩm theo mã vạch từ Open Beauty Facts / Open Food Facts (miễn phí, có CORS)
 async function fetchProductByBarcode(code){
   const urls=[
