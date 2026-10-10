@@ -1088,13 +1088,15 @@ function confirmBillPaid(id,method){
 function setPayMethod(m){
   billPayMethod=m;
   document.querySelectorAll("#payMethodT button").forEach(b=>b.classList.toggle("active",b.dataset.v===m));
-  renderPayQR();
+  // Chọn Chuyển khoản khi đang là "Đã thanh toán" → tự chuyển về "Chưa thanh toán" để tạo QR cho khách
+  if(m==="transfer"&&billPaid)setPaid(false);
+  else renderPayQR();
 }
 function billNote(){const cust=byId(DB.customers,document.getElementById("bCust")?.value);return "Thanh toan "+(cust?.name||"khach").slice(0,20);}
 function renderPayQR(){
   const el=document.getElementById("payQR");if(!el)return;
   const {total}=getBillCalc();
-  if(billPayMethod==="transfer"&&total>0&&!billPaid)el.innerHTML=vietqrBlock(total,billNote());
+  if(billPayMethod==="transfer"&&total>0)el.innerHTML=vietqrBlock(total,billNote());
   else el.innerHTML="";
 }
 function setPaid(paid){
