@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="utf-8">
@@ -109,7 +109,7 @@ img{max-width:100%;display:block}
 .add-btn.ok{background:var(--good)}
 .empty{text-align:center;padding:44px 20px;grid-column:1/-1;color:var(--ink-soft)}
 /* PRODUCT DETAIL */
-.pd-img{aspect-ratio:1;background:var(--surface-2);overflow:hidden;max-height:300px;display:grid;place-items:center}
+.pd-img{aspect-ratio:1;background:var(--surface-2);overflow:hidden;max-height:min(360px,45vh);display:grid;place-items:center}
 .pd-img img{width:100%;height:100%;object-fit:cover}
 .pd-img-ph{width:100%;height:100%;display:grid;place-items:center;font-size:80px}
 .pd-cat-tag{display:inline-block;background:var(--surface-2);border:1px solid var(--line);border-radius:100px;padding:3px 11px;font-size:12px;color:var(--ink-soft);margin-bottom:9px}
@@ -130,7 +130,7 @@ img{max-width:100%;display:block}
 .pd-more summary{font-size:13px;font-weight:700;cursor:pointer}
 .pd-more .pd-text{margin-top:8px}
 .pd-note{font-size:13px;color:var(--ink-soft);line-height:1.6;background:var(--surface-2);border-radius:10px;padding:11px 13px;margin-top:8px}
-.pd-foot{padding:13px 18px calc(env(safe-area-inset-bottom,0px)+13px);border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;background:var(--surface)}
+.pd-foot{padding:11px max(14px,env(safe-area-inset-left,0px)) calc(env(safe-area-inset-bottom,0px)+11px) max(14px,env(safe-area-inset-right,0px));border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;background:var(--surface);flex-shrink:0}
 .empty .ico{font-size:40px;margin-bottom:10px}
 
 /* CART BAR */
@@ -142,18 +142,19 @@ img{max-width:100%;display:block}
 .cb-btn{background:var(--rose);border:0;color:#fff;padding:11px 18px;border-radius:11px;font-size:14px;font-weight:700;white-space:nowrap;flex-shrink:0;min-height:44px}
 
 /* OVERLAY + SHEET */
-.overlay{position:fixed;inset:0;background:rgba(40,20,35,.55);backdrop-filter:blur(4px);z-index:50;display:none;place-items:flex-end center}
+.overlay{position:fixed;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column;overflow:hidden}
 .overlay.show{display:flex}
-.sheet{background:var(--surface);border-radius:22px 22px 0 0;width:100%;max-width:560px;max-height:88vh;overflow:auto;margin:0 auto;animation:sup .28s cubic-bezier(.34,1.46,.64,1)}
-@keyframes sup{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
-.sheet-drag{width:40px;height:4px;border-radius:2px;background:var(--line);margin:10px auto 0}
-.sheet-head{display:flex;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
-.sheet-head h2{font-size:17px;flex:1}
-.close-btn{width:42px;height:42px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);font-size:18px;display:grid;place-items:center;color:var(--ink);cursor:pointer}
+.sheet{background:var(--surface);width:100%;max-width:720px;height:100%;overflow:hidden;margin:0 auto;display:flex;flex-direction:column;animation:sup .22s ease-out}
+@keyframes sup{from{transform:translateY(20px);opacity:.4}to{transform:translateY(0);opacity:1}}
+.sheet-drag{display:none}
+.sheet-head{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px)+10px) max(14px,env(safe-area-inset-left,0px)) 10px max(14px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--surface);flex-shrink:0}
+.sheet-head h2{font-size:17px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.close-btn{width:44px;height:44px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);font-size:20px;display:grid;place-items:center;color:var(--ink);cursor:pointer;flex-shrink:0}
 .close-btn:active{background:var(--line)}
-.sheet-body{padding:14px 18px}
-.sheet-foot{padding:11px 18px calc(env(safe-area-inset-bottom,0px)+11px);border-top:1px solid var(--line);background:var(--surface);position:sticky;bottom:0;display:flex;gap:9px}
+.sheet-body{padding:16px max(14px,env(safe-area-inset-left,0px)) 16px max(14px,env(safe-area-inset-right,0px));flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.sheet-foot{padding:11px max(14px,env(safe-area-inset-left,0px)) calc(env(safe-area-inset-bottom,0px)+11px) max(14px,env(safe-area-inset-right,0px));border-top:1px solid var(--line);background:var(--surface);display:flex;gap:9px;flex-shrink:0}
 .sheet-foot .btn{flex:1}
+body.sheet-open{overflow:hidden;overscroll-behavior:none}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);padding:12px 17px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:700;transition:.15s;min-height:46px;font-family:inherit}
 .btn:hover{border-color:var(--rose);color:var(--rose-deep)}
 .btn.primary{background:var(--rose);border-color:var(--rose);color:#fff}
@@ -435,11 +436,10 @@ function openProductDetail(id){
       :`<span class="pd-stock-ok">✓ Còn hàng · ${p.stock} sản phẩm</span>`;
   const infoRows=[["Thương hiệu",p.brand],["Xuất xứ",p.origin],["Dung tích / Khối lượng",p.volume],["Loại da phù hợp",p.skinType],["Mã sản phẩm",p.sku]].filter(r=>r[1]);
   const s=document.getElementById("sheet");s.dataset.view="detail";
-  s.innerHTML=`<div class="sheet-drag"></div>
-    <div class="sheet-head"><h2>Chi tiết sản phẩm</h2><button class="close-btn" onclick="closeSheet()">✕</button></div>
-    <div class="sheet-body" style="padding:0;overflow:auto">
+  s.innerHTML=`<div class="sheet-head"><h2>Chi tiết sản phẩm</h2><button class="close-btn" onclick="closeSheet()">✕</button></div>
+    <div class="sheet-body" style="padding:0">
       <div class="pd-img">${p.image?`<img src="${esc(p.image)}" alt="${esc(p.name)}">`:`<div class="pd-img-ph">${getIcon(p.category)}</div>`}</div>
-      <div style="padding:16px 18px 6px">
+      <div style="padding:14px 16px 20px">
         ${p.category?`<div class="pd-cat-tag">🏷 ${esc(p.category)}</div>`:""}
         ${p.brand?`<div class="pd-brand">${esc(p.brand)}</div>`:""}
         <div class="pd-name">${esc(p.name)}</div>
@@ -458,7 +458,7 @@ function openProductDetail(id){
         :`<div class="qty-ctrl" style="height:46px"><button onclick="chgDetail('${p.id}',-1)" style="width:40px;height:46px;font-size:18px">−</button><span class="qty-val" id="pdQv" style="min-width:36px;font-size:16px">${cart[id]||0}</span><button onclick="chgDetail('${p.id}',1)" style="width:40px;height:46px;font-size:18px">＋</button></div>
         <button class="btn primary${cart[id]?" ok":""}" id="pdAddBtn" onclick="addDetail('${p.id}')" style="flex:1;font-size:14px">${cart[id]?"✓ Đã thêm ("+(cart[id]||0)+")":"🛒 Thêm vào giỏ"}</button>`}
     </div>`;
-  document.getElementById("overlay").classList.add("show");
+  _openSheet();
 }
 function chgDetail(id,d){
   const db=loadDB()||{products:[]};const p=(db.products||[]).find(x=>x.id===id);const max=p?p.stock:99;
@@ -499,13 +499,9 @@ function updateCartUI(db){
 
 /* Sheet */
 const LOCKED_SHEETS=["cart","checkout"];
-function ovClick(e){
-  if(e.target.id!=="overlay")return;
-  const v=document.getElementById("sheet").dataset.view;
-  if(LOCKED_SHEETS.includes(v)){toast("Nhấn ✕ ở góc phải để thoát");return;}
-  closeSheet();
-}
-function closeSheet(){document.getElementById("overlay").classList.remove("show");const s=document.getElementById("sheet");s.innerHTML="";s.dataset.view="";}
+function ovClick(e){/* nền phủ toàn bộ màn hình: không đóng khi bấm nền, luôn phải bấm ✕ */}
+function closeSheet(){document.getElementById("overlay").classList.remove("show");const s=document.getElementById("sheet");s.innerHTML="";s.dataset.view="";document.body.classList.remove("sheet-open");}
+function _openSheet(){document.getElementById("overlay").classList.add("show");document.body.classList.add("sheet-open");}
 window.ovClick=ovClick;window.closeSheet=closeSheet;
 
 function openCartSheet(){
@@ -513,7 +509,7 @@ function openCartSheet(){
   const db=loadDB()||{products:[]};
   const s=document.getElementById("sheet");s.dataset.view="cart";
   s.innerHTML=`<div class="sheet-head"><h2>🛒 Giỏ hàng</h2><button class="close-btn" onclick="closeSheet()">✕</button></div><div class="sheet-body" id="cartBody"></div><div class="sheet-foot"><button class="btn primary" style="flex:1" onclick="openCheckout()">Đặt hàng →</button></div>`;
-  document.getElementById("overlay").classList.add("show");renderCartBody(db);
+  _openSheet();renderCartBody(db);
 }
 window.openCartSheet=openCartSheet;
 
