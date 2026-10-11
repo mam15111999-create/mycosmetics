@@ -2969,8 +2969,119 @@ async function importSeedShop(){
   toast(txt);
 }
 window.importSeedShop=importSeedShop;
+
+// Đợt 2: 22 sản phẩm thực tế shop vừa gửi ảnh (sữa dưỡng, mặt nạ, trị mụn, trang điểm, chăm tóc...)
+const SEED_SHOP2=[
+  {name:"Sữa dưỡng thể hạnh nhân L'Occitane Amande Sublime 240ml",brand:"L'Occitane",origin:"Pháp",volume:"240ml",category:"Dưỡng thể",skinType:"Da khô",price:0,image:"images/seed/loccitane-amande-240.webp",
+    note:"Sữa dưỡng thể hạnh nhân Amande Sublime cấp ẩm và săn chắc da, tăng độ đàn hồi, hương hạnh nhân nhẹ nhàng sang trọng.",
+    ingredients:"Dầu hạnh nhân, Protein hạnh nhân, Glycerin, Vitamin E",
+    usage:"Thoa đều lên da ẩm sau khi tắm, massage nhẹ để thấm. Dùng hằng ngày."},
+  {name:"Mặt nạ Peptide tơ tằm SMAS Hydration Boost 25g",brand:"SMAS",origin:"Hàn Quốc",volume:"25g",category:"Mặt nạ",skinType:"Mọi loại da",price:0,image:"images/seed/smas-peptide-silk-mask.webp",
+    note:"Mặt nạ sợi tơ tằm phức hợp Peptide, cấp ẩm sâu 24h, làm dịu kích ứng, tái tạo da. Dùng được cho mọi loại da.",
+    ingredients:"Peptide complex, chiết xuất tơ tằm, Hyaluronic Acid, Panthenol",
+    usage:"Đắp mặt nạ 15-20 phút sau khi làm sạch da. Dùng 2-3 lần/tuần."},
+  {name:"Gel rửa mặt SVR Sébiaclear Gel Moussant cho da dầu mụn 400ml",brand:"SVR",origin:"Pháp",volume:"400ml",category:"Sữa rửa mặt",skinType:"Da dầu mụn",price:0,image:"images/seed/svr-naruko-dermacos-amortals-combo.webp",
+    note:"Gel rửa mặt dịu nhẹ cho da dầu mụn, kiểm soát bã nhờn, thông thoáng lỗ chân lông, không gây khô căng. Phù hợp cả mặt và thân.",
+    ingredients:"Gluconolactone, Niacinamide, chiết xuất rau má",
+    usage:"Lấy gel ra tay, tạo bọt với nước, massage lên mặt ẩm 30 giây rồi rửa sạch. Dùng sáng tối."},
+  {name:"Sữa rửa mặt Naruko Thanh Mộc Hương kiểm soát dầu 120g",brand:"Naruko",origin:"Đài Loan",volume:"120g",category:"Sữa rửa mặt",skinType:"Da dầu mụn",price:0,image:"images/seed/svr-naruko-dermacos-amortals-combo.webp",
+    note:"Sữa rửa mặt Thanh Mộc Hương chiết xuất tràm trà và sơn trà, làm sạch sâu lỗ chân lông, kiểm soát dầu, giảm mụn.",
+    ingredients:"Tràm trà, sơn trà, Salicylic Acid, Witch Hazel",
+    usage:"Lấy một lượng vừa đủ, tạo bọt, massage lên mặt 30-60 giây rồi rửa sạch. Dùng sáng tối."},
+  {name:"Gel rửa mặt Dermacos Farmona Anti-Acne Deep Cleansing 150ml",brand:"Dermacos Farmona",origin:"Ba Lan",volume:"150ml",category:"Sữa rửa mặt",skinType:"Da dầu mụn",price:0,image:"images/seed/svr-naruko-dermacos-amortals-combo.webp",
+    note:"Gel rửa mặt làm sạch sâu chuyên cho da mụn, chiết xuất rau má giảm viêm, se nhân mụn, phù hợp da dầu hỗn hợp.",
+    ingredients:"Centella Asiatica, Salicylic Acid, Allantoin, chiết xuất tràm trà",
+    usage:"Lấy một lượng gel, massage lên mặt ẩm, rửa sạch với nước. Dùng sáng tối."},
+  {name:"Mút rửa mặt Amortals Konjac Sponge chiết xuất trà xanh",brand:"AMORTALS",origin:"Hàn Quốc",volume:"1 miếng",category:"Phụ kiện làm đẹp",skinType:"Mọi loại da",price:0,image:"images/seed/svr-naruko-dermacos-amortals-combo.webp",
+    note:"Mút rửa mặt từ củ konjac tự nhiên pha chiết xuất trà xanh, lau sạch bụi bẩn, bã nhờn và tế bào chết dịu nhẹ, không tổn thương da.",
+    ingredients:"Konjac tự nhiên, chiết xuất trà xanh",
+    usage:"Làm ẩm mút với nước ấm 2-3 phút cho mềm, thoa sữa rửa mặt lên, massage mặt 1 phút rồi rửa sạch. Rửa mút sau mỗi lần dùng, treo khô, thay sau 4-6 tuần."},
+  {name:"Gel rửa mặt Bioderma Sébium Moussant cho da dầu mụn 200ml",brand:"Bioderma",origin:"Pháp",volume:"200ml",category:"Sữa rửa mặt",skinType:"Da dầu mụn",price:0,image:"images/seed/bioderma-sebium-combo.webp",
+    note:"Gel rửa mặt Bioderma Sébium cho da hỗn hợp đến dầu mụn, pH sinh lý 5.5, kháng khuẩn, dịu nhẹ không gây khô căng, hỗ trợ giảm mụn hiệu quả.",
+    ingredients:"Zinc Gluconate, Copper Sulfate, chiết xuất rau má",
+    usage:"Lấy một lượng ra tay, tạo bọt, massage lên mặt 30 giây rồi rửa sạch. Dùng sáng tối."},
+  {name:"Kem thu nhỏ lỗ chân lông Bioderma Sébium Pore Refiner 30ml",brand:"Bioderma",origin:"Pháp",volume:"30ml",category:"Kem dưỡng",skinType:"Da dầu mụn",price:0,image:"images/seed/bioderma-sebium-combo.webp",
+    note:"Kem thu nhỏ lỗ chân lông Bioderma Sébium Pore Refiner, kiểm soát dầu, cấp ẩm nhẹ, cải thiện kết cấu da mụn.",
+    ingredients:"Fluidactiv complex, Zinc Gluconate, Agaric Acid",
+    usage:"Thoa một lớp mỏng lên vùng chữ T hoặc toàn mặt sau các bước làm sạch và toner. Dùng sáng tối."},
+  {name:"Kem phục hồi La Roche-Posay Cicaplast Baume B5 40ml",brand:"La Roche-Posay",origin:"Pháp",volume:"40ml",category:"Kem dưỡng",skinType:"Da nhạy cảm",price:0,image:"images/seed/retinol-combo-lrp-histolab-obagi.webp",
+    note:"Kem phục hồi đa năng Cicaplast Baume B5, làm dịu da kích ứng, phục hồi hàng rào bảo vệ da, dùng cho cả mặt và cơ thể. Thường dùng kèm retinol/BHA để giảm kích ứng.",
+    ingredients:"Panthenol (B5) 5%, Madecassoside, Zinc Gluconate, Manganese Gluconate",
+    usage:"Thoa lên vùng da khô, kích ứng, hoặc toàn mặt vào bước dưỡng cuối cùng. Dùng khi cần."},
+  {name:"Serum cấp ẩm Histolab 62% Hyaluron Complex Ampoule 50ml",brand:"Histolab",origin:"Hàn Quốc",volume:"50ml",category:"Serum",skinType:"Da khô",price:0,image:"images/seed/retinol-combo-lrp-histolab-obagi.webp",
+    note:"Serum chứa 62% phức hợp 7 loại Hyaluronic Acid, cấp ẩm nhiều tầng, làm căng mịn da, tăng độ đàn hồi. Phù hợp dùng kèm retinol để chống khô căng.",
+    ingredients:"7 loại Hyaluronic Acid 62%, Panthenol, Niacinamide",
+    usage:"Sau toner, nhỏ 3-5 giọt lên tay thoa đều mặt. Dùng sáng tối, trước kem dưỡng."},
+  {name:"Kem Retinol Obagi Medical Smoothing Retinol 0.5% 28g",brand:"Obagi Medical",origin:"Mỹ",volume:"28g",category:"Kem dưỡng",skinType:"Da lão hoá",price:0,image:"images/seed/retinol-combo-lrp-histolab-obagi.webp",
+    note:"Kem retinol 0.5% dịu nhẹ dạng vi nhũ tương, giảm nếp nhăn, cải thiện kết cấu và độ đàn hồi da, mờ thâm nám.",
+    ingredients:"Retinol 0.5%, Vitamin C, Vitamin E, Shea Butter",
+    usage:"Dùng tối, sau các bước làm sạch và toner. Bắt đầu 2-3 tối/tuần, tăng dần. BẮT BUỘC dùng kem chống nắng vào sáng hôm sau. Tránh dùng khi mang thai."},
+  {name:"Kem đa năng Lucas Papaw Ointment đu đủ Úc 25g",brand:"Lucas",origin:"Úc",volume:"25g",category:"Kem đa năng",skinType:"Mọi loại da",price:0,image:"images/seed/lucas-papaw-25g.webp",
+    note:"Kem đu đủ đa năng từ Úc, dưỡng ẩm môi, làm dịu kích ứng, hỗ trợ lành vết côn trùng cắn, hăm, nứt nẻ. Dùng được cho cả bé và người lớn.",
+    ingredients:"Bột đu đủ hữu cơ, dầu Calendula, keo ong tự nhiên, Vitamin E",
+    usage:"Thoa lớp mỏng lên môi, vùng da khô/kích ứng, hoặc vết thương nhẹ. Dùng khi cần."},
+  {name:"Mặt nạ phục hồi KYUNGLAB CICA Ultra Calming Mask 25g",brand:"KYUNGLAB",origin:"Hàn Quốc",volume:"25g",category:"Mặt nạ",skinType:"Da nhạy cảm",price:0,image:"images/seed/kyunglab-cica-mask.webp",
+    note:"Mặt nạ siêu vi sợi CICA Ultra Calming, phục hồi và làm dịu da kích ứng, cấp ẩm căng bóng, chứa Centella Asiatica cao cấp.",
+    ingredients:"Centella Asiatica, Madecassoside, Niacinamide, Hyaluronic Acid",
+    usage:"Đắp 15-20 phút sau khi làm sạch da. Dùng 2-3 lần/tuần hoặc khi da cần phục hồi."},
+  {name:"Bảng phấn trang điểm Dior Backstage Glow Face Palette 10g",brand:"Dior",origin:"Pháp",volume:"10g",category:"Trang điểm",skinType:"Mọi loại da",price:0,image:"images/seed/dior-backstage-glow-palette.webp",
+    note:"Bảng phấn đa năng Dior Backstage Glow Face Palette, 4 ô gồm highlight, bronzer và má hồng. Tạo hiệu ứng sáng mịn tự nhiên, phù hợp cả trang điểm hằng ngày và dự tiệc.",
+    ingredients:"Mica, Talc, khoáng chất tạo màu, dầu dưỡng",
+    usage:"Dùng cọ phấn tán nhẹ highlight lên gò má, sống mũi; má hồng lên gò má; bronzer để tạo khối. Dùng sau kem nền."},
+  {name:"Dầu gội phục hồi giữ màu Mixrs Glaric Repairing Color Protect Shampoo 500ml",brand:"Mixrs",origin:"Hàn Quốc",volume:"500ml",category:"Chăm sóc tóc",skinType:"Mọi loại tóc",price:0,image:"images/seed/mixrs-glaric-unove-hair-combo.webp",
+    note:"Dầu gội Glaric giữ màu tóc nhuộm, phục hồi tóc hư tổn, giảm gãy rụng, hương nước hoa cao cấp bền lâu.",
+    ingredients:"Chiết xuất witch hazel, hoa hamamelis, keratin, protein lúa mì",
+    usage:"Thoa dầu gội lên tóc ướt, massage da đầu, xả sạch. Dùng 2-3 lần/tuần hoặc hằng ngày."},
+  {name:"Dầu xả cấp ẩm Mixrs Glaric Hydrating Conditioner 500ml",brand:"Mixrs",origin:"Hàn Quốc",volume:"500ml",category:"Chăm sóc tóc",skinType:"Mọi loại tóc",price:0,image:"images/seed/mixrs-glaric-unove-hair-combo.webp",
+    note:"Dầu xả Glaric cấp ẩm, mềm mượt tóc, giảm rối, hương thơm quyến rũ bền lâu. Dùng kèm dầu gội cùng dòng cho hiệu quả tối ưu.",
+    ingredients:"Hyaluronic Acid, dầu Argan, Protein lúa mì",
+    usage:"Sau khi gội, thoa dầu xả lên thân và đuôi tóc, để 2-3 phút rồi xả sạch."},
+  {name:"Dầu dưỡng tóc Unove Silk Hair Oil Warm Petals 70ml",brand:"Unove",origin:"Hàn Quốc",volume:"70ml",category:"Chăm sóc tóc",skinType:"Tóc khô xơ",price:0,image:"images/seed/mixrs-glaric-unove-hair-combo.webp",
+    note:"Dầu dưỡng tóc Unove Silk Hair Oil, dưỡng nang tóc, giảm khô xơ hư tổn, giúp sợi tóc căng bóng mượt mà, hương Warm Petals ấm áp.",
+    ingredients:"Dầu Argan, Camellia Oil, Keratin thuỷ phân, Vitamin E",
+    usage:"Thoa 2-3 giọt lên tóc ẩm sau khi gội hoặc tóc khô. Không cần xả."},
+  {name:"Kem trị mụn Differin Adapalene 0.1% 30g",brand:"Differin (Galderma)",origin:"Pháp",volume:"30g",category:"Trị mụn",skinType:"Da khô có mụn",price:0,image:"images/seed/differin-cream-01.webp",
+    note:"Kem trị mụn Differin dạng kem với Adapalene 0.1%, phù hợp cho da khô có mụn đầu trắng, đầu đen, viêm nhẹ. Không chứa kháng sinh.",
+    ingredients:"Adapalene 0.1%",
+    usage:"Thoa 1 lớp mỏng lên vùng mụn vào buổi tối, sau khi làm sạch da. Có thể gây đẩy mụn giai đoạn đầu. LUÔN dùng kem chống nắng ban ngày. Tránh dùng khi mang thai."},
+  {name:"Gel trị mụn Megaduo Azelaic + Glycolic acid (AHA) 15g",brand:"Megaduo (Gamma Chemicals)",origin:"Việt Nam",volume:"15g",category:"Trị mụn",skinType:"Da mụn có thâm",price:0,image:"images/seed/megaduo-gel-15g.webp",
+    note:"Gel trị mụn Megaduo kết hợp Azelaic acid và Glycolic acid (AHA), giảm mụn đầu trắng/đen, mờ vết thâm sau mụn, hỗ trợ ngừa mụn.",
+    ingredients:"Azelaic acid, Glycolic acid (AHA)",
+    usage:"Thoa lớp mỏng lên vùng mụn vào tối, 1 lần/ngày. Dùng ít một, tăng dần tần suất. LUÔN dùng kem chống nắng ban ngày."},
+  {name:"Gel trị mụn Klenzit MS Adapalene 0.1% microspheres 15g",brand:"Klenzit (Glenmark)",origin:"Ấn Độ",volume:"15g",category:"Trị mụn",skinType:"Da mụn bít tắc",price:0,image:"images/seed/klenzit-ms-15g.webp",
+    note:"Gel trị mụn Klenzit MS với Adapalene 0.1% dạng vi cầu (microspheres), giảm mụn ẩn, đầu trắng, đen, hạn chế mụn mới. Không chứa kháng sinh.",
+    ingredients:"Adapalene 0.1% dạng microspheres",
+    usage:"Thoa lớp mỏng lên vùng mụn vào buổi tối sau khi làm sạch da. Có thể gây đẩy mụn ban đầu. LUÔN dùng kem chống nắng ban ngày."},
+  {name:"Gel trị mụn Actidem Derma Gel AHA+BHA+B5+ZnPCA 18g (vàng)",brand:"Actidem",origin:"Việt Nam",volume:"18g",category:"Trị mụn",skinType:"Da sần nhiều mụn ẩn",price:0,image:"images/seed/actidem-derma-gel-vang.webp",
+    note:"Gel trị mụn Actidem Derma Gel vàng, kết hợp AHA + BHA + B5 + Zinc PCA, giảm mụn ẩn, đầu đen, da sần do bít tắc. Kiểm soát dầu, hỗ trợ giảm mụn và thâm.",
+    ingredients:"AHA, BHA (Salicylic Acid), Panthenol (B5), Zinc PCA",
+    usage:"Thoa đều lên vùng da mụn sau khi làm sạch, 1-2 lần/ngày. Dùng kem chống nắng khi ra ngoài."},
+  {name:"Gel trị mụn Actidem Derma EXTRA Gel 18g (cam)",brand:"Actidem",origin:"Việt Nam",volume:"18g",category:"Trị mụn",skinType:"Da mụn nhẹ-vừa có thâm",price:0,image:"images/seed/actidem-derma-extra-cam.webp",
+    note:"Gel trị mụn Actidem Derma Extra Gel cam, công thức mạnh hơn với dẫn xuất Azelaic + AHA + BHA + Niacinamide + B5 + Zinc PCA. Giảm mụn, mờ thâm, đều màu da.",
+    ingredients:"Dẫn xuất Azelaic, AHA, BHA, Niacinamide, Panthenol (B5), Zinc PCA",
+    usage:"Thoa đều lên vùng da mụn và thâm vào tối, có thể dùng cả sáng. LUÔN dùng kem chống nắng khi ra ngoài."}
+];
+async function importSeedShop2(silent){
+  if(!silent&&!confirm(`Thêm ${SEED_SHOP2.length} sản phẩm thực tế của shop (đợt 2, có ảnh)? Tồn kho = 0, giá = 0 — bạn sửa sau.`))return;
+  const existing=new Set((DB.products||[]).map(p=>(p.name||"").toLowerCase().trim()));
+  const existingImg=new Set((DB.products||[]).map(p=>p.image).filter(Boolean));
+  DB.categories=DB.categories||[];
+  let added=0,skipped=0;
+  for(const m of SEED_SHOP2){
+    // Tránh add trùng theo tên; cho phép dùng chung ảnh (combo)
+    if(existing.has(m.name.toLowerCase().trim())){skipped++;continue;}
+    if(m.category&&!DB.categories.some(c=>c.name===m.category))DB.categories.push({id:uid(),name:m.category,icon:"🧴"});
+    DB.products.push(Object.assign({id:uid(),stock:0,lowStock:5,cost:0,supplierId:"",barcodes:[]},m));
+    added++;
+  }
+  if(added)save();
+  if(!silent)toast(`✓ Đã thêm ${added} sản phẩm${skipped?` · bỏ qua ${skipped} đã tồn tại`:""}`);
+  return added;
+}
+window.importSeedShop2=importSeedShop2;
+
 // Lần đầu cloud sẵn sàng: tự thêm 6 SP shop vào Firestore (chỉ chạy 1 lần duy nhất trên mỗi máy)
-function autoSeedShopOnce(){
+async function autoSeedShopOnce(){
   const KEY="myphamHH_seedShopAuto_v1";
   const RENAME_KEY="myphamHH_seedShopRename_v2";
   let changed=false;
@@ -3000,6 +3111,13 @@ function autoSeedShopOnce(){
     }
     localStorage.setItem(KEY,"1");
     if(added)toast(`✓ Đã tự thêm ${added} sản phẩm mẫu của shop. Vào Mặt hàng để chỉnh giá.`);
+  }}catch(e){}
+  // Đợt 2: 22 SP mới shop vừa gửi ảnh
+  try{if(!localStorage.getItem("myphamHH_seedShop2Auto_v1")){
+    const n=await importSeedShop2(true);
+    localStorage.setItem("myphamHH_seedShop2Auto_v1","1");
+    if(n)toast(`✓ Đã tự thêm ${n} sản phẩm đợt 2 (có ảnh thật). Vào Mặt hàng để chỉnh giá.`);
+    changed=true;
   }}catch(e){}
   if(changed)save();
 }
