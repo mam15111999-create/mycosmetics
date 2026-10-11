@@ -3080,6 +3080,66 @@ async function importSeedShop2(silent){
 }
 window.importSeedShop2=importSeedShop2;
 
+// Đợt 3: 10 sản phẩm thêm (kem nền, kem lót, toner, dưỡng thể, chăm tóc, tẩy tế bào chết, tẩy trang...)
+const SEED_SHOP3=[
+  {name:"Kem nền Estée Lauder Double Wear Stay-in-Place Makeup mini 15ml",brand:"Estée Lauder",origin:"Mỹ",volume:"15ml",category:"Trang điểm",skinType:"Mọi loại da",price:0,image:"images/seed/estee-double-wear-mini.webp",
+    note:"Kem nền Double Wear bền màu 24h, che phủ cao, lì kiềm dầu suốt ngày dài, không trôi khi mồ hôi. Phiên bản mini tiện mang theo.",
+    ingredients:"Phức hợp giữ màu, SPF 10, chống nước, chống trôi",
+    usage:"Lắc đều trước khi dùng. Lấy một lượng vừa đủ, tán đều từ giữa mặt ra ngoài bằng cọ hoặc bọt biển. Dặm phấn phủ nếu cần."},
+  {name:"Kem lót dưỡng ẩm Bobbi Brown Vitamin Enriched Face Base 50ml",brand:"Bobbi Brown",origin:"Mỹ",volume:"50ml",category:"Trang điểm",skinType:"Mọi loại da",price:0,image:"images/seed/bobbi-brown-face-base.webp",
+    note:"Kem lót All-in-One kết hợp dưỡng ẩm sâu, chứa Vitamin B5, C, E. Cấp ẩm 24h, giúp lớp nền bám đẹp, da căng mịn tự nhiên.",
+    ingredients:"Vitamin B5, Vitamin C, Vitamin E, Shea Butter, Jojoba Oil",
+    usage:"Thoa một lượng vừa đủ lên mặt sạch, trước khi dùng kem nền. Cũng có thể dùng như kem dưỡng sáng cho da khô."},
+  {name:"Lotion phục hồi hàng rào da Ongredients Skin Barrier Calming Lotion 400ml",brand:"Ongredients",origin:"Hàn Quốc",volume:"400ml",category:"Toner / Lotion",skinType:"Da nhạy cảm",price:0,image:"images/seed/ongredients-calming-lotion.webp",
+    note:"Lotion dạng toner cấp ẩm phục hồi hàng rào bảo vệ da, làm dịu kích ứng. Chai dung tích lớn 400ml dùng được cho cả mặt và cơ thể.",
+    ingredients:"Centella Asiatica, Panthenol, Allantoin, Hyaluronic Acid",
+    usage:"Sau khi rửa mặt, lấy lotion ra tay hoặc bông, vỗ nhẹ lên da mặt, cổ (và cơ thể nếu cần). Dùng sáng tối."},
+  {name:"Sữa dưỡng thể Jmella No.02 Femme Fatale Body Lotion 500ml",brand:"Jmella",origin:"Hàn Quốc",volume:"500ml",category:"Dưỡng thể",skinType:"Mọi loại da",price:0,image:"images/seed/jmella-femme-fatale-body.webp",
+    note:"Sữa dưỡng thể hương nước hoa cao cấp Femme Fatale (Lệ Chi, Huệ Trắng, Vanilla), dưỡng mềm mượt với 5 loại dầu dưỡng. Hương lưu lâu quyến rũ.",
+    ingredients:"5 loại dầu dưỡng, Shea Butter, Glycerin, hương Femme Fatale (Lychee, White Lily, Vanilla)",
+    usage:"Thoa đều lên da ẩm sau khi tắm, massage nhẹ để thấm. Dùng hằng ngày."},
+  {name:"Dầu gội phục hồi tóc hư tổn Unove Deep Damage Repair Shampoo 500g",brand:"Unove (Dr.FORHAIR)",origin:"Hàn Quốc",volume:"500g",category:"Chăm sóc tóc",skinType:"Tóc khô hư tổn",price:0,image:"images/seed/unove-deep-damage-shampoo.webp",
+    note:"Dầu gội phục hồi tóc khô xơ, hư tổn nặng, công thức pH 4.9-5.9 dịu nhẹ, 22 amino acid, tinh dầu vàng, công nghệ 3 tầng hương lưu lâu.",
+    ingredients:"22 amino acids, Argan Oil, Keratin, Panthenol, tinh dầu vàng",
+    usage:"Làm ướt tóc, lấy một lượng dầu gội, tạo bọt rồi massage da đầu 1-2 phút, xả sạch. Có thể dùng hằng ngày."},
+  {name:"Dầu gội bưởi Cocoon Pomelo Shampoo giảm rụng tóc 310ml",brand:"Cocoon",origin:"Việt Nam",volume:"310ml",category:"Chăm sóc tóc",skinType:"Da đầu nhạy cảm",price:0,image:"images/seed/cocoon-pomelo-shampoo.webp",
+    note:"Dầu gội bưởi Cocoon KHÔNG chứa sulfate, giảm gãy rụng tóc, phù hợp cả da đầu nhạy cảm. Thuần chay, không thử nghiệm trên động vật.",
+    ingredients:"Tinh dầu bưởi, Vitamin B5, Xylitol, amino acids, không sulfate/paraben",
+    usage:"Làm ướt tóc, lấy dầu gội tạo bọt rồi massage da đầu, xả sạch. Dùng hằng ngày."},
+  {name:"Gel tẩy tế bào chết Dr.G Brightening Peeling Gel 120ml",brand:"Dr.G",origin:"Hàn Quốc",volume:"120ml",category:"Tẩy tế bào chết",skinType:"Da nhạy cảm",price:0,image:"images/seed/drg-brightening-peeling-gel.webp",
+    note:"Gel tẩy tế bào chết dịu nhẹ cho da nhạy cảm, làm sạch tế bào chết, giúp da sáng mịn, cấp ẩm nhẹ không gây khô căng.",
+    ingredients:"Mentoxy Hexanol, chiết xuất Aloe Vera, Panthenol, Centella Asiatica",
+    usage:"Da sạch khô, lấy một lượng vừa đủ, massage nhẹ nhàng theo chuyển động tròn 1-2 phút, rửa sạch. Dùng 2-3 lần/tuần."},
+  {name:"Set bông phấn trang điểm AMORTALS Puff (combo)",brand:"AMORTALS",origin:"Hàn Quốc",volume:"1 set",category:"Phụ kiện trang điểm",skinType:"Mọi loại da",price:0,image:"images/seed/amortals-puff-set.webp",
+    note:"Set bông phấn/bọt biển trang điểm AMORTALS, chất liệu mềm mịn, thấm tốt, dùng để tán kem nền, phấn phủ. Thiết kế vải denim thời trang, kèm hộp đựng.",
+    ingredients:"Chất liệu bọt biển cao cấp, viền denim",
+    usage:"Làm ẩm nhẹ (hoặc dùng khô), chấm kem nền/phấn, tán đều lên mặt bằng cách vỗ nhẹ. Rửa sạch sau mỗi lần dùng, để khô tự nhiên."},
+  {name:"Nước tẩy trang Bioderma Crealine H2O da khô nhạy cảm 500ml (hồng)",brand:"Bioderma",origin:"Pháp",volume:"500ml",category:"Tẩy trang",skinType:"Da khô, nhạy cảm",price:0,image:"images/seed/bioderma-micellar-combo.webp",
+    note:"Nước tẩy trang micellar Bioderma Crealine H2O (còn gọi Sensibio) cho da khô nhạy cảm, làm sạch dịu nhẹ không cần rửa lại, không gây kích ứng, không hương liệu.",
+    ingredients:"Micellar water, chiết xuất Cucumber, Vitamin E, không cồn, không paraben",
+    usage:"Thấm bông tẩy trang với lượng vừa đủ, lau nhẹ nhàng theo chiều từ trong ra ngoài. Không cần rửa lại với nước."},
+  {name:"Nước tẩy trang Bioderma Sébium H2O da dầu mụn 500ml (xanh)",brand:"Bioderma",origin:"Pháp",volume:"500ml",category:"Tẩy trang",skinType:"Da dầu mụn",price:0,image:"images/seed/bioderma-micellar-combo.webp",
+    note:"Nước tẩy trang micellar Bioderma Sébium H2O cho da hỗn hợp đến dầu mụn, làm sạch sâu lỗ chân lông, kiểm soát bã nhờn, không gây bí da.",
+    ingredients:"Micellar water, Zinc Gluconate, Copper Sulfate, không cồn, không paraben",
+    usage:"Thấm bông tẩy trang với lượng vừa đủ, lau nhẹ nhàng. Không cần rửa lại với nước."}
+];
+async function importSeedShop3(silent){
+  if(!silent&&!confirm(`Thêm ${SEED_SHOP3.length} sản phẩm đợt 3 (có ảnh thực)? Tồn kho = 0, giá = 0 — bạn sửa sau.`))return;
+  const existing=new Set((DB.products||[]).map(p=>(p.name||"").toLowerCase().trim()));
+  DB.categories=DB.categories||[];
+  let added=0,skipped=0;
+  for(const m of SEED_SHOP3){
+    if(existing.has(m.name.toLowerCase().trim())){skipped++;continue;}
+    if(m.category&&!DB.categories.some(c=>c.name===m.category))DB.categories.push({id:uid(),name:m.category,icon:"🧴"});
+    DB.products.push(Object.assign({id:uid(),stock:0,lowStock:5,cost:0,supplierId:"",barcodes:[]},m));
+    added++;
+  }
+  if(added)save();
+  if(!silent)toast(`✓ Đã thêm ${added} sản phẩm đợt 3${skipped?` · bỏ qua ${skipped} đã tồn tại`:""}`);
+  return added;
+}
+window.importSeedShop3=importSeedShop3;
+
 // Lần đầu cloud sẵn sàng: tự thêm 6 SP shop vào Firestore (chỉ chạy 1 lần duy nhất trên mỗi máy)
 async function autoSeedShopOnce(){
   const KEY="myphamHH_seedShopAuto_v1";
@@ -3117,6 +3177,13 @@ async function autoSeedShopOnce(){
     const n=await importSeedShop2(true);
     localStorage.setItem("myphamHH_seedShop2Auto_v1","1");
     if(n)toast(`✓ Đã tự thêm ${n} sản phẩm đợt 2 (có ảnh thật). Vào Mặt hàng để chỉnh giá.`);
+    changed=true;
+  }}catch(e){}
+  // Đợt 3: 10 SP tiếp (kem nền, kem lót, toner, dưỡng thể, chăm tóc, tẩy trang...)
+  try{if(!localStorage.getItem("myphamHH_seedShop3Auto_v1")){
+    const n=await importSeedShop3(true);
+    localStorage.setItem("myphamHH_seedShop3Auto_v1","1");
+    if(n)toast(`✓ Đã tự thêm ${n} sản phẩm đợt 3 (có ảnh thật). Vào Mặt hàng để chỉnh giá.`);
     changed=true;
   }}catch(e){}
   if(changed)save();
